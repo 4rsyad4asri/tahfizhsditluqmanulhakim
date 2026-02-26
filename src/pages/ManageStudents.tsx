@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
-import { Plus, Pencil, Trash2, Search, Loader2, UserPlus, Users, ChevronDown } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Loader2, UserPlus, Users, ChevronDown, FileSpreadsheet } from "lucide-react";
+import ImportStudentsDialog from "@/components/ImportStudentsDialog";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -42,6 +43,7 @@ const ManageStudents = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<StudentForm>(emptyForm);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   // Fetch classes
   const { data: classes } = useQuery({
@@ -195,6 +197,15 @@ const ManageStudents = () => {
             </p>
           </div>
 
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setImportOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              Import Excel/CSV
+            </button>
+
           <Dialog open={formOpen} onOpenChange={(open) => { if (!open) resetForm(); setFormOpen(open); }}>
             <DialogTrigger asChild>
               <button
@@ -307,6 +318,9 @@ const ManageStudents = () => {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
+
+          <ImportStudentsDialog open={importOpen} onOpenChange={setImportOpen} />
         </div>
 
         {/* Filters */}
