@@ -41,7 +41,7 @@ const Header = () => {
               "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"}`
               }>
 
-              <Settings className="w-4 h-4 bg-zinc-50 text-slate-50" />
+              <Settings className="w-4 h-4 bg-zinc-50 text-slate-950" />
               <span className="hidden sm:inline text-gray-100 bg-zinc-950">Kelola Siswa</span>
             </button>
 
