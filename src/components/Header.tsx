@@ -41,8 +41,8 @@ const Header = () => {
               "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"}`
               }>
 
-              <Settings className="w-4 h-4 text-yellow-950" />
-              <span className="hidden sm:inline text-gray-100">Kelola Siswa</span>
+              <Settings className="w-4 h-4 bg-zinc-50 text-slate-50" />
+              <span className="hidden sm:inline text-gray-100 bg-zinc-950">Kelola Siswa</span>
             </button>
 
             {isAdmin &&
@@ -55,7 +55,7 @@ const Header = () => {
               }>
 
                 <Shield className="w-4 h-4 text-slate-800" />
-                <span className="hidden sm:inline text-slate-900">Kelola User</span>
+                <span className="hidden sm:inline text-zinc-50">Kelola User</span>
               </button>
             }
 
