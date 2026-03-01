@@ -10,8 +10,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  DialogTrigger } from
+"@/components/ui/dialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type StudentLevel = Database["public"]["Enums"]["student_level"];
@@ -32,7 +32,7 @@ const emptyForm: StudentForm = {
   target_juz: 30,
   level: "Tahsin Dasar",
   progress_hafalan: 0,
-  status_sertifikasi: "Belum Ujian",
+  status_sertifikasi: "Belum Ujian"
 };
 
 const ManageStudents = () => {
@@ -49,24 +49,24 @@ const ManageStudents = () => {
   const { data: classes } = useQuery({
     queryKey: ["all-classes"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("classes")
-        .select("*")
-        .order("grade")
-        .order("section");
+      const { data, error } = await supabase.
+      from("classes").
+      select("*").
+      order("grade").
+      order("section");
       if (error) throw error;
       return data;
-    },
+    }
   });
 
   // Fetch students with class info
   const { data: students, isLoading } = useQuery({
     queryKey: ["all-students", selectedClass],
     queryFn: async () => {
-      let query = supabase
-        .from("students")
-        .select("*, classes(name, grade, section)")
-        .order("name");
+      let query = supabase.
+      from("students").
+      select("*, classes(name, grade, section)").
+      order("name");
 
       if (selectedClass !== "all") {
         query = query.eq("class_id", selectedClass);
@@ -75,7 +75,7 @@ const ManageStudents = () => {
       const { data, error } = await query;
       if (error) throw error;
       return data;
-    },
+    }
   });
 
   // Add student
@@ -87,7 +87,7 @@ const ManageStudents = () => {
         target_juz: data.target_juz,
         level: data.level,
         progress_hafalan: data.progress_hafalan,
-        status_sertifikasi: data.status_sertifikasi,
+        status_sertifikasi: data.status_sertifikasi
       });
       if (error) throw error;
     },
@@ -97,23 +97,23 @@ const ManageStudents = () => {
       toast.success("Siswa berhasil ditambahkan!");
       resetForm();
     },
-    onError: (err) => toast.error("Gagal: " + (err as Error).message),
+    onError: (err) => toast.error("Gagal: " + (err as Error).message)
   });
 
   // Update student
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: StudentForm }) => {
-      const { error } = await supabase
-        .from("students")
-        .update({
-          name: data.name.trim(),
-          class_id: data.class_id,
-          target_juz: data.target_juz,
-          level: data.level,
-          progress_hafalan: data.progress_hafalan,
-          status_sertifikasi: data.status_sertifikasi,
-        })
-        .eq("id", id);
+    mutationFn: async ({ id, data }: {id: string;data: StudentForm;}) => {
+      const { error } = await supabase.
+      from("students").
+      update({
+        name: data.name.trim(),
+        class_id: data.class_id,
+        target_juz: data.target_juz,
+        level: data.level,
+        progress_hafalan: data.progress_hafalan,
+        status_sertifikasi: data.status_sertifikasi
+      }).
+      eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -122,7 +122,7 @@ const ManageStudents = () => {
       toast.success("Data siswa berhasil diperbarui!");
       resetForm();
     },
-    onError: (err) => toast.error("Gagal: " + (err as Error).message),
+    onError: (err) => toast.error("Gagal: " + (err as Error).message)
   });
 
   // Delete student
@@ -137,7 +137,7 @@ const ManageStudents = () => {
       toast.success("Siswa berhasil dihapus!");
       setDeleteConfirm(null);
     },
-    onError: (err) => toast.error("Gagal: " + (err as Error).message),
+    onError: (err) => toast.error("Gagal: " + (err as Error).message)
   });
 
   const resetForm = () => {
@@ -153,7 +153,7 @@ const ManageStudents = () => {
       target_juz: student.target_juz,
       level: student.level,
       progress_hafalan: student.progress_hafalan,
-      status_sertifikasi: student.status_sertifikasi,
+      status_sertifikasi: student.status_sertifikasi
     });
     setEditingId(student.id);
     setFormOpen(true);
@@ -177,7 +177,7 @@ const ManageStudents = () => {
   };
 
   const filteredStudents = (students || []).filter((s: any) =>
-    s.name.toLowerCase().includes(search.toLowerCase())
+  s.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const isPending = addMutation.isPending || updateMutation.isPending;
@@ -200,18 +200,18 @@ const ManageStudents = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setImportOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-accent/10 text-accent hover:bg-accent/20 transition-colors border border-accent/20"
-            >
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-accent/10 hover:bg-accent/20 transition-colors border border-accent/20 text-amber-700">
+
               <FileSpreadsheet className="w-4 h-4" />
               Import Excel/CSV
             </button>
 
-          <Dialog open={formOpen} onOpenChange={(open) => { if (!open) resetForm(); setFormOpen(open); }}>
+          <Dialog open={formOpen} onOpenChange={(open) => {if (!open) resetForm();setFormOpen(open);}}>
             <DialogTrigger asChild>
               <button
-                onClick={() => { setForm(emptyForm); setEditingId(null); }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold gradient-islamic text-primary-foreground hover:opacity-90 transition-opacity"
-              >
+                  onClick={() => {setForm(emptyForm);setEditingId(null);}}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold gradient-islamic text-primary-foreground hover:opacity-90 transition-opacity">
+
                 <UserPlus className="w-4 h-4" />
                 Tambah Siswa Baru
               </button>
@@ -224,26 +224,26 @@ const ManageStudents = () => {
                 <div>
                   <label className="block text-xs font-medium text-muted-foreground mb-1">Nama Siswa *</label>
                   <input
-                    type="text"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="Masukkan nama lengkap siswa"
-                    maxLength={100}
-                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
+                      type="text"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="Masukkan nama lengkap siswa"
+                      maxLength={100}
+                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+
                 </div>
 
                 <div>
                   <label className="block text-xs font-medium text-muted-foreground mb-1">Kelas *</label>
                   <select
-                    value={form.class_id}
-                    onChange={(e) => setForm({ ...form, class_id: e.target.value })}
-                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
+                      value={form.class_id}
+                      onChange={(e) => setForm({ ...form, class_id: e.target.value })}
+                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+
                     <option value="">-- Pilih Kelas --</option>
-                    {(classes || []).map((c) => (
+                    {(classes || []).map((c) =>
                       <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
+                      )}
                   </select>
                 </div>
 
@@ -251,22 +251,22 @@ const ManageStudents = () => {
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Target Juz</label>
                     <select
-                      value={form.target_juz}
-                      onChange={(e) => setForm({ ...form, target_juz: parseInt(e.target.value) })}
-                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                      {Array.from({ length: 30 }, (_, i) => i + 1).map((j) => (
+                        value={form.target_juz}
+                        onChange={(e) => setForm({ ...form, target_juz: parseInt(e.target.value) })}
+                        className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+
+                      {Array.from({ length: 30 }, (_, i) => i + 1).map((j) =>
                         <option key={j} value={j}>Juz {j}</option>
-                      ))}
+                        )}
                     </select>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Level</label>
                     <select
-                      value={form.level}
-                      onChange={(e) => setForm({ ...form, level: e.target.value as StudentLevel })}
-                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
+                        value={form.level}
+                        onChange={(e) => setForm({ ...form, level: e.target.value as StudentLevel })}
+                        className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+
                       <option value="Tahsin Dasar">Tahsin Dasar</option>
                       <option value="Tahsin Lanjutan">Tahsin Lanjutan</option>
                       <option value="Tahfizh">Tahfizh</option>
@@ -278,21 +278,21 @@ const ManageStudents = () => {
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Progress (%)</label>
                     <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={form.progress_hafalan}
-                      onChange={(e) => setForm({ ...form, progress_hafalan: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) })}
-                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={form.progress_hafalan}
+                        onChange={(e) => setForm({ ...form, progress_hafalan: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) })}
+                        className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Status</label>
                     <select
-                      value={form.status_sertifikasi}
-                      onChange={(e) => setForm({ ...form, status_sertifikasi: e.target.value as CertStatus })}
-                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
+                        value={form.status_sertifikasi}
+                        onChange={(e) => setForm({ ...form, status_sertifikasi: e.target.value as CertStatus })}
+                        className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+
                       <option value="Belum Ujian">Belum Ujian</option>
                       <option value="Lulus">Lulus</option>
                       <option value="Tidak Lulus">Tidak Lulus</option>
@@ -302,16 +302,16 @@ const ManageStudents = () => {
 
                 <div className="flex gap-2 justify-end pt-2">
                   <button
-                    onClick={resetForm}
-                    className="px-4 py-2 rounded-md text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
-                  >
+                      onClick={resetForm}
+                      className="px-4 py-2 rounded-md text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
+
                     Batal
                   </button>
                   <button
-                    onClick={handleSubmit}
-                    disabled={isPending}
-                    className="px-4 py-2 rounded-md text-sm font-medium gradient-islamic text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
-                  >
+                      onClick={handleSubmit}
+                      disabled={isPending}
+                      className="px-4 py-2 rounded-md text-sm font-medium gradient-islamic text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50">
+
                     {isPending ? "Menyimpan..." : editingId ? "Simpan Perubahan" : "Tambah Siswa"}
                   </button>
                 </div>
@@ -332,19 +332,19 @@ const ManageStudents = () => {
               placeholder="Cari nama siswa..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+
           </div>
           <div className="relative">
             <select
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
-              className="appearance-none pl-3 pr-8 py-2 rounded-lg border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[160px]"
-            >
+              className="appearance-none pl-3 pr-8 py-2 rounded-lg border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[160px]">
+
               <option value="all">Semua Kelas</option>
-              {(classes || []).map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
+              {(classes || []).map((c) =>
+              <option key={c.id} value={c.id}>{c.name}</option>
+              )}
             </select>
             <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           </div>
@@ -355,16 +355,16 @@ const ManageStudents = () => {
           Menampilkan {filteredStudents.length} siswa
         </p>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
+        {isLoading ?
+        <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <>
+          </div> :
+
+        <>
             {/* Mobile Cards */}
             <div className="md:hidden space-y-3">
-              {filteredStudents.map((student: any) => (
-                <div key={student.id} className="bg-card rounded-lg border border-border p-4 shadow-card">
+              {filteredStudents.map((student: any) =>
+            <div key={student.id} className="bg-card rounded-lg border border-border p-4 shadow-card">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <h3 className="font-semibold text-foreground">{student.name}</h3>
@@ -372,15 +372,15 @@ const ManageStudents = () => {
                     </div>
                     <div className="flex gap-1">
                       <button
-                        onClick={() => openEdit(student)}
-                        className="p-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                      >
+                    onClick={() => openEdit(student)}
+                    className="p-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => setDeleteConfirm(student.id)}
-                        className="p-1.5 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
-                      >
+                    onClick={() => setDeleteConfirm(student.id)}
+                    className="p-1.5 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
+
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -392,7 +392,7 @@ const ManageStudents = () => {
                     <span>Status: <span className="text-foreground">{student.status_sertifikasi}</span></span>
                   </div>
                 </div>
-              ))}
+            )}
             </div>
 
             {/* Desktop Table */}
@@ -411,17 +411,17 @@ const ManageStudents = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredStudents.map((student: any, idx: number) => (
-                      <tr key={student.id} className={`border-b border-border/50 hover:bg-muted/30 transition-colors ${idx % 2 ? 'bg-muted/10' : ''}`}>
+                    {filteredStudents.map((student: any, idx: number) =>
+                  <tr key={student.id} className={`border-b border-border/50 hover:bg-muted/30 transition-colors ${idx % 2 ? 'bg-muted/10' : ''}`}>
                         <td className="px-4 py-3 font-medium text-foreground">{student.name}</td>
                         <td className="px-4 py-3 text-muted-foreground">{student.classes?.name}</td>
                         <td className="px-4 py-3 text-muted-foreground">Juz {student.target_juz}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            student.level === 'Tahfizh' ? 'bg-primary/10 text-primary' :
-                            student.level === 'Tahsin Lanjutan' ? 'bg-accent/10 text-accent' :
-                            'bg-muted text-muted-foreground'
-                          }`}>{student.level}</span>
+                      student.level === 'Tahfizh' ? 'bg-primary/10 text-primary' :
+                      student.level === 'Tahsin Lanjutan' ? 'bg-accent/10 text-accent' :
+                      'bg-muted text-muted-foreground'}`
+                      }>{student.level}</span>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
@@ -433,47 +433,47 @@ const ManageStudents = () => {
                         </td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            student.status_sertifikasi === 'Lulus' ? 'bg-success/10 text-success' :
-                            student.status_sertifikasi === 'Tidak Lulus' ? 'bg-destructive/10 text-destructive' :
-                            'bg-muted text-muted-foreground'
-                          }`}>
+                      student.status_sertifikasi === 'Lulus' ? 'bg-success/10 text-success' :
+                      student.status_sertifikasi === 'Tidak Lulus' ? 'bg-destructive/10 text-destructive' :
+                      'bg-muted text-muted-foreground'}`
+                      }>
                             {student.status_sertifikasi}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-1">
                             <button
-                              onClick={() => openEdit(student)}
-                              className="p-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                              title="Edit"
-                            >
+                          onClick={() => openEdit(student)}
+                          className="p-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                          title="Edit">
+
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button
-                              onClick={() => setDeleteConfirm(student.id)}
-                              className="p-1.5 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
-                              title="Hapus"
-                            >
+                          onClick={() => setDeleteConfirm(student.id)}
+                          className="p-1.5 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                          title="Hapus">
+
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </td>
                       </tr>
-                    ))}
+                  )}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            {filteredStudents.length === 0 && !isLoading && (
-              <div className="text-center py-12 text-muted-foreground">
+            {filteredStudents.length === 0 && !isLoading &&
+          <div className="text-center py-12 text-muted-foreground">
                 <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p>Belum ada siswa {selectedClass !== "all" ? "di kelas ini" : ""}</p>
                 <p className="text-xs mt-1">Klik "Tambah Siswa Baru" untuk memulai</p>
               </div>
-            )}
+          }
           </>
-        )}
+        }
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
@@ -487,23 +487,23 @@ const ManageStudents = () => {
             <div className="flex gap-2 justify-end pt-2">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 rounded-md text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
-              >
+                className="px-4 py-2 rounded-md text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
+
                 Batal
               </button>
               <button
                 onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)}
                 disabled={deleteMutation.isPending}
-                className="px-4 py-2 rounded-md text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50"
-              >
+                className="px-4 py-2 rounded-md text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50">
+
                 {deleteMutation.isPending ? "Menghapus..." : "Ya, Hapus"}
               </button>
             </div>
           </DialogContent>
         </Dialog>
       </main>
-    </div>
-  );
+    </div>);
+
 };
 
 export default ManageStudents;

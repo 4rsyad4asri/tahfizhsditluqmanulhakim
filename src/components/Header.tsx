@@ -18,16 +18,16 @@ const Header = () => {
         <div className="flex items-center justify-between">
           <div
             className="flex items-center gap-3 cursor-pointer"
-            onClick={() => navigate("/")}
-          >
+            onClick={() => navigate("/")}>
+
             <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20">
-              <BookOpen className="w-6 h-6" />
+              <BookOpen className="w-6 h-6 bg-[sidebar-primary-foreground] bg-background text-slate-950" />
             </div>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight">
+              <h1 className="md:text-2xl font-bold tracking-tight text-[sidebar-accent-foreground] text-slate-950">
                 Monitoring Hafalan
               </h1>
-              <p className="text-sm opacity-80">
+              <p className="text-sm opacity-80 text-gray-800">
                 Sistem Tahsin & Tahfizh SD
               </p>
             </div>
@@ -36,43 +36,43 @@ const Header = () => {
             <button
               onClick={() => navigate("/kelola-siswa")}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                location.pathname === "/kelola-siswa"
-                  ? "bg-primary-foreground/20 backdrop-blur-sm"
-                  : "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"
-              }`}
-            >
-              <Settings className="w-4 h-4" />
-              <span className="hidden sm:inline">Kelola Siswa</span>
+              location.pathname === "/kelola-siswa" ?
+              "bg-primary-foreground/20 backdrop-blur-sm" :
+              "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"}`
+              }>
+
+              <Settings className="w-4 h-4 text-yellow-950" />
+              <span className="hidden sm:inline text-gray-100">Kelola Siswa</span>
             </button>
 
-            {isAdmin && (
-              <button
-                onClick={() => navigate("/kelola-user")}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  location.pathname === "/kelola-user"
-                    ? "bg-primary-foreground/20 backdrop-blur-sm"
-                    : "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-                <span className="hidden sm:inline">Kelola User</span>
-              </button>
-            )}
+            {isAdmin &&
+            <button
+              onClick={() => navigate("/kelola-user")}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+              location.pathname === "/kelola-user" ?
+              "bg-primary-foreground/20 backdrop-blur-sm" :
+              "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"}`
+              }>
 
-            {user && (
-              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-slate-800" />
+                <span className="hidden sm:inline text-slate-900">Kelola User</span>
+              </button>
+            }
+
+            {user &&
+            <div className="flex items-center gap-2">
                 <span className="hidden md:inline text-xs opacity-70">
                   {profile?.full_name || user.email}
                 </span>
                 <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm transition-all"
-                  title="Logout"
-                >
-                  <LogOut className="w-4 h-4" />
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm transition-all"
+                title="Logout">
+
+                  <LogOut className="w-4 h-4 text-red-500" />
                 </button>
               </div>
-            )}
+            }
 
             <div className="hidden md:flex items-center gap-2 opacity-60">
               <Star className="w-4 h-4" />
@@ -82,8 +82,8 @@ const Header = () => {
           </div>
         </div>
       </div>
-    </header>
-  );
+    </header>);
+
 };
 
 export default Header;
