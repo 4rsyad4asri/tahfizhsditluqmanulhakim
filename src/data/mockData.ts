@@ -161,6 +161,33 @@ export function calculateNilaiSetoran(koreksi: Koreksi): number {
   return Math.max(0, Math.min(100, Math.round(nilai)));
 }
 
+export interface TahfizhSurahEntry {
+  surah: string;
+  juz: number;
+  lahn_jali: number;
+  lahn_khofi: number;
+  kelancaran: number; // 100, 90, 80, 70, 60
+}
+
+export function calculateNilaiSurah(entry: TahfizhSurahEntry): number {
+  const nilaiKoreksi = 100 - (entry.lahn_jali * 2) - (entry.lahn_khofi * 0.5);
+  const nilaiAkhir = (Math.max(0, nilaiKoreksi) + entry.kelancaran) / 2;
+  return Math.round(Math.max(0, Math.min(100, nilaiAkhir)));
+}
+
+export function calculateNilaiTahfizh(entries: TahfizhSurahEntry[]): { nilaiAkhir: number; status: 'Lulus' | 'Tidak Lulus'; grade: string; predikat: string } {
+  if (entries.length === 0) return { nilaiAkhir: 0, status: 'Tidak Lulus', grade: 'D', predikat: 'Perlu Perbaikan' };
+  const nilaiPerSurah = entries.map(calculateNilaiSurah);
+  const nilaiAkhir = Math.round(nilaiPerSurah.reduce((a, b) => a + b, 0) / nilaiPerSurah.length);
+  const status = nilaiAkhir >= 85 ? 'Lulus' : 'Tidak Lulus';
+  let grade = 'D';
+  let predikat = 'Perlu Perbaikan';
+  if (nilaiAkhir >= 90) { grade = 'A'; predikat = 'Mumtaz'; }
+  else if (nilaiAkhir >= 80) { grade = 'B'; predikat = 'Jiddan Jayyid'; }
+  else if (nilaiAkhir >= 70) { grade = 'C'; predikat = 'Jayyid'; }
+  return { nilaiAkhir, status, grade, predikat };
+}
+
 export function calculateNilaiUjian(nilaiAspek: Record<string, number>): { nilaiAkhir: number; status: 'Lulus' | 'Tidak Lulus'; grade: string } {
   const values = Object.values(nilaiAspek);
   const nilaiAkhir = Math.round(values.reduce((a, b) => a + b, 0) / values.length);

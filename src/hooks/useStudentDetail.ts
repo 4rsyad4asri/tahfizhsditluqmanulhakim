@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { calculateNilaiSetoran, calculateNilaiUjian } from "@/data/mockData";
+import { calculateNilaiSetoran, calculateNilaiUjian, calculateNilaiTahfizh } from "@/data/mockData";
+import type { TahfizhSurahEntry } from "@/data/mockData";
 
 export function useStudentDetail(studentId: string | undefined) {
   return useQuery({

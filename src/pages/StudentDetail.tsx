@@ -1,12 +1,20 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
-import { calculateNilaiSetoran, calculateNilaiUjian, SURAH_LIST } from "@/data/mockData";
-import type { Koreksi } from "@/data/mockData";
-import { useStudentDetail, useAddSetoran, useAddUjian, useUpdateCatatan } from "@/hooks/useStudentDetail";
-import { ArrowLeft, Plus, FileText, Award, BookOpen, PenLine, Loader2 } from "lucide-react";
+import { calculateNilaiSetoran, calculateNilaiUjian, calculateNilaiTahfizh, calculateNilaiSurah, SURAH_LIST } from "@/data/mockData";
+import type { Koreksi, TahfizhSurahEntry } from "@/data/mockData";
+import { useStudentDetail, useAddSetoran, useAddUjian, useAddTahfizhUjian, useUpdateCatatan } from "@/hooks/useStudentDetail";
+import { ArrowLeft, Plus, FileText, Award, BookOpen, PenLine, Loader2, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+
+const KELANCARAN_OPTIONS = [
+  { value: 100, label: "Sangat Lancar (100)" },
+  { value: 90, label: "Lancar (90)" },
+  { value: 80, label: "Cukup Lancar (80)" },
+  { value: 70, label: "Kurang Lancar (70)" },
+  { value: 60, label: "Tidak Lancar (60)" },
+];
 
 const StudentDetail = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -14,6 +22,7 @@ const StudentDetail = () => {
   const { data, isLoading, error } = useStudentDetail(studentId);
   const addSetoran = useAddSetoran();
   const addUjian = useAddUjian();
+  const addTahfizhUjian = useAddTahfizhUjian();
   const updateCatatan = useUpdateCatatan();
 
   const [catatan, setCatatan] = useState("");
@@ -35,6 +44,12 @@ const StudentDetail = () => {
   const [ujianMode, setUjianMode] = useState<'Tahsin' | 'Tahfizh'>('Tahsin');
   const [ujianAspek, setUjianAspek] = useState<Record<string, number>>({});
 
+  // Tahfizh form state
+  const [tahfizhEntries, setTahfizhEntries] = useState<TahfizhSurahEntry[]>([
+    { surah: "Al-Fatihah", juz: 1, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }
+  ]);
+  const [catatanGuru, setCatatanGuru] = useState("");
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -52,7 +67,6 @@ const StudentDetail = () => {
 
   const { student, classInfo, setoran, ujian } = data;
 
-  // Initialize catatan once
   if (!catatanInitialized && student) {
     setCatatan(student.catatan_penguji || "");
     setCatatanInitialized(true);
@@ -81,19 +95,37 @@ const StudentDetail = () => {
   };
 
   const tahsinAspek = ['Makharijul Huruf', 'Tajwid', 'Kelancaran', 'Adab Membaca'];
-  const tahfizhAspek = ['Kelancaran Hafalan', 'Ketepatan Ayat', 'Tajwid', 'Kekuatan Ingatan'];
 
   const handleUjianSubmit = () => {
     if (!studentId) return;
     addUjian.mutate({
       student_id: studentId,
-      mode: ujianMode,
+      mode: 'Tahsin',
       nilai_aspek: ujianAspek,
     }, {
       onSuccess: () => {
         toast.success("Hasil ujian berhasil disimpan!");
         setShowUjianForm(false);
         setUjianAspek({});
+      },
+      onError: (err) => toast.error("Gagal menyimpan: " + (err as Error).message),
+    });
+  };
+
+  const handleTahfizhSubmit = () => {
+    if (!studentId) return;
+    const result = calculateNilaiTahfizh(tahfizhEntries);
+    addTahfizhUjian.mutate({
+      student_id: studentId,
+      entries: tahfizhEntries,
+      catatan_guru: catatanGuru,
+      ...result,
+    }, {
+      onSuccess: () => {
+        toast.success("Hasil ujian Tahfizh berhasil disimpan!");
+        setShowUjianForm(false);
+        setTahfizhEntries([{ surah: "Al-Fatihah", juz: 1, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }]);
+        setCatatanGuru("");
       },
       onError: (err) => toast.error("Gagal menyimpan: " + (err as Error).message),
     });
@@ -107,7 +139,23 @@ const StudentDetail = () => {
     });
   };
 
-  const nilaiPreview = Object.keys(ujianAspek).length > 0 ? calculateNilaiUjian(ujianAspek) : null;
+  const nilaiPreview = ujianMode === 'Tahsin' && Object.keys(ujianAspek).length > 0 ? calculateNilaiUjian(ujianAspek) : null;
+  const tahfizhPreview = ujianMode === 'Tahfizh' && tahfizhEntries.length > 0 ? calculateNilaiTahfizh(tahfizhEntries) : null;
+
+  const addTahfizhEntry = () => {
+    setTahfizhEntries([...tahfizhEntries, { surah: "Al-Fatihah", juz: 1, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }]);
+  };
+
+  const removeTahfizhEntry = (index: number) => {
+    if (tahfizhEntries.length <= 1) return;
+    setTahfizhEntries(tahfizhEntries.filter((_, i) => i !== index));
+  };
+
+  const updateTahfizhEntry = (index: number, field: keyof TahfizhSurahEntry, value: any) => {
+    const updated = [...tahfizhEntries];
+    updated[index] = { ...updated[index], [field]: value };
+    setTahfizhEntries(updated);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -348,78 +396,240 @@ const StudentDetail = () => {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {(ujianMode === 'Tahsin' ? tahsinAspek : tahfizhAspek).map(aspek => (
-                    <div key={aspek}>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1">{aspek}</label>
-                      <input type="number" min={0} max={100}
-                        value={ujianAspek[aspek] || ''}
-                        placeholder="0-100"
-                        onChange={e => setUjianAspek({ ...ujianAspek, [aspek]: parseInt(e.target.value) || 0 })}
-                        className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                {/* TAHSIN FORM */}
+                {ujianMode === 'Tahsin' && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {tahsinAspek.map(aspek => (
+                        <div key={aspek}>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">{aspek}</label>
+                          <input type="number" min={0} max={100}
+                            value={ujianAspek[aspek] || ''}
+                            placeholder="0-100"
+                            onChange={e => setUjianAspek({ ...ujianAspek, [aspek]: parseInt(e.target.value) || 0 })}
+                            className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                {nilaiPreview && (
-                  <div className={`p-4 rounded-md ${nilaiPreview.status === 'Lulus' ? 'bg-success/10' : 'bg-destructive/10'}`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Nilai Akhir</p>
-                        <p className="text-3xl font-bold text-foreground">{nilaiPreview.nilaiAkhir}</p>
+                    {nilaiPreview && (
+                      <div className={`p-4 rounded-md ${nilaiPreview.status === 'Lulus' ? 'bg-success/10' : 'bg-destructive/10'}`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Nilai Akhir</p>
+                            <p className="text-3xl font-bold text-foreground">{nilaiPreview.nilaiAkhir}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-2xl font-bold ${nilaiPreview.status === 'Lulus' ? 'text-success' : 'text-destructive'}`}>
+                              Grade {nilaiPreview.grade}
+                            </p>
+                            <p className="text-sm font-medium">
+                              {nilaiPreview.status === 'Lulus' ? '✅ LULUS' : '❌ TIDAK LULUS'}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className={`text-2xl font-bold ${nilaiPreview.status === 'Lulus' ? 'text-success' : 'text-destructive'}`}>
-                          Grade {nilaiPreview.grade}
-                        </p>
-                        <p className="text-sm font-medium">
-                          {nilaiPreview.status === 'Lulus' ? '✅ LULUS' : '❌ TIDAK LULUS'}
-                        </p>
-                      </div>
+                    )}
+
+                    <div className="flex gap-2 justify-end">
+                      <button onClick={() => setShowUjianForm(false)}
+                        className="px-4 py-2 rounded-md text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
+                        Batal
+                      </button>
+                      <button onClick={handleUjianSubmit}
+                        disabled={Object.keys(ujianAspek).length < 4 || addUjian.isPending}
+                        className="px-4 py-2 rounded-md text-sm font-medium gradient-islamic text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50">
+                        {addUjian.isPending ? "Menyimpan..." : "Simpan Hasil Ujian"}
+                      </button>
                     </div>
-                  </div>
+                  </>
                 )}
 
-                <div className="flex gap-2 justify-end">
-                  <button onClick={() => setShowUjianForm(false)}
-                    className="px-4 py-2 rounded-md text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
-                    Batal
-                  </button>
-                  <button onClick={handleUjianSubmit}
-                    disabled={Object.keys(ujianAspek).length < 4 || addUjian.isPending}
-                    className="px-4 py-2 rounded-md text-sm font-medium gradient-islamic text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50">
-                    {addUjian.isPending ? "Menyimpan..." : "Simpan Hasil Ujian"}
-                  </button>
-                </div>
+                {/* TAHFIZH FORM */}
+                {ujianMode === 'Tahfizh' && (
+                  <>
+                    <div className="space-y-4">
+                      {tahfizhEntries.map((entry, index) => (
+                        <div key={index} className="p-4 rounded-lg border border-border bg-muted/30 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h5 className="text-sm font-semibold text-foreground">Surat #{index + 1}</h5>
+                            {tahfizhEntries.length > 1 && (
+                              <button onClick={() => removeTahfizhEntry(index)} className="text-destructive hover:text-destructive/80">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-muted-foreground mb-1">Surah</label>
+                              <select value={entry.surah}
+                                onChange={e => updateTahfizhEntry(index, 'surah', e.target.value)}
+                                className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                                {SURAH_LIST.map(s => (
+                                  <option key={s.name} value={s.name}>{s.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-muted-foreground mb-1">Juz</label>
+                              <select value={entry.juz}
+                                onChange={e => updateTahfizhEntry(index, 'juz', parseInt(e.target.value))}
+                                className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                                {Array.from({ length: 30 }, (_, i) => i + 1).map(j => (
+                                  <option key={j} value={j}>Juz {j}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Lahn Jali */}
+                          <div className="p-3 rounded-md bg-destructive/5 border border-destructive/20">
+                            <h6 className="text-xs font-semibold text-foreground mb-2">1️⃣ Lahn Jali (Kesalahan Nyata)</h6>
+                            <p className="text-[10px] text-muted-foreground mb-2">Salah huruf · Salah harakat · Huruf tertukar · Makhraj jelas salah</p>
+                            <div>
+                              <label className="block text-xs font-medium text-muted-foreground mb-1">Jumlah Kesalahan</label>
+                              <input type="number" min={0} max={50} value={entry.lahn_jali}
+                                onChange={e => updateTahfizhEntry(index, 'lahn_jali', parseInt(e.target.value) || 0)}
+                                className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                              <p className="text-[10px] text-muted-foreground mt-1">Skor: 100 - ({entry.lahn_jali} × 2) = <span className="font-bold text-foreground">{Math.max(0, 100 - entry.lahn_jali * 2)}</span></p>
+                            </div>
+                          </div>
+
+                          {/* Lahn Khofi */}
+                          <div className="p-3 rounded-md bg-warning/5 border border-warning/20">
+                            <h6 className="text-xs font-semibold text-foreground mb-2">2️⃣ Lahn Khofi (Kesalahan Samar)</h6>
+                            <p className="text-[10px] text-muted-foreground mb-2">Kurang panjang mad · Ghunnah kurang jelas · Tajwid kurang sempurna · Irama kurang tepat</p>
+                            <div>
+                              <label className="block text-xs font-medium text-muted-foreground mb-1">Jumlah Kesalahan</label>
+                              <input type="number" min={0} max={50} value={entry.lahn_khofi}
+                                onChange={e => updateTahfizhEntry(index, 'lahn_khofi', parseInt(e.target.value) || 0)}
+                                className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                              <p className="text-[10px] text-muted-foreground mt-1">Skor: 100 - ({entry.lahn_khofi} × 0.5) = <span className="font-bold text-foreground">{Math.max(0, 100 - entry.lahn_khofi * 0.5)}</span></p>
+                            </div>
+                          </div>
+
+                          {/* Kelancaran */}
+                          <div className="p-3 rounded-md bg-primary/5 border border-primary/20">
+                            <h6 className="text-xs font-semibold text-foreground mb-2">3️⃣ Kelancaran</h6>
+                            <select value={entry.kelancaran}
+                              onChange={e => updateTahfizhEntry(index, 'kelancaran', parseInt(e.target.value))}
+                              className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                              {KELANCARAN_OPTIONS.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Nilai Surat */}
+                          <div className="p-3 rounded-md bg-muted text-center">
+                            <p className="text-xs text-muted-foreground">Nilai Surat: (({Math.max(0, 100 - entry.lahn_jali * 2 - entry.lahn_khofi * 0.5)}) + {entry.kelancaran}) / 2</p>
+                            <p className="text-2xl font-bold text-primary">{calculateNilaiSurah(entry)}</p>
+                          </div>
+                        </div>
+                      ))}
+
+                      <button onClick={addTahfizhEntry}
+                        className="w-full py-2.5 rounded-md border-2 border-dashed border-border text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                        <Plus className="w-4 h-4 inline mr-1" /> Tambah Surat
+                      </button>
+                    </div>
+
+                    {/* Catatan Guru */}
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Catatan Guru</label>
+                      <textarea value={catatanGuru}
+                        onChange={e => setCatatanGuru(e.target.value)}
+                        placeholder="Tulis catatan penilaian..."
+                        className="w-full min-h-[80px] px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-y" />
+                    </div>
+
+                    {/* Tahfizh Preview */}
+                    {tahfizhPreview && (
+                      <div className={`p-4 rounded-md ${tahfizhPreview.status === 'Lulus' ? 'bg-success/10' : 'bg-destructive/10'}`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Nilai Akhir Ujian</p>
+                            <p className="text-3xl font-bold text-foreground">{tahfizhPreview.nilaiAkhir}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-xl font-bold ${tahfizhPreview.status === 'Lulus' ? 'text-success' : 'text-destructive'}`}>
+                              {tahfizhPreview.predikat}
+                            </p>
+                            <p className="text-sm font-medium">
+                              {tahfizhPreview.status === 'Lulus' ? '✅ LULUS SERTIFIKASI' : '❌ BELUM LULUS'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Grade {tahfizhPreview.grade}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 justify-end">
+                      <button onClick={() => setShowUjianForm(false)}
+                        className="px-4 py-2 rounded-md text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
+                        Batal
+                      </button>
+                      <button onClick={handleTahfizhSubmit}
+                        disabled={tahfizhEntries.length === 0 || addTahfizhUjian.isPending}
+                        className="px-4 py-2 rounded-md text-sm font-medium gradient-islamic text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50">
+                        {addTahfizhUjian.isPending ? "Menyimpan..." : "Simpan Hasil Ujian Tahfizh"}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
             {/* Ujian History */}
             <div className="space-y-3">
-              {ujian.map((u: any) => (
-                <div key={u.id} className={`bg-card rounded-lg border p-4 shadow-card ${u.status === 'Lulus' ? 'border-success/30' : 'border-destructive/30'}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <p className="font-medium text-foreground">Ujian {u.mode}</p>
-                      <p className="text-xs text-muted-foreground">{u.tanggal}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-foreground">{u.nilai_akhir}</p>
-                      <p className={`text-xs font-medium ${u.status === 'Lulus' ? 'text-success' : 'text-destructive'}`}>
-                        Grade {u.grade} · {u.status === 'Lulus' ? '✅ Lulus' : '❌ Tidak Lulus'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {Object.entries(u.nilai_aspek as Record<string, number>).map(([key, val]) => (
-                      <div key={key} className="text-center p-2 rounded-md bg-muted">
-                        <p className="text-xs text-muted-foreground">{key}</p>
-                        <p className="font-bold text-foreground">{val}</p>
+              {ujian.map((u: any) => {
+                const isTahfizh = u.mode === 'Tahfizh' && u.nilai_aspek?.surahEntries;
+                const predikat = u.nilai_akhir >= 90 ? 'Mumtaz' : u.nilai_akhir >= 80 ? 'Jiddan Jayyid' : u.nilai_akhir >= 70 ? 'Jayyid' : 'Perlu Perbaikan';
+
+                return (
+                  <div key={u.id} className={`bg-card rounded-lg border p-4 shadow-card ${u.status === 'Lulus' ? 'border-success/30' : 'border-destructive/30'}`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="font-medium text-foreground">Ujian {u.mode}</p>
+                        <p className="text-xs text-muted-foreground">{u.tanggal}</p>
                       </div>
-                    ))}
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-foreground">{u.nilai_akhir}</p>
+                        <p className={`text-xs font-medium ${u.status === 'Lulus' ? 'text-success' : 'text-destructive'}`}>
+                          {isTahfizh ? predikat : `Grade ${u.grade}`} · {u.status === 'Lulus' ? '✅ Lulus' : '❌ Tidak Lulus'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isTahfizh ? (
+                      <div className="space-y-2">
+                        {(u.nilai_aspek.surahEntries as TahfizhSurahEntry[]).map((entry: TahfizhSurahEntry, i: number) => (
+                          <div key={i} className="grid grid-cols-5 gap-2 text-center p-2 rounded-md bg-muted text-xs">
+                            <div><p className="text-muted-foreground">Surat</p><p className="font-bold text-foreground">{entry.surah}</p></div>
+                            <div><p className="text-muted-foreground">Lahn Jali</p><p className="font-bold text-foreground">{entry.lahn_jali}</p></div>
+                            <div><p className="text-muted-foreground">Lahn Khofi</p><p className="font-bold text-foreground">{entry.lahn_khofi}</p></div>
+                            <div><p className="text-muted-foreground">Kelancaran</p><p className="font-bold text-foreground">{entry.kelancaran}</p></div>
+                            <div><p className="text-muted-foreground">Nilai</p><p className="font-bold text-primary">{calculateNilaiSurah(entry)}</p></div>
+                          </div>
+                        ))}
+                        {u.nilai_aspek.catatanGuru && (
+                          <p className="text-xs text-muted-foreground italic mt-2">📝 {u.nilai_aspek.catatanGuru}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {Object.entries(u.nilai_aspek as Record<string, number>).map(([key, val]) => (
+                          <div key={key} className="text-center p-2 rounded-md bg-muted">
+                            <p className="text-xs text-muted-foreground">{key}</p>
+                            <p className="font-bold text-foreground">{val as number}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {ujian.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">Belum ada ujian</p>
               )}
