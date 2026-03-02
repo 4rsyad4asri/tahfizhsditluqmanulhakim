@@ -1,4 +1,4 @@
-import { BookOpen, Star, Moon, Settings, Shield, LogOut } from "lucide-react";
+import { BookOpen, Star, Moon, Settings, Shield, LogOut, Award } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
 
