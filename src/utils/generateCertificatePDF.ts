@@ -145,10 +145,8 @@ export const generateCertificatePDF = (data: CertificateData) => {
   const boxH = 22;
   const boxX = (w - boxW) / 2;
 
-  doc.setFillColor(22, 101, 52);
-  doc.setGlobalAlpha(0.06);
+  doc.setFillColor(240, 248, 240);
   doc.roundedRect(boxX, y, boxW, boxH, 3, 3, "F");
-  doc.setGlobalAlpha(1);
 
   doc.setDrawColor(22, 101, 52);
   doc.setLineWidth(0.5);
