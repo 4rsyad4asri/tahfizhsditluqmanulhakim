@@ -67,11 +67,9 @@ export const generateCertificatePDF = (data: CertificateData) => {
   doc.rect(0, 0, w, h, "F");
 
   // Subtle background pattern band
-  doc.setFillColor(22, 101, 52);
-  doc.setGlobalAlpha(0.03);
+  doc.setFillColor(240, 245, 240);
   doc.rect(0, 55, w, 30, "F");
   doc.rect(0, 130, w, 20, "F");
-  doc.setGlobalAlpha(1);
 
   // Draw border
   drawIslamicBorder(doc, w, h);
