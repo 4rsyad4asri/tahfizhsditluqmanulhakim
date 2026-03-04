@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import { calculateNilaiSetoran, calculateNilaiUjian, calculateNilaiTahfizh, calculateNilaiSurah, SURAH_LIST } from "@/data/mockData";
 import type { Koreksi, TahfizhSurahEntry } from "@/data/mockData";
 import { useStudentDetail, useAddSetoran, useAddUjian, useAddTahfizhUjian, useUpdateCatatan } from "@/hooks/useStudentDetail";
+import { JUZ_SURAH_MAP, getSurahsForJuz, getSurahLabel } from "@/data/quranData";
 import { ArrowLeft, Plus, FileText, Award, BookOpen, PenLine, Loader2, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -46,7 +47,7 @@ const StudentDetail = () => {
 
   // Tahfizh form state
   const [tahfizhEntries, setTahfizhEntries] = useState<TahfizhSurahEntry[]>([
-    { surah: "Al-Fatihah", juz: 1, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }
+    { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }
   ]);
   const [catatanGuru, setCatatanGuru] = useState("");
 
@@ -124,7 +125,7 @@ const StudentDetail = () => {
       onSuccess: () => {
         toast.success("Hasil ujian Tahfizh berhasil disimpan!");
         setShowUjianForm(false);
-        setTahfizhEntries([{ surah: "Al-Fatihah", juz: 1, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }]);
+        setTahfizhEntries([{ surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }]);
         setCatatanGuru("");
       },
       onError: (err) => toast.error("Gagal menyimpan: " + (err as Error).message),
@@ -143,7 +144,7 @@ const StudentDetail = () => {
   const tahfizhPreview = ujianMode === 'Tahfizh' && tahfizhEntries.length > 0 ? calculateNilaiTahfizh(tahfizhEntries) : null;
 
   const addTahfizhEntry = () => {
-    setTahfizhEntries([...tahfizhEntries, { surah: "Al-Fatihah", juz: 1, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }]);
+    setTahfizhEntries([...tahfizhEntries, { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }]);
   };
 
   const removeTahfizhEntry = (index: number) => {
@@ -154,6 +155,13 @@ const StudentDetail = () => {
   const updateTahfizhEntry = (index: number, field: keyof TahfizhSurahEntry, value: any) => {
     const updated = [...tahfizhEntries];
     updated[index] = { ...updated[index], [field]: value };
+    // When juz changes, reset surah to first surah of that juz
+    if (field === 'juz') {
+      const surahs = getSurahsForJuz(value as number);
+      if (surahs.length > 0) {
+        updated[index].surah = surahs[0].name;
+      }
+    }
     setTahfizhEntries(updated);
   };
 
@@ -462,22 +470,22 @@ const StudentDetail = () => {
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-xs font-medium text-muted-foreground mb-1">Surah</label>
-                              <select value={entry.surah}
-                                onChange={e => updateTahfizhEntry(index, 'surah', e.target.value)}
-                                className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
-                                {SURAH_LIST.map(s => (
-                                  <option key={s.name} value={s.name}>{s.name}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-muted-foreground mb-1">Juz</label>
+                              <label className="block text-xs font-medium text-muted-foreground mb-1">Juz yang Diujikan</label>
                               <select value={entry.juz}
                                 onChange={e => updateTahfizhEntry(index, 'juz', parseInt(e.target.value))}
                                 className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
                                 {Array.from({ length: 30 }, (_, i) => i + 1).map(j => (
-                                  <option key={j} value={j}>Juz {j}</option>
+                                  <option key={j} value={j}>📖 Juz {j}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-muted-foreground mb-1">Surah</label>
+                              <select value={entry.surah}
+                                onChange={e => updateTahfizhEntry(index, 'surah', e.target.value)}
+                                className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                                {getSurahsForJuz(entry.juz).map(s => (
+                                  <option key={`${s.name}-${s.ayatRange || 'full'}`} value={s.name}>{getSurahLabel(s)}</option>
                                 ))}
                               </select>
                             </div>
