@@ -24,7 +24,7 @@ const Header = () => {
               <BookOpen className="w-6 h-6 bg-[sidebar-primary-foreground] bg-background text-slate-950" />
             </div>
             <div>
-              <h1 className="md:text-2xl font-bold tracking-tight text-[sidebar-accent-foreground] text-slate-950">
+              <h1 className="md:text-2xl font-bold tracking-tight text-slate-950 text-sm">
                 Monitoring Hafalan Siswa SDIT Luqmanul Hakim    
               </h1>
               <p className="opacity-80 text-gray-800 text-xs">
