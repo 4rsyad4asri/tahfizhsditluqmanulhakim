@@ -66,7 +66,7 @@ const Header = () => {
               }>
 
                 <Shield className="w-4 h-4 text-slate-800" />
-                <span className="hidden sm:inline text-zinc-50">Kelola User</span>
+                <span className="hidden sm:inline text-black">Kelola User</span>
               </button>
             }
 
