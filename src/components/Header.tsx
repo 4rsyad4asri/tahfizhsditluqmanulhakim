@@ -25,10 +25,10 @@ const Header = () => {
             </div>
             <div>
               <h1 className="md:text-2xl font-bold tracking-tight text-[sidebar-accent-foreground] text-slate-950">
-                Monitoring Hafalan
+                Monitoring Hafalan Siswa SDIT Luqmanul Hakim    
               </h1>
-              <p className="text-sm opacity-80 text-gray-800">
-                Sistem Tahsin & Tahfizh SD
+              <p className="opacity-80 text-gray-800 text-xs">
+                Ownership : Miftahul Arsyad Asri, S.H    
               </p>
             </div>
           </div>
