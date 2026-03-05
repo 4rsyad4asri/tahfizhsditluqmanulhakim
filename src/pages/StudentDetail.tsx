@@ -110,7 +110,7 @@ const StudentDetail = () => {
         setShowUjianForm(false);
         setUjianAspek({});
       },
-      onError: (err) => toast.error("Gagal menyimpan: " + (err as Error).message),
+      onError: (err) => toast.error(getSafeErrorMessage(err)),
     });
   };
 
