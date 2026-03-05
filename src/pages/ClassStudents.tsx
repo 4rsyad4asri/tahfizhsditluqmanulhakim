@@ -40,6 +40,7 @@ const ClassStudents = () => {
   }
 
   const { classInfo, students } = data;
+  const { data: assignedPenguji = [] } = useClassPenguji(classInfo.id);
 
   const filteredStudents = students.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase())
