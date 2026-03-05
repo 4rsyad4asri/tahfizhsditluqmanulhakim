@@ -4,6 +4,8 @@ import { useClassStudents } from "@/hooks/useClassStudents";
 import { ArrowLeft, Search, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import AssignPengujiDialog from "@/components/AssignPengujiDialog";
+import { useClassPenguji } from "@/hooks/usePenguji";
 
 const ClassStudents = () => {
   const { classId } = useParams<{ classId: string }>();
