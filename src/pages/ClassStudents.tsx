@@ -84,16 +84,26 @@ const ClassStudents = () => {
           <div>
             <h2 className="text-2xl font-bold text-foreground">{classInfo.name}</h2>
             <p className="text-sm text-muted-foreground">{students.length} siswa terdaftar</p>
+            {assignedPenguji.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {assignedPenguji.map((p) => (
+                  <Badge key={p.id} variant="outline" className="text-xs">{p.name}</Badge>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Cari siswa..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 rounded-lg border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+          <div className="flex items-center gap-2">
+            <AssignPengujiDialog classId={classInfo.id} className={classInfo.name} />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Cari siswa..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 pr-4 py-2 rounded-lg border border-input bg-card text-foreground placeholder:text-muted-foreground text-sm w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
           </div>
         </div>
 
