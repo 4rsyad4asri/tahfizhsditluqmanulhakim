@@ -123,7 +123,7 @@ const ManageStudents = () => {
       toast.success("Data siswa berhasil diperbarui!");
       resetForm();
     },
-    onError: (err) => toast.error("Gagal: " + (err as Error).message)
+    onError: (err) => toast.error(getSafeErrorMessage(err))
   });
 
   // Delete student
