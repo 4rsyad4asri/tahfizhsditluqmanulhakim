@@ -28,7 +28,7 @@ const Header = () => {
                 Monitoring Hafalan Siswa SDIT Luqmanul Hakim    
               </h1>
               <p className="opacity-80 text-gray-800 text-xs">
-                Ownership : Miftahul Arsyad Asri, S.H    
+                 Web Developer : Miftahul Arsyad Asri, S.H    
               </p>
             </div>
           </div>
