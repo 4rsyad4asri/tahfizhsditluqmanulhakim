@@ -41,7 +41,7 @@ const Header = () => {
               "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"}`
               }>
               <Award className="w-4 h-4 text-slate-950" />
-              <span className="hidden sm:inline text-gray-950 text-xs">Rekap Sertifikat</span>
+              <span className="hidden sm:inline text-gray-950 text-xs text-center">Rekap Sertifikat</span>
             </button>
 
             <button
@@ -53,7 +53,7 @@ const Header = () => {
               }>
 
               <Settings className="w-4 h-4 bg-zinc-50 text-slate-950" />
-              <span className="hidden sm:inline text-gray-950 bg-[#f0f5fa] text-xs">Kelola Siswa</span>
+              <span className="hidden sm:inline text-gray-950 bg-[#f0f5fa] text-xs text-center">Kelola Siswa</span>
             </button>
 
             {isAdmin &&
@@ -66,7 +66,7 @@ const Header = () => {
               }>
 
                 <Shield className="w-4 h-4 text-slate-800" />
-                <span className="hidden sm:inline text-black text-xs">Kelola User</span>
+                <span className="hidden sm:inline text-black text-xs text-center">Kelola User</span>
               </button>
             }
 
@@ -86,8 +86,8 @@ const Header = () => {
             }
 
             <div className="hidden md:flex items-center gap-2 opacity-60">
-              <Star className="w-4 h-4" />
-              <Moon className="w-4 h-4" />
+              <Star className="w-4 h-4 text-neutral-950" />
+              <Moon className="w-4 h-4 text-slate-900" />
               <Star className="w-4 h-4" />
             </div>
           </div>
