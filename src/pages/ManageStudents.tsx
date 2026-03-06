@@ -201,6 +201,7 @@ const ManageStudents = () => {
             </p>
           </div>
 
+          {isLoggedIn && (
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setImportOpen(true)}
