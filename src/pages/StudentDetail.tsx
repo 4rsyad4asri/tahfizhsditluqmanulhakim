@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuthContext } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import { calculateNilaiSetoran, calculateNilaiUjian, calculateNilaiTahfizh, calculateNilaiSurah, SURAH_LIST } from "@/data/mockData";
 import type { Koreksi, TahfizhSurahEntry } from "@/data/mockData";
