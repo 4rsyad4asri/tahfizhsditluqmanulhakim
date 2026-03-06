@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -37,6 +38,8 @@ const emptyForm: StudentForm = {
 };
 
 const ManageStudents = () => {
+  const { user } = useAuthContext();
+  const isLoggedIn = !!user;
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedClass, setSelectedClass] = useState<string>("all");
@@ -198,6 +201,7 @@ const ManageStudents = () => {
             </p>
           </div>
 
+          {isLoggedIn && (
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setImportOpen(true)}
@@ -320,8 +324,9 @@ const ManageStudents = () => {
             </DialogContent>
           </Dialog>
           </div>
+          )}
 
-          <ImportStudentsDialog open={importOpen} onOpenChange={setImportOpen} />
+          {isLoggedIn && <ImportStudentsDialog open={importOpen} onOpenChange={setImportOpen} />}
         </div>
 
         {/* Filters */}
@@ -371,20 +376,20 @@ const ManageStudents = () => {
                       <h3 className="font-semibold text-foreground">{student.name}</h3>
                       <p className="text-xs text-muted-foreground">{student.classes?.name}</p>
                     </div>
+                    {isLoggedIn && (
                     <div className="flex gap-1">
                       <button
                     onClick={() => openEdit(student)}
                     className="p-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
                     onClick={() => setDeleteConfirm(student.id)}
                     className="p-1.5 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
-
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
                     <span>Level: <span className="text-foreground">{student.level}</span></span>
@@ -442,22 +447,22 @@ const ManageStudents = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
+                          {isLoggedIn && (
                           <div className="flex items-center justify-end gap-1">
                             <button
                           onClick={() => openEdit(student)}
                           className="p-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                           title="Edit">
-
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button
                           onClick={() => setDeleteConfirm(student.id)}
                           className="p-1.5 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
                           title="Hapus">
-
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
+                          )}
                         </td>
                       </tr>
                   )}
