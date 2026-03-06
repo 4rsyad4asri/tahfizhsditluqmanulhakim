@@ -239,6 +239,7 @@ const StudentDetail = () => {
           <TabsContent value="setoran" className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-foreground">Riwayat Setoran</h3>
+              {isLoggedIn && (
               <button
                 onClick={() => setShowSetoranForm(!showSetoranForm)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium gradient-islamic text-primary-foreground hover:opacity-90 transition-opacity"
@@ -246,6 +247,7 @@ const StudentDetail = () => {
                 <Plus className="w-3.5 h-3.5" />
                 Tambah Setoran
               </button>
+              )}
             </div>
 
             {showSetoranForm && (
