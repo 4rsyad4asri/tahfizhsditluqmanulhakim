@@ -655,19 +655,27 @@ const StudentDetail = () => {
           {/* CATATAN TAB */}
           <TabsContent value="catatan" className="space-y-4">
             <h3 className="font-semibold text-foreground">Catatan Penguji</h3>
-            <textarea
-              value={catatan}
-              onChange={e => setCatatan(e.target.value)}
-              placeholder="Tulis catatan, evaluasi, dan saran perbaikan untuk siswa..."
-              className="w-full min-h-[200px] px-4 py-3 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-y"
-            />
-            <button
-              onClick={handleSaveCatatan}
-              disabled={updateCatatan.isPending}
-              className="px-4 py-2 rounded-md text-sm font-medium gradient-islamic text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
-            >
-              {updateCatatan.isPending ? "Menyimpan..." : "Simpan Catatan"}
-            </button>
+            {isLoggedIn ? (
+              <>
+                <textarea
+                  value={catatan}
+                  onChange={e => setCatatan(e.target.value)}
+                  placeholder="Tulis catatan, evaluasi, dan saran perbaikan untuk siswa..."
+                  className="w-full min-h-[200px] px-4 py-3 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-y"
+                />
+                <button
+                  onClick={handleSaveCatatan}
+                  disabled={updateCatatan.isPending}
+                  className="px-4 py-2 rounded-md text-sm font-medium gradient-islamic text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {updateCatatan.isPending ? "Menyimpan..." : "Simpan Catatan"}
+                </button>
+              </>
+            ) : (
+              <div className="bg-card rounded-lg border border-border p-4">
+                <p className="text-sm text-muted-foreground">{catatan || "Belum ada catatan"}</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </main>

@@ -44,6 +44,7 @@ const Header = () => {
               <span className="hidden sm:inline text-gray-950 text-xs text-center">Rekap Sertifikat</span>
             </button>
 
+            {user && (
             <button
               onClick={() => navigate("/kelola-siswa")}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
@@ -55,6 +56,7 @@ const Header = () => {
               <Settings className="w-4 h-4 bg-zinc-50 text-slate-950" />
               <span className="hidden sm:inline text-gray-950 bg-[#f0f5fa] text-xs text-center">Kelola Siswa</span>
             </button>
+            )}
 
             {isAdmin &&
             <button

@@ -447,22 +447,22 @@ const ManageStudents = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
+                          {isLoggedIn && (
                           <div className="flex items-center justify-end gap-1">
                             <button
                           onClick={() => openEdit(student)}
                           className="p-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                           title="Edit">
-
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button
                           onClick={() => setDeleteConfirm(student.id)}
                           className="p-1.5 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
                           title="Hapus">
-
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
+                          )}
                         </td>
                       </tr>
                   )}
