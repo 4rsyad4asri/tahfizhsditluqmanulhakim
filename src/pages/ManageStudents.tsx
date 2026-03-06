@@ -376,20 +376,20 @@ const ManageStudents = () => {
                       <h3 className="font-semibold text-foreground">{student.name}</h3>
                       <p className="text-xs text-muted-foreground">{student.classes?.name}</p>
                     </div>
+                    {isLoggedIn && (
                     <div className="flex gap-1">
                       <button
                     onClick={() => openEdit(student)}
                     className="p-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
                     onClick={() => setDeleteConfirm(student.id)}
                     className="p-1.5 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
-
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
                     <span>Level: <span className="text-foreground">{student.level}</span></span>
