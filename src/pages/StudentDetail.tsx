@@ -40,6 +40,9 @@ const StudentDetail = () => {
     ayatMulai: 1,
     ayatAkhir: 7,
     koreksi: { kesalahanMakhraj: 0, kesalahanTajwid: 0, kesalahanMad: 0, kelancaran: 8 } as Koreksi,
+    lupaAyat: 0,
+    terhentiTerbata: 0,
+    catatanGuru: "",
   });
 
   // Ujian form state
@@ -88,6 +91,9 @@ const StudentDetail = () => {
       kesalahan_tajwid: setoranForm.koreksi.kesalahanTajwid,
       kesalahan_mad: setoranForm.koreksi.kesalahanMad,
       kelancaran: setoranForm.koreksi.kelancaran,
+      lupa_ayat: setoranForm.lupaAyat,
+      terhenti_terbata: setoranForm.terhentiTerbata,
+      catatan_guru: setoranForm.catatanGuru,
     }, {
       onSuccess: () => {
         toast.success("Setoran berhasil disimpan!");
@@ -297,32 +303,86 @@ const StudentDetail = () => {
                   </div>
                 </div>
 
-                {/* Koreksi Penguji */}
+                {/* Keterangan Kesalahan */}
                 <div className="pt-2 border-t border-border">
-                  <h5 className="text-sm font-semibold text-foreground mb-3">Koreksi Penguji</h5>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <h5 className="text-sm font-semibold text-foreground mb-1">📝 Keterangan Kesalahan</h5>
+                  <p className="text-[11px] text-muted-foreground mb-3">Catat jumlah kesalahan yang ditemukan selama setoran hafalan</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {[
-                      { key: 'kesalahanMakhraj', label: 'Kesalahan Makhraj' },
-                      { key: 'kesalahanTajwid', label: 'Kesalahan Tajwid' },
-                      { key: 'kesalahanMad', label: 'Kesalahan Mad' },
-                      { key: 'kelancaran', label: 'Kelancaran (1-10)' },
+                      { key: 'kesalahanMakhraj', label: 'Kesalahan Makhraj', desc: 'Salah pengucapan huruf / makhraj' },
+                      { key: 'kesalahanTajwid', label: 'Kesalahan Tajwid', desc: 'Hukum tajwid tidak diterapkan' },
+                      { key: 'kesalahanMad', label: 'Kesalahan Mad', desc: 'Panjang pendek bacaan tidak sesuai' },
                     ].map(field => (
                       <div key={field.key}>
                         <label className="block text-xs font-medium text-muted-foreground mb-1">{field.label}</label>
-                        <input type="number" min={0} max={field.key === 'kelancaran' ? 10 : 50}
+                        <input type="number" min={0} max={50}
                           value={(setoranForm.koreksi as any)[field.key]}
                           onChange={e => setSetoranForm({
                             ...setoranForm,
                             koreksi: { ...setoranForm.koreksi, [field.key]: parseInt(e.target.value) || 0 }
                           })}
                           className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{field.desc}</p>
                       </div>
                     ))}
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Lupa Ayat</label>
+                      <input type="number" min={0} max={50}
+                        value={setoranForm.lupaAyat}
+                        onChange={e => setSetoranForm({ ...setoranForm, lupaAyat: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Lupa lanjutan ayat / ayat terlewat</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Terhenti / Terbata</label>
+                      <input type="number" min={0} max={50}
+                        value={setoranForm.terhentiTerbata}
+                        onChange={e => setSetoranForm({ ...setoranForm, terhentiTerbata: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Bacaan terputus-putus / tidak lancar</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Kelancaran (1-10)</label>
+                      <input type="number" min={0} max={10}
+                        value={setoranForm.koreksi.kelancaran}
+                        onChange={e => setSetoranForm({
+                          ...setoranForm,
+                          koreksi: { ...setoranForm.koreksi, kelancaran: parseInt(e.target.value) || 0 }
+                        })}
+                        className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Skor kelancaran keseluruhan</p>
+                    </div>
                   </div>
                   <div className="mt-3 p-3 rounded-md bg-muted">
                     <p className="text-sm text-muted-foreground">
                       Nilai Otomatis: <span className="text-lg font-bold text-primary">{calculateNilaiSetoran(setoranForm.koreksi)}</span>
                     </p>
+                  </div>
+                </div>
+
+                {/* Catatan Guru */}
+                <div className="pt-2 border-t border-border">
+                  <h5 className="text-sm font-semibold text-foreground mb-1">💬 Catatan Guru / Pembimbing</h5>
+                  <p className="text-[11px] text-muted-foreground mb-2">Tuliskan komentar atau masukan untuk siswa</p>
+                  <textarea
+                    value={setoranForm.catatanGuru}
+                    onChange={e => setSetoranForm({ ...setoranForm, catatanGuru: e.target.value })}
+                    placeholder="Contoh: Hafalan sudah lancar namun masih perlu memperbaiki mad thabi'i"
+                    className="w-full min-h-[80px] px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-y"
+                  />
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {[
+                      "Hafalan sudah lancar namun masih perlu memperbaiki mad thabi'i",
+                      "Makhraj huruf ض dan ظ masih perlu latihan",
+                      "Perlu memperbanyak murajaah",
+                      "Bacaan sudah sangat baik",
+                    ].map(saran => (
+                      <button key={saran} type="button"
+                        onClick={() => setSetoranForm({ ...setoranForm, catatanGuru: saran })}
+                        className="text-[10px] px-2 py-1 rounded-full border border-border bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors">
+                        {saran.length > 40 ? saran.slice(0, 40) + '…' : saran}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -358,12 +418,17 @@ const StudentDetail = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="mt-2 grid grid-cols-4 gap-2 text-xs text-muted-foreground">
+                  <div className="mt-2 grid grid-cols-3 md:grid-cols-6 gap-2 text-xs text-muted-foreground">
                     <span>Makhraj: {s.kesalahan_makhraj}</span>
                     <span>Tajwid: {s.kesalahan_tajwid}</span>
                     <span>Mad: {s.kesalahan_mad}</span>
+                    <span>Lupa: {s.lupa_ayat || 0}</span>
+                    <span>Terhenti: {s.terhenti_terbata || 0}</span>
                     <span>Lancar: {s.kelancaran}/10</span>
                   </div>
+                  {s.catatan_guru && (
+                    <p className="mt-1.5 text-xs text-muted-foreground italic">💬 {s.catatan_guru}</p>
+                  )}
                 </div>
               ))}
               {setoran.length === 0 && (
@@ -481,12 +546,27 @@ const StudentDetail = () => {
                     </div>
 
                     {/* Catatan Guru */}
-                    <div>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1">Catatan Guru</label>
+                    <div className="pt-2 border-t border-border">
+                      <h5 className="text-sm font-semibold text-foreground mb-1">💬 Catatan Guru / Pembimbing</h5>
+                      <p className="text-[11px] text-muted-foreground mb-2">Tuliskan komentar atau masukan untuk siswa</p>
                       <textarea value={catatanGuru}
                         onChange={e => setCatatanGuru(e.target.value)}
-                        placeholder="Tulis catatan penilaian..."
+                        placeholder="Contoh: Hafalan sudah lancar namun masih perlu memperbaiki mad thabi'i"
                         className="w-full min-h-[80px] px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-y" />
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {[
+                          "Hafalan sudah lancar namun masih perlu memperbaiki mad thabi'i",
+                          "Makhraj huruf ض dan ظ masih perlu latihan",
+                          "Perlu memperbanyak murajaah",
+                          "Bacaan sudah sangat baik",
+                        ].map(saran => (
+                          <button key={saran} type="button"
+                            onClick={() => setCatatanGuru(saran)}
+                            className="text-[10px] px-2 py-1 rounded-full border border-border bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors">
+                            {saran.length > 40 ? saran.slice(0, 40) + '…' : saran}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Tahfizh Preview */}

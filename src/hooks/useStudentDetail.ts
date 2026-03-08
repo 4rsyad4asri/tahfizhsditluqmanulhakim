@@ -60,6 +60,9 @@ export function useAddSetoran() {
       kesalahan_tajwid: number;
       kesalahan_mad: number;
       kelancaran: number;
+      lupa_ayat: number;
+      terhenti_terbata: number;
+      catatan_guru: string;
     }) => {
       const nilai = calculateNilaiSetoran({
         kesalahanMakhraj: data.kesalahan_makhraj,
@@ -69,7 +72,19 @@ export function useAddSetoran() {
       });
 
       const { error } = await supabase.from("setoran").insert({
-        ...data,
+        student_id: data.student_id,
+        tanggal: data.tanggal,
+        juz: data.juz,
+        surah: data.surah,
+        ayat_mulai: data.ayat_mulai,
+        ayat_akhir: data.ayat_akhir,
+        kesalahan_makhraj: data.kesalahan_makhraj,
+        kesalahan_tajwid: data.kesalahan_tajwid,
+        kesalahan_mad: data.kesalahan_mad,
+        kelancaran: data.kelancaran,
+        lupa_ayat: data.lupa_ayat,
+        terhenti_terbata: data.terhenti_terbata,
+        catatan_guru: data.catatan_guru,
         nilai,
       });
       if (error) throw error;
