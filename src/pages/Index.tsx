@@ -128,6 +128,53 @@ const Dashboard = () => {
           ))}
         </div>
 
+        {/* Level Distribution Chart */}
+        {levelData && levelData.length > 0 && (
+          <div className="bg-card rounded-lg border border-border p-6 shadow-card mb-6">
+            <h3 className="font-semibold text-foreground mb-4">📊 Distribusi Level Siswa</h3>
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="w-full md:w-1/2" style={{ height: 250 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={levelData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={90}
+                      innerRadius={45}
+                      paddingAngle={3}
+                      label={({ name, pct }) => `${name} (${pct}%)`}
+                      labelLine={false}
+                    >
+                      {levelData.map((_, i) => (
+                        <Cell key={i} fill={LEVEL_COLORS[i % LEVEL_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
+                      formatter={(value: number, name: string) => [`${value} siswa`, name]}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-1 gap-3 w-full md:w-1/2">
+                {levelData.map((item, i) => (
+                  <div key={item.name} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: LEVEL_COLORS[i % LEVEL_COLORS.length] }} />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">{item.name}</p>
+                      <p className="text-xs text-muted-foreground">{item.value} siswa ({item.pct}%)</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Bismillah */}
         <div className="text-center mb-6">
           <p className="font-arabic text-2xl text-primary opacity-70">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
