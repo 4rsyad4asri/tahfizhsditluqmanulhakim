@@ -259,6 +259,13 @@ const ManageStudents = () => {
               Hapus Semua
             </button>
             <button
+              onClick={handleExport}
+              disabled={filteredStudents.length === 0}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-primary/10 hover:bg-primary/20 transition-colors border border-primary/20 text-primary disabled:opacity-50">
+              <Download className="w-4 h-4" />
+              Export Excel
+            </button>
+            <button
               onClick={() => setImportOpen(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-accent/10 hover:bg-accent/20 transition-colors border border-accent/20 text-amber-700">
 
