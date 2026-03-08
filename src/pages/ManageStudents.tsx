@@ -145,6 +145,27 @@ const ManageStudents = () => {
     onError: (err) => toast.error(getSafeErrorMessage(err))
   });
 
+  // Delete all students
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      let query = supabase.from("students").delete();
+      if (selectedClass !== "all") {
+        query = query.eq("class_id", selectedClass);
+      } else {
+        query = query.neq("id", "00000000-0000-0000-0000-000000000000"); // delete all rows
+      }
+      const { error } = await query;
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-students"] });
+      queryClient.invalidateQueries({ queryKey: ["classes"] });
+      toast.success(selectedClass !== "all" ? "Semua siswa di kelas ini berhasil dihapus!" : "Semua data siswa berhasil dihapus!");
+      setDeleteAllConfirm(false);
+    },
+    onError: (err) => toast.error(getSafeErrorMessage(err))
+  });
+
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
