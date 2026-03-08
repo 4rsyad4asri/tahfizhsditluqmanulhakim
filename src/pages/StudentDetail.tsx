@@ -127,8 +127,7 @@ const StudentDetail = () => {
     });
   };
 
-  const nilaiPreview = ujianMode === 'Tahsin' && Object.keys(ujianAspek).length > 0 ? calculateNilaiUjian(ujianAspek) : null;
-  const tahfizhPreview = ujianMode === 'Tahfizh' && tahfizhEntries.length > 0 ? calculateNilaiTahfizh(tahfizhEntries) : null;
+  const tahfizhPreview = tahfizhEntries.length > 0 ? calculateNilaiTahfizh(tahfizhEntries) : null;
 
   const addTahfizhEntry = () => {
     setTahfizhEntries([...tahfizhEntries, { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }]);
