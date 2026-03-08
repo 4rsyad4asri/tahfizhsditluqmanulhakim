@@ -99,23 +99,6 @@ const StudentDetail = () => {
     });
   };
 
-  const tahsinAspek = ['Makharijul Huruf', 'Tajwid', 'Kelancaran', 'Adab Membaca'];
-
-  const handleUjianSubmit = () => {
-    if (!studentId) return;
-    addUjian.mutate({
-      student_id: studentId,
-      mode: 'Tahsin',
-      nilai_aspek: ujianAspek,
-    }, {
-      onSuccess: () => {
-        toast.success("Hasil ujian berhasil disimpan!");
-        setShowUjianForm(false);
-        setUjianAspek({});
-      },
-      onError: (err) => toast.error(getSafeErrorMessage(err)),
-    });
-  };
 
   const handleTahfizhSubmit = () => {
     if (!studentId) return;
