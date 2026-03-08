@@ -207,6 +207,32 @@ const ManageStudents = () => {
   s.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleExport = () => {
+    const dataToExport = filteredStudents.map((s: any) => ({
+      "Nama": s.name,
+      "Kelas": s.classes?.name || "",
+      "Target Juz": s.target_juz,
+      "Level": s.level,
+      "Progress (%)": s.progress_hafalan,
+      "Status Sertifikasi": s.status_sertifikasi,
+    }));
+
+    if (dataToExport.length === 0) {
+      toast.error("Tidak ada data untuk diexport");
+      return;
+    }
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    ws["!cols"] = [{ wch: 25 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 12 }, { wch: 15 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Data Siswa");
+    const className = selectedClass !== "all"
+      ? `_${(classes || []).find(c => c.id === selectedClass)?.name || "kelas"}`
+      : "";
+    XLSX.writeFile(wb, `data_siswa${className}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast.success(`${dataToExport.length} data siswa berhasil diexport!`);
+  };
+
   const isPending = addMutation.isPending || updateMutation.isPending;
 
   return (
