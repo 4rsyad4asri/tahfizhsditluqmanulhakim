@@ -47,6 +47,7 @@ const ManageStudents = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<StudentForm>(emptyForm);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
   // Fetch classes
