@@ -7,9 +7,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { Users, BookOpen, Award, TrendingUp, Loader2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
+const LEVEL_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--success))",
+  "hsl(var(--warning))",
+];
+
 const Dashboard = () => {
   const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
   const { data: classes, isLoading, error } = useClasses();
+
+  // Fetch student level distribution
+  const { data: levelData } = useQuery({
+    queryKey: ["student-level-distribution"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("level");
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      (data || []).forEach((s) => {
+        counts[s.level] = (counts[s.level] || 0) + 1;
+      });
+      const total = data?.length || 1;
+      return Object.entries(counts).map(([name, value]) => ({
+        name,
+        value,
+        pct: Math.round((value / total) * 100),
+      }));
+    },
+  });
 
   const filteredClasses = useMemo(() => {
     if (!classes) return [];
