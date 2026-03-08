@@ -44,8 +44,6 @@ const StudentDetail = () => {
 
   // Ujian form state
   const [showUjianForm, setShowUjianForm] = useState(false);
-  const ujianMode = 'Tahfizh' as const;
-  const [ujianAspek, setUjianAspek] = useState<Record<string, number>>({});
 
   // Tahfizh form state
   const [tahfizhEntries, setTahfizhEntries] = useState<TahfizhSurahEntry[]>([
