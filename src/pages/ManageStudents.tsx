@@ -3,7 +3,7 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
-import { Plus, Pencil, Trash2, Search, Loader2, UserPlus, Users, ChevronDown, FileSpreadsheet } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Loader2, UserPlus, Users, ChevronDown, FileSpreadsheet, AlertTriangle } from "lucide-react";
 import ImportStudentsDialog from "@/components/ImportStudentsDialog";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/utils/errorMessages";
@@ -47,6 +47,7 @@ const ManageStudents = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<StudentForm>(emptyForm);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
   // Fetch classes
@@ -144,6 +145,27 @@ const ManageStudents = () => {
     onError: (err) => toast.error(getSafeErrorMessage(err))
   });
 
+  // Delete all students
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      let query = supabase.from("students").delete();
+      if (selectedClass !== "all") {
+        query = query.eq("class_id", selectedClass);
+      } else {
+        query = query.neq("id", "00000000-0000-0000-0000-000000000000"); // delete all rows
+      }
+      const { error } = await query;
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-students"] });
+      queryClient.invalidateQueries({ queryKey: ["classes"] });
+      toast.success(selectedClass !== "all" ? "Semua siswa di kelas ini berhasil dihapus!" : "Semua data siswa berhasil dihapus!");
+      setDeleteAllConfirm(false);
+    },
+    onError: (err) => toast.error(getSafeErrorMessage(err))
+  });
+
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
@@ -203,6 +225,12 @@ const ManageStudents = () => {
 
           {isLoggedIn && (
           <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setDeleteAllConfirm(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-destructive/10 hover:bg-destructive/20 transition-colors border border-destructive/20 text-destructive">
+              <Trash2 className="w-4 h-4" />
+              Hapus Semua
+            </button>
             <button
               onClick={() => setImportOpen(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-accent/10 hover:bg-accent/20 transition-colors border border-accent/20 text-amber-700">
@@ -503,6 +531,36 @@ const ManageStudents = () => {
                 className="px-4 py-2 rounded-md text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50">
 
                 {deleteMutation.isPending ? "Menghapus..." : "Ya, Hapus"}
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        {/* Delete All Confirmation Dialog */}
+        <Dialog open={deleteAllConfirm} onOpenChange={setDeleteAllConfirm}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="w-5 h-5" />
+                Hapus Semua Siswa?
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              {selectedClass !== "all"
+                ? "Semua data siswa di kelas yang dipilih beserta setoran dan ujian akan dihapus permanen."
+                : "SEMUA data siswa beserta seluruh setoran dan ujian akan dihapus permanen dari sistem."}
+            </p>
+            <p className="text-xs font-semibold text-destructive">Tindakan ini tidak bisa dibatalkan!</p>
+            <div className="flex gap-2 justify-end pt-2">
+              <button
+                onClick={() => setDeleteAllConfirm(false)}
+                className="px-4 py-2 rounded-md text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors">
+                Batal
+              </button>
+              <button
+                onClick={() => deleteAllMutation.mutate()}
+                disabled={deleteAllMutation.isPending}
+                className="px-4 py-2 rounded-md text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50">
+                {deleteAllMutation.isPending ? "Menghapus..." : "Ya, Hapus Semua"}
               </button>
             </div>
           </DialogContent>
