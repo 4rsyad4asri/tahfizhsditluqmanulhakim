@@ -541,12 +541,27 @@ const StudentDetail = () => {
                     </div>
 
                     {/* Catatan Guru */}
-                    <div>
-                      <label className="block text-xs font-medium text-muted-foreground mb-1">Catatan Guru</label>
+                    <div className="pt-2 border-t border-border">
+                      <h5 className="text-sm font-semibold text-foreground mb-1">💬 Catatan Guru / Pembimbing</h5>
+                      <p className="text-[11px] text-muted-foreground mb-2">Tuliskan komentar atau masukan untuk siswa</p>
                       <textarea value={catatanGuru}
                         onChange={e => setCatatanGuru(e.target.value)}
-                        placeholder="Tulis catatan penilaian..."
+                        placeholder="Contoh: Hafalan sudah lancar namun masih perlu memperbaiki mad thabi'i"
                         className="w-full min-h-[80px] px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-y" />
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {[
+                          "Hafalan sudah lancar namun masih perlu memperbaiki mad thabi'i",
+                          "Makhraj huruf ض dan ظ masih perlu latihan",
+                          "Perlu memperbanyak murajaah",
+                          "Bacaan sudah sangat baik",
+                        ].map(saran => (
+                          <button key={saran} type="button"
+                            onClick={() => setCatatanGuru(saran)}
+                            className="text-[10px] px-2 py-1 rounded-full border border-border bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors">
+                            {saran.length > 40 ? saran.slice(0, 40) + '…' : saran}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Tahfizh Preview */}
