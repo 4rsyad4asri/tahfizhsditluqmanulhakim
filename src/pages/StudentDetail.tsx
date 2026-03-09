@@ -242,6 +242,45 @@ const StudentDetail = () => {
                   <FileText className="w-4 h-4 text-primary" />
                   Form Input Setoran Hafalan
                 </h4>
+
+                {/* Keterangan Rumus Penilaian Setoran */}
+                <div className="p-4 rounded-lg border border-border bg-muted/40 space-y-3">
+                  <h5 className="text-sm font-semibold text-foreground flex items-center gap-1.5">📐 Rumus & Bobot Penilaian Setoran</h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="p-3 rounded-md bg-destructive/5 border border-destructive/20">
+                      <p className="text-xs font-semibold text-foreground mb-1">Kesalahan Makhraj</p>
+                      <p className="text-[10px] text-muted-foreground">Salah pengucapan huruf hijaiyah</p>
+                      <p className="text-xs font-bold text-destructive mt-1">Penalti: −3 poin / kesalahan</p>
+                    </div>
+                    <div className="p-3 rounded-md bg-warning/5 border border-warning/20">
+                      <p className="text-xs font-semibold text-foreground mb-1">Kesalahan Tajwid</p>
+                      <p className="text-[10px] text-muted-foreground">Hukum bacaan kurang tepat</p>
+                      <p className="text-xs font-bold text-orange-600 mt-1">Penalti: −2 poin / kesalahan</p>
+                    </div>
+                    <div className="p-3 rounded-md bg-warning/5 border border-warning/20">
+                      <p className="text-xs font-semibold text-foreground mb-1">Kesalahan Mad</p>
+                      <p className="text-[10px] text-muted-foreground">Panjang-pendek bacaan tidak sesuai</p>
+                      <p className="text-xs font-bold text-orange-600 mt-1">Penalti: −2 poin / kesalahan</p>
+                    </div>
+                    <div className="p-3 rounded-md bg-primary/5 border border-primary/20">
+                      <p className="text-xs font-semibold text-foreground mb-1">Kelancaran</p>
+                      <p className="text-[10px] text-muted-foreground">Skor 1–10, bobot 20% dari nilai akhir</p>
+                      <p className="text-xs font-bold text-primary mt-1">Rumus: (skor / 10) × 20</p>
+                    </div>
+                    <div className="p-3 rounded-md bg-muted border border-border">
+                      <p className="text-xs font-semibold text-foreground mb-1">Lupa Ayat</p>
+                      <p className="text-[10px] text-muted-foreground">Catatan tambahan jumlah ayat yang lupa</p>
+                    </div>
+                    <div className="p-3 rounded-md bg-muted border border-border">
+                      <p className="text-xs font-semibold text-foreground mb-1">Terhenti / Terbata</p>
+                      <p className="text-[10px] text-muted-foreground">Catatan tambahan bacaan terhenti</p>
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-md bg-accent/50 border border-border">
+                    <p className="text-xs font-semibold text-foreground">📝 Rumus Nilai Setoran:</p>
+                    <p className="text-xs text-muted-foreground font-mono bg-background/80 px-2 py-1 rounded mt-1">Nilai = 100 − (Makhraj × 3) − (Tajwid × 2) − (Mad × 2) − (20 − Kelancaran × 2)</p>
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Tanggal</label>
