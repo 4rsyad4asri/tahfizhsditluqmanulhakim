@@ -617,7 +617,19 @@ const StudentDetail = () => {
 
                           {/* Lahn Jali */}
                           <div className="p-3 rounded-md bg-destructive/5 border border-destructive/20">
-                            <h6 className="text-xs font-semibold text-foreground mb-2">1️⃣ Lahn Jali (Kesalahan Nyata)</h6>
+                            <h6 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1">
+                              1️⃣ Lahn Jali (Kesalahan Nyata)
+                              <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-destructive cursor-help transition-colors" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-[240px] whitespace-pre-line text-xs">
+                                    {"Contoh Lahn Jali:\n• Huruf ث dibaca س\n• Harakat fathah dibaca kasrah\n• Huruf ع dibaca hamzah\n• Huruf ص dibaca س\n• Menambah/mengurangi huruf"}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </h6>
                             <p className="text-[10px] text-muted-foreground mb-2">Salah huruf · Salah harakat · Huruf tertukar · Makhraj jelas salah</p>
                             <div>
                               <label className="block text-xs font-medium text-muted-foreground mb-1">Jumlah Kesalahan</label>
@@ -630,7 +642,19 @@ const StudentDetail = () => {
 
                           {/* Lahn Khofi */}
                           <div className="p-3 rounded-md bg-warning/5 border border-warning/20">
-                            <h6 className="text-xs font-semibold text-foreground mb-2">2️⃣ Lahn Khofi (Kesalahan Samar)</h6>
+                            <h6 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1">
+                              2️⃣ Lahn Khofi (Kesalahan Samar)
+                              <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-warning cursor-help transition-colors" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-[240px] whitespace-pre-line text-xs">
+                                    {"Contoh Lahn Khofi:\n• Mad thabi'i kurang 2 harakat\n• Ghunnah kurang berdengung\n• Ikhfa tidak tepat\n• Waqaf/ibtida kurang sesuai\n• Irama bacaan tidak konsisten"}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </h6>
                             <p className="text-[10px] text-muted-foreground mb-2">Kurang panjang mad · Ghunnah kurang jelas · Tajwid kurang sempurna · Irama kurang tepat</p>
                             <div>
                               <label className="block text-xs font-medium text-muted-foreground mb-1">Jumlah Kesalahan</label>
@@ -643,7 +667,19 @@ const StudentDetail = () => {
 
                           {/* Kelancaran */}
                           <div className="p-3 rounded-md bg-primary/5 border border-primary/20">
-                            <h6 className="text-xs font-semibold text-foreground mb-2">3️⃣ Kelancaran</h6>
+                            <h6 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1">
+                              3️⃣ Kelancaran
+                              <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-primary cursor-help transition-colors" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-[240px] whitespace-pre-line text-xs">
+                                    {"Panduan kelancaran:\n• 100: Sangat lancar tanpa jeda\n• 90: Lancar, jeda sangat sedikit\n• 80: Cukup lancar, beberapa jeda\n• 70: Kurang lancar, sering jeda\n• 60: Tidak lancar, sangat terbata"}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </h6>
                             <select value={entry.kelancaran}
                               onChange={e => updateTahfizhEntry(index, 'kelancaran', parseInt(e.target.value))}
                               className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
