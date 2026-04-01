@@ -51,7 +51,7 @@ const StudentDetail = () => {
 
   // Tahfizh form state
   const [tahfizhEntries, setTahfizhEntries] = useState<TahfizhSurahEntry[]>([
-    { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }
+    { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100, waqaf_ibtida: 100 }
   ]);
   const [catatanGuru, setCatatanGuru] = useState("");
 
@@ -117,7 +117,7 @@ const StudentDetail = () => {
       onSuccess: () => {
         toast.success("Hasil ujian Tahfizh berhasil disimpan!");
         setShowUjianForm(false);
-        setTahfizhEntries([{ surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }]);
+        setTahfizhEntries([{ surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100, waqaf_ibtida: 100 }]);
         setCatatanGuru("");
       },
       onError: (err) => toast.error(getSafeErrorMessage(err)),
@@ -135,7 +135,7 @@ const StudentDetail = () => {
   const tahfizhPreview = tahfizhEntries.length > 0 ? calculateNilaiTahfizh(tahfizhEntries) : null;
 
   const addTahfizhEntry = () => {
-    setTahfizhEntries([...tahfizhEntries, { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100 }]);
+    setTahfizhEntries([...tahfizhEntries, { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100, waqaf_ibtida: 100 }]);
   };
 
   const removeTahfizhEntry = (index: number) => {
@@ -547,26 +547,32 @@ const StudentDetail = () => {
                 {/* Keterangan Rumus Penilaian */}
                 <div className="p-4 rounded-lg border border-border bg-muted/40 space-y-3">
                   <h5 className="text-sm font-semibold text-foreground flex items-center gap-1.5">📐 Rumus & Bobot Penilaian</h5>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="p-3 rounded-md bg-destructive/5 border border-destructive/20">
                       <p className="text-xs font-semibold text-foreground mb-1">1️⃣ Lahn Jali</p>
                       <p className="text-[10px] text-muted-foreground">Kesalahan nyata: salah huruf, harakat, makhraj</p>
-                      <p className="text-xs font-bold text-destructive mt-1">Penalti: −2 poin / kesalahan</p>
+                      <p className="text-xs font-bold text-destructive mt-1">Penalti: −4 poin / kesalahan</p>
                     </div>
                     <div className="p-3 rounded-md bg-warning/5 border border-warning/20">
                       <p className="text-xs font-semibold text-foreground mb-1">2️⃣ Lahn Khofi</p>
                       <p className="text-[10px] text-muted-foreground">Kesalahan samar: mad, ghunnah, tajwid, irama</p>
-                      <p className="text-xs font-bold text-orange-600 mt-1">Penalti: −1 poin / kesalahan</p>
+                      <p className="text-xs font-bold text-orange-600 mt-1">Penalti: −2 poin / kesalahan</p>
                     </div>
                     <div className="p-3 rounded-md bg-primary/5 border border-primary/20">
                       <p className="text-xs font-semibold text-foreground mb-1">3️⃣ Kelancaran</p>
                       <p className="text-[10px] text-muted-foreground">Skor 60–100 berdasarkan kelancaran bacaan</p>
-                      <p className="text-xs font-bold text-primary mt-1">Bobot: 50% dari nilai akhir</p>
+                      <p className="text-xs font-bold text-primary mt-1">Bobot: 40% dari nilai akhir</p>
+                    </div>
+                    <div className="p-3 rounded-md bg-accent border border-border">
+                      <p className="text-xs font-semibold text-foreground mb-1">4️⃣ Waqaf & Ibtida</p>
+                      <p className="text-[10px] text-muted-foreground">Cara berhenti dan memulai bacaan dengan baik</p>
+                      <p className="text-xs font-bold text-foreground mt-1">Bobot: 20% dari nilai akhir</p>
                     </div>
                   </div>
                   <div className="p-3 rounded-md bg-accent/50 border border-border space-y-1.5">
                     <p className="text-xs font-semibold text-foreground">📝 Rumus Nilai Per Surat:</p>
-                    <p className="text-xs text-muted-foreground font-mono bg-background/80 px-2 py-1 rounded">Nilai = ((100 − Lahn Jali × 2 − Lahn Khofi × 1) + Kelancaran) / 2</p>
+                    <p className="text-xs text-muted-foreground font-mono bg-background/80 px-2 py-1 rounded">Koreksi = 100 − (Lahn Jali × 4) − (Lahn Khofi × 2)</p>
+                    <p className="text-xs text-muted-foreground font-mono bg-background/80 px-2 py-1 rounded">Nilai = (Koreksi × 40%) + (Kelancaran × 40%) + (Waqaf & Ibtida × 20%)</p>
                     <p className="text-xs font-semibold text-foreground mt-2">📊 Nilai Akhir Ujian = Rata-rata nilai seluruh surat</p>
                   </div>
                   <div className="flex flex-wrap gap-2 text-[10px]">
@@ -636,7 +642,7 @@ const StudentDetail = () => {
                               <input type="number" min={0} max={50} value={entry.lahn_jali}
                                 onChange={e => updateTahfizhEntry(index, 'lahn_jali', parseInt(e.target.value) || 0)}
                                 className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                              <p className="text-[10px] text-muted-foreground mt-1">Skor: 100 - ({entry.lahn_jali} × 2) = <span className="font-bold text-foreground">{Math.max(0, 100 - entry.lahn_jali * 2)}</span></p>
+                              <p className="text-[10px] text-muted-foreground mt-1">Skor: 100 - ({entry.lahn_jali} × 4) = <span className="font-bold text-foreground">{Math.max(0, 100 - entry.lahn_jali * 4)}</span></p>
                             </div>
                           </div>
 
@@ -661,7 +667,7 @@ const StudentDetail = () => {
                               <input type="number" min={0} max={50} value={entry.lahn_khofi}
                                 onChange={e => updateTahfizhEntry(index, 'lahn_khofi', parseInt(e.target.value) || 0)}
                                 className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                              <p className="text-[10px] text-muted-foreground mt-1">Skor: 100 - ({entry.lahn_khofi} × 1) = <span className="font-bold text-foreground">{Math.max(0, 100 - entry.lahn_khofi * 1)}</span></p>
+                              <p className="text-[10px] text-muted-foreground mt-1">Skor: 100 - ({entry.lahn_khofi} × 2) = <span className="font-bold text-foreground">{Math.max(0, 100 - entry.lahn_khofi * 2)}</span></p>
                             </div>
                           </div>
 
@@ -689,9 +695,36 @@ const StudentDetail = () => {
                             </select>
                           </div>
 
+                          {/* Waqaf & Ibtida */}
+                          <div className="p-3 rounded-md bg-accent border border-border">
+                            <h6 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1">
+                              4️⃣ Waqaf & Ibtida
+                              <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-foreground cursor-help transition-colors" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-[240px] whitespace-pre-line text-xs">
+                                    {"Panduan Waqaf & Ibtida:\n• 100: Berhenti & memulai sangat tepat\n• 90: Tepat, sesekali kurang sesuai\n• 80: Cukup, beberapa kali kurang tepat\n• 70: Kurang tepat, sering salah posisi\n• 60: Tidak memperhatikan waqaf/ibtida"}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </h6>
+                            <p className="text-[10px] text-muted-foreground mb-2">Ketepatan berhenti (waqaf) dan memulai (ibtida) bacaan · Memperhatikan tanda waqaf</p>
+                            <select value={entry.waqaf_ibtida}
+                              onChange={e => updateTahfizhEntry(index, 'waqaf_ibtida', parseInt(e.target.value))}
+                              className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                              <option value={100}>Sangat Baik (100)</option>
+                              <option value={90}>Baik (90)</option>
+                              <option value={80}>Cukup (80)</option>
+                              <option value={70}>Kurang (70)</option>
+                              <option value={60}>Perlu Perbaikan (60)</option>
+                            </select>
+                          </div>
+
                           {/* Nilai Surat */}
                           <div className="p-3 rounded-md bg-muted text-center">
-                            <p className="text-xs text-muted-foreground">Nilai Surat: (({Math.max(0, 100 - entry.lahn_jali * 2 - entry.lahn_khofi * 1)}) + {entry.kelancaran}) / 2</p>
+                            <p className="text-xs text-muted-foreground">Nilai = ({Math.max(0, 100 - entry.lahn_jali * 4 - entry.lahn_khofi * 2)} × 40%) + ({entry.kelancaran} × 40%) + ({entry.waqaf_ibtida} × 20%)</p>
                             <p className="text-2xl font-bold text-primary">{calculateNilaiSurah(entry)}</p>
                           </div>
                         </div>
@@ -787,11 +820,12 @@ const StudentDetail = () => {
                     {isTahfizh ? (
                       <div className="space-y-2">
                         {(u.nilai_aspek.surahEntries as TahfizhSurahEntry[]).map((entry: TahfizhSurahEntry, i: number) => (
-                          <div key={i} className="grid grid-cols-5 gap-2 text-center p-2 rounded-md bg-muted text-xs">
+                          <div key={i} className="grid grid-cols-6 gap-2 text-center p-2 rounded-md bg-muted text-xs">
                             <div><p className="text-muted-foreground">Surat</p><p className="font-bold text-foreground">{entry.surah}</p></div>
                             <div><p className="text-muted-foreground">Lahn Jali</p><p className="font-bold text-foreground">{entry.lahn_jali}</p></div>
                             <div><p className="text-muted-foreground">Lahn Khofi</p><p className="font-bold text-foreground">{entry.lahn_khofi}</p></div>
                             <div><p className="text-muted-foreground">Kelancaran</p><p className="font-bold text-foreground">{entry.kelancaran}</p></div>
+                            <div><p className="text-muted-foreground">Waqaf</p><p className="font-bold text-foreground">{entry.waqaf_ibtida ?? '-'}</p></div>
                             <div><p className="text-muted-foreground">Nilai</p><p className="font-bold text-primary">{calculateNilaiSurah(entry)}</p></div>
                           </div>
                         ))}
