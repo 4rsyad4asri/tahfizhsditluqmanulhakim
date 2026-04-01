@@ -547,26 +547,32 @@ const StudentDetail = () => {
                 {/* Keterangan Rumus Penilaian */}
                 <div className="p-4 rounded-lg border border-border bg-muted/40 space-y-3">
                   <h5 className="text-sm font-semibold text-foreground flex items-center gap-1.5">📐 Rumus & Bobot Penilaian</h5>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="p-3 rounded-md bg-destructive/5 border border-destructive/20">
                       <p className="text-xs font-semibold text-foreground mb-1">1️⃣ Lahn Jali</p>
                       <p className="text-[10px] text-muted-foreground">Kesalahan nyata: salah huruf, harakat, makhraj</p>
-                      <p className="text-xs font-bold text-destructive mt-1">Penalti: −2 poin / kesalahan</p>
+                      <p className="text-xs font-bold text-destructive mt-1">Penalti: −4 poin / kesalahan</p>
                     </div>
                     <div className="p-3 rounded-md bg-warning/5 border border-warning/20">
                       <p className="text-xs font-semibold text-foreground mb-1">2️⃣ Lahn Khofi</p>
                       <p className="text-[10px] text-muted-foreground">Kesalahan samar: mad, ghunnah, tajwid, irama</p>
-                      <p className="text-xs font-bold text-orange-600 mt-1">Penalti: −1 poin / kesalahan</p>
+                      <p className="text-xs font-bold text-orange-600 mt-1">Penalti: −2 poin / kesalahan</p>
                     </div>
                     <div className="p-3 rounded-md bg-primary/5 border border-primary/20">
                       <p className="text-xs font-semibold text-foreground mb-1">3️⃣ Kelancaran</p>
                       <p className="text-[10px] text-muted-foreground">Skor 60–100 berdasarkan kelancaran bacaan</p>
-                      <p className="text-xs font-bold text-primary mt-1">Bobot: 50% dari nilai akhir</p>
+                      <p className="text-xs font-bold text-primary mt-1">Bobot: 40% dari nilai akhir</p>
+                    </div>
+                    <div className="p-3 rounded-md bg-accent border border-border">
+                      <p className="text-xs font-semibold text-foreground mb-1">4️⃣ Waqaf & Ibtida</p>
+                      <p className="text-[10px] text-muted-foreground">Cara berhenti dan memulai bacaan dengan baik</p>
+                      <p className="text-xs font-bold text-foreground mt-1">Bobot: 20% dari nilai akhir</p>
                     </div>
                   </div>
                   <div className="p-3 rounded-md bg-accent/50 border border-border space-y-1.5">
                     <p className="text-xs font-semibold text-foreground">📝 Rumus Nilai Per Surat:</p>
-                    <p className="text-xs text-muted-foreground font-mono bg-background/80 px-2 py-1 rounded">Nilai = ((100 − Lahn Jali × 2 − Lahn Khofi × 1) + Kelancaran) / 2</p>
+                    <p className="text-xs text-muted-foreground font-mono bg-background/80 px-2 py-1 rounded">Koreksi = 100 − (Lahn Jali × 4) − (Lahn Khofi × 2)</p>
+                    <p className="text-xs text-muted-foreground font-mono bg-background/80 px-2 py-1 rounded">Nilai = (Koreksi × 40%) + (Kelancaran × 40%) + (Waqaf & Ibtida × 20%)</p>
                     <p className="text-xs font-semibold text-foreground mt-2">📊 Nilai Akhir Ujian = Rata-rata nilai seluruh surat</p>
                   </div>
                   <div className="flex flex-wrap gap-2 text-[10px]">
