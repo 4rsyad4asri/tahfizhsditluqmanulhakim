@@ -642,7 +642,7 @@ const StudentDetail = () => {
                               <input type="number" min={0} max={50} value={entry.lahn_jali}
                                 onChange={e => updateTahfizhEntry(index, 'lahn_jali', parseInt(e.target.value) || 0)}
                                 className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                              <p className="text-[10px] text-muted-foreground mt-1">Skor: 100 - ({entry.lahn_jali} × 2) = <span className="font-bold text-foreground">{Math.max(0, 100 - entry.lahn_jali * 2)}</span></p>
+                              <p className="text-[10px] text-muted-foreground mt-1">Skor: 100 - ({entry.lahn_jali} × 4) = <span className="font-bold text-foreground">{Math.max(0, 100 - entry.lahn_jali * 4)}</span></p>
                             </div>
                           </div>
 
