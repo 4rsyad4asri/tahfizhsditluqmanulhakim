@@ -51,7 +51,7 @@ const StudentDetail = () => {
 
   // Tahfizh form state
   const [tahfizhEntries, setTahfizhEntries] = useState<TahfizhSurahEntry[]>([
-    { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100, waqaf_ibtida: 0 }
+    { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100, waqaf_ibtida: 0, salah_sambung_ayat: 0 }
   ]);
   const [catatanGuru, setCatatanGuru] = useState("");
 
@@ -117,7 +117,7 @@ const StudentDetail = () => {
       onSuccess: () => {
         toast.success("Hasil ujian Tahfizh berhasil disimpan!");
         setShowUjianForm(false);
-        setTahfizhEntries([{ surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100, waqaf_ibtida: 0 }]);
+        setTahfizhEntries([{ surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100, waqaf_ibtida: 0, salah_sambung_ayat: 0 }]);
         setCatatanGuru("");
       },
       onError: (err) => toast.error(getSafeErrorMessage(err)),
@@ -135,7 +135,7 @@ const StudentDetail = () => {
   const tahfizhPreview = tahfizhEntries.length > 0 ? calculateNilaiTahfizh(tahfizhEntries) : null;
 
   const addTahfizhEntry = () => {
-    setTahfizhEntries([...tahfizhEntries, { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100, waqaf_ibtida: 0 }]);
+    setTahfizhEntries([...tahfizhEntries, { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100, waqaf_ibtida: 0, salah_sambung_ayat: 0 }]);
   };
 
   const removeTahfizhEntry = (index: number) => {
@@ -568,10 +568,15 @@ const StudentDetail = () => {
                       <p className="text-[10px] text-muted-foreground">Kesalahan berhenti dan memulai bacaan</p>
                       <p className="text-xs font-bold text-foreground mt-1">Penalti: −2 poin / kesalahan</p>
                     </div>
+                    <div className="p-3 rounded-md bg-violet-500/5 border border-violet-500/20">
+                      <p className="text-xs font-semibold text-foreground mb-1">5️⃣ Salah/Lupa Sambung Ayat</p>
+                      <p className="text-[10px] text-muted-foreground">Kesalahan menyambung antar ayat</p>
+                      <p className="text-xs font-bold text-violet-600 mt-1">Penalti: −2 poin / kesalahan</p>
+                    </div>
                   </div>
                   <div className="p-3 rounded-md bg-accent/50 border border-border space-y-1.5">
                     <p className="text-xs font-semibold text-foreground">📝 Rumus Nilai Per Surat:</p>
-                    <p className="text-xs text-muted-foreground font-mono bg-background/80 px-2 py-1 rounded">Koreksi = 100 − (Lahn Jali × 4) − (Lahn Khofi × 2) − (Waqaf & Ibtida × 2)</p>
+                    <p className="text-xs text-muted-foreground font-mono bg-background/80 px-2 py-1 rounded">Koreksi = 100 − (LJ × 4) − (LK × 2) − (Waqaf × 2) − (Sambung Ayat × 2)</p>
                     <p className="text-xs text-muted-foreground font-mono bg-background/80 px-2 py-1 rounded">Nilai = (Koreksi × 60%) + (Kelancaran × 40%)</p>
                     <p className="text-xs font-semibold text-foreground mt-2">📊 Nilai Akhir Ujian = Rata-rata nilai seluruh surat</p>
                   </div>
@@ -719,9 +724,33 @@ const StudentDetail = () => {
                             </div>
                           </div>
 
+                          {/* Salah/Lupa Sambung Ayat */}
+                          <div className="p-3 rounded-md bg-violet-500/5 border border-violet-500/20">
+                            <h6 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1">
+                              5️⃣ Salah/Lupa Sambung Ayat (−2 poin/kesalahan)
+                              <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-violet-600 cursor-help transition-colors" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-[240px] whitespace-pre-line text-xs">
+                                    {"Contoh Kesalahan Sambung Ayat:\n• Lupa sambungan ke ayat berikutnya\n• Salah menyambung ayat (loncat ayat)\n• Tertukar urutan ayat\n• Mengulang ayat yang sama"}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </h6>
+                            <p className="text-[10px] text-muted-foreground mb-2">Kesalahan atau lupa menyambung antar ayat · Setiap kesalahan −2 poin</p>
+                            <div>
+                              <label className="text-[10px] text-muted-foreground">Jumlah Kesalahan</label>
+                              <input type="number" min={0} value={entry.salah_sambung_ayat}
+                                onChange={e => updateTahfizhEntry(index, 'salah_sambung_ayat', Math.max(0, parseInt(e.target.value) || 0))}
+                                className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                            </div>
+                          </div>
+
                           {/* Nilai Surat */}
                           <div className="p-3 rounded-md bg-muted text-center">
-                            <p className="text-xs text-muted-foreground">Koreksi = {Math.max(0, 100 - entry.lahn_jali * 4 - entry.lahn_khofi * 2 - entry.waqaf_ibtida * 2)} → Nilai = ({Math.max(0, 100 - entry.lahn_jali * 4 - entry.lahn_khofi * 2 - entry.waqaf_ibtida * 2)} × 60%) + ({entry.kelancaran} × 40%)</p>
+                            <p className="text-xs text-muted-foreground">Koreksi = {Math.max(0, 100 - entry.lahn_jali * 4 - entry.lahn_khofi * 2 - entry.waqaf_ibtida * 2 - (entry.salah_sambung_ayat || 0) * 2)} → Nilai = ({Math.max(0, 100 - entry.lahn_jali * 4 - entry.lahn_khofi * 2 - entry.waqaf_ibtida * 2 - (entry.salah_sambung_ayat || 0) * 2)} × 60%) + ({entry.kelancaran} × 40%)</p>
                             <p className="text-2xl font-bold text-primary">{calculateNilaiSurah(entry)}</p>
                           </div>
                         </div>
@@ -817,12 +846,13 @@ const StudentDetail = () => {
                     {isTahfizh ? (
                       <div className="space-y-2">
                         {(u.nilai_aspek.surahEntries as TahfizhSurahEntry[]).map((entry: TahfizhSurahEntry, i: number) => (
-                          <div key={i} className="grid grid-cols-6 gap-2 text-center p-2 rounded-md bg-muted text-xs">
+                          <div key={i} className="grid grid-cols-7 gap-2 text-center p-2 rounded-md bg-muted text-xs">
                             <div><p className="text-muted-foreground">Surat</p><p className="font-bold text-foreground">{entry.surah}</p></div>
                             <div><p className="text-muted-foreground">Lahn Jali</p><p className="font-bold text-foreground">{entry.lahn_jali}</p></div>
                             <div><p className="text-muted-foreground">Lahn Khofi</p><p className="font-bold text-foreground">{entry.lahn_khofi}</p></div>
                             <div><p className="text-muted-foreground">Kelancaran</p><p className="font-bold text-foreground">{entry.kelancaran}</p></div>
                             <div><p className="text-muted-foreground">Waqaf</p><p className="font-bold text-foreground">{entry.waqaf_ibtida ?? '-'}</p></div>
+                            <div><p className="text-muted-foreground">Sambung</p><p className="font-bold text-foreground">{entry.salah_sambung_ayat ?? '-'}</p></div>
                             <div><p className="text-muted-foreground">Nilai</p><p className="font-bold text-primary">{calculateNilaiSurah(entry)}</p></div>
                           </div>
                         ))}
