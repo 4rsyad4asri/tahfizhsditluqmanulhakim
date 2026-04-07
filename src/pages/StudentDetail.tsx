@@ -70,7 +70,7 @@ const StudentDetail = () => {
     return <div className="min-h-screen bg-background flex items-center justify-center text-foreground">Siswa tidak ditemukan</div>;
   }
 
-  const { student, classInfo, setoran, ujian } = data;
+  const { student, classInfo, setoran, ujian, assessorMap = {} } = data;
   const { user } = useAuthContext();
   const isLoggedIn = !!user;
 
@@ -95,6 +95,7 @@ const StudentDetail = () => {
       lupa_ayat: setoranForm.lupaAyat,
       terhenti_terbata: setoranForm.terhentiTerbata,
       catatan_guru: setoranForm.catatanGuru,
+      assessed_by: user?.id,
     }, {
       onSuccess: () => {
         toast.success("Setoran berhasil disimpan!");
@@ -112,6 +113,7 @@ const StudentDetail = () => {
       student_id: studentId,
       entries: tahfizhEntries,
       catatan_guru: catatanGuru,
+      assessed_by: user?.id,
       ...result,
     }, {
       onSuccess: () => {
@@ -496,6 +498,9 @@ const StudentDetail = () => {
                     <div>
                       <p className="font-medium text-foreground">{s.surah} (Ayat {s.ayat_mulai}-{s.ayat_akhir})</p>
                       <p className="text-xs text-muted-foreground">Juz {s.juz} · {s.tanggal}</p>
+                      {s.assessed_by && assessorMap[s.assessed_by] && (
+                        <p className="text-xs text-primary font-medium mt-0.5">👤 Dinilai oleh: {assessorMap[s.assessed_by]}</p>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
@@ -834,6 +839,9 @@ const StudentDetail = () => {
                       <div>
                         <p className="font-medium text-foreground">Ujian {u.mode}</p>
                         <p className="text-xs text-muted-foreground">{u.tanggal}</p>
+                        {u.assessed_by && assessorMap[u.assessed_by] && (
+                          <p className="text-xs text-primary font-medium mt-0.5">👤 Dinilai oleh: {assessorMap[u.assessed_by]}</p>
+                        )}
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-foreground">{u.nilai_akhir}</p>

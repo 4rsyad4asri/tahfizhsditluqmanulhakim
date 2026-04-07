@@ -35,11 +35,28 @@ export function useStudentDetail(studentId: string | undefined) {
         .eq("student_id", studentId)
         .order("tanggal", { ascending: false });
 
+      // Fetch assessor profiles for setoran and ujian
+      const assessorIds = new Set<string>();
+      (setoran || []).forEach((s: any) => s.assessed_by && assessorIds.add(s.assessed_by));
+      (ujian || []).forEach((u: any) => u.assessed_by && assessorIds.add(u.assessed_by));
+
+      let assessorMap: Record<string, string> = {};
+      if (assessorIds.size > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", Array.from(assessorIds));
+        if (profiles) {
+          profiles.forEach((p: any) => { assessorMap[p.id] = p.full_name; });
+        }
+      }
+
       return {
         student,
         classInfo: classData,
         setoran: setoran || [],
         ujian: ujian || [],
+        assessorMap,
       };
     },
     enabled: !!studentId,
@@ -63,6 +80,7 @@ export function useAddSetoran() {
       lupa_ayat: number;
       terhenti_terbata: number;
       catatan_guru: string;
+      assessed_by?: string;
     }) => {
       const nilai = calculateNilaiSetoran({
         kesalahanMakhraj: data.kesalahan_makhraj,
@@ -86,7 +104,8 @@ export function useAddSetoran() {
         terhenti_terbata: data.terhenti_terbata,
         catatan_guru: data.catatan_guru,
         nilai,
-      });
+        assessed_by: data.assessed_by || null,
+      } as any);
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
@@ -139,6 +158,7 @@ export function useAddTahfizhUjian() {
       status: 'Lulus' | 'Tidak Lulus';
       grade: string;
       predikat: string;
+      assessed_by?: string;
     }) => {
       const nilai_aspek = {
         surahEntries: data.entries,
@@ -153,7 +173,8 @@ export function useAddTahfizhUjian() {
         nilai_akhir: data.nilaiAkhir,
         status: data.status,
         grade: data.grade,
-      });
+        assessed_by: data.assessed_by || null,
+      } as any);
       if (ujianError) throw ujianError;
 
       const { error: studentError } = await supabase
