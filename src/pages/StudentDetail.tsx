@@ -839,6 +839,9 @@ const StudentDetail = () => {
                       <div>
                         <p className="font-medium text-foreground">Ujian {u.mode}</p>
                         <p className="text-xs text-muted-foreground">{u.tanggal}</p>
+                        {u.assessed_by && assessorMap[u.assessed_by] && (
+                          <p className="text-xs text-primary font-medium mt-0.5">👤 Dinilai oleh: {assessorMap[u.assessed_by]}</p>
+                        )}
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-foreground">{u.nilai_akhir}</p>
