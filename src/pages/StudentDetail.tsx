@@ -70,7 +70,7 @@ const StudentDetail = () => {
     return <div className="min-h-screen bg-background flex items-center justify-center text-foreground">Siswa tidak ditemukan</div>;
   }
 
-  const { student, classInfo, setoran, ujian } = data;
+  const { student, classInfo, setoran, ujian, assessorMap = {} } = data;
   const { user } = useAuthContext();
   const isLoggedIn = !!user;
 
