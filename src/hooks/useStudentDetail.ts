@@ -80,6 +80,7 @@ export function useAddSetoran() {
       lupa_ayat: number;
       terhenti_terbata: number;
       catatan_guru: string;
+      assessed_by?: string;
     }) => {
       const nilai = calculateNilaiSetoran({
         kesalahanMakhraj: data.kesalahan_makhraj,
@@ -103,7 +104,8 @@ export function useAddSetoran() {
         terhenti_terbata: data.terhenti_terbata,
         catatan_guru: data.catatan_guru,
         nilai,
-      });
+        assessed_by: data.assessed_by || null,
+      } as any);
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
