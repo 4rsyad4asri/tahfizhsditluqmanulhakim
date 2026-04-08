@@ -94,7 +94,6 @@ const StudentDetail = () => {
     );
   }
 
-  const { user } = useAuthContext();
   const isLoggedIn = !!user;
 
   if (!catatanInitialized && student) {
