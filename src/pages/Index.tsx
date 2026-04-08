@@ -55,11 +55,14 @@ const Dashboard = () => {
     return result;
   }, [classes, selectedGrade, isPenguji, assignedClassIds]);
 
-  const totalStudents = classes?.reduce((sum, c) => sum + c.studentCount, 0) || 0;
+  const statsClasses = isPenguji && assignedClassIds !== null && assignedClassIds !== undefined
+    ? (classes || []).filter(c => assignedClassIds.includes(c.id))
+    : classes;
+  const totalStudents = statsClasses?.reduce((sum, c) => sum + c.studentCount, 0) || 0;
   const avgProgress = totalStudents > 0
-    ? Math.round((classes?.reduce((sum, c) => sum + c.avgProgress * c.studentCount, 0) || 0) / totalStudents)
+    ? Math.round((statsClasses?.reduce((sum, c) => sum + c.avgProgress * c.studentCount, 0) || 0) / totalStudents)
     : 0;
-  const totalLulus = classes?.reduce((sum, c) => sum + c.lulusCount, 0) || 0;
+  const totalLulus = statsClasses?.reduce((sum, c) => sum + c.lulusCount, 0) || 0;
 
   const stats = [
     { icon: Users, label: "Total Siswa", value: totalStudents, color: "text-primary" },
