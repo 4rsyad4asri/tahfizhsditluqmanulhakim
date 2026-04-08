@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useMyAssignedClasses } from "@/hooks/useMyAssignedClasses";
 import Header from "@/components/Header";
 import { calculateNilaiSetoran, calculateNilaiTahfizh, calculateNilaiSurah } from "@/data/mockData";
 import type { Koreksi, TahfizhSurahEntry } from "@/data/mockData";
@@ -24,6 +25,8 @@ const StudentDetail = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
   const { data, isLoading, error } = useStudentDetail(studentId);
+  const { data: assignedClassIds } = useMyAssignedClasses();
+  const { isPenguji } = useAuthContext();
   const addSetoran = useAddSetoran();
   
   const addTahfizhUjian = useAddTahfizhUjian();
