@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useMyAssignedClasses } from "@/hooks/useMyAssignedClasses";
 import Header from "@/components/Header";
 import { calculateNilaiSetoran, calculateNilaiTahfizh, calculateNilaiSurah } from "@/data/mockData";
 import type { Koreksi, TahfizhSurahEntry } from "@/data/mockData";
@@ -24,6 +25,8 @@ const StudentDetail = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
   const { data, isLoading, error } = useStudentDetail(studentId);
+  const { data: assignedClassIds } = useMyAssignedClasses();
+  const { isPenguji, user } = useAuthContext();
   const addSetoran = useAddSetoran();
   
   const addTahfizhUjian = useAddTahfizhUjian();
@@ -71,7 +74,26 @@ const StudentDetail = () => {
   }
 
   const { student, classInfo, setoran, ujian, assessorMap = {} } = data;
-  const { user } = useAuthContext();
+
+  // Access check for penguji
+  const studentClassId = student?.class_id;
+  const hasAccess = !isPenguji || assignedClassIds === null || assignedClassIds === undefined || (studentClassId && assignedClassIds.includes(studentClassId));
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+          <Award className="w-12 h-12 text-destructive/60" />
+          <h2 className="text-lg font-semibold text-foreground">Akses Ditolak</h2>
+          <p className="text-sm">Anda tidak ditugaskan untuk kelas siswa ini.</p>
+          <button onClick={() => navigate("/")} className="mt-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm">
+            Kembali ke Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const isLoggedIn = !!user;
 
   if (!catatanInitialized && student) {

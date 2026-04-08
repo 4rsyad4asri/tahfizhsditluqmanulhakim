@@ -1,7 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { useClassStudents } from "@/hooks/useClassStudents";
-import { ArrowLeft, Search, Loader2 } from "lucide-react";
+import { useMyAssignedClasses } from "@/hooks/useMyAssignedClasses";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { ArrowLeft, Search, Loader2, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import AssignPengujiDialog from "@/components/AssignPengujiDialog";
@@ -18,6 +20,11 @@ const ClassStudents = () => {
   const { data, isLoading, error } = useClassStudents(grade, section);
   const classId_db = data?.classInfo?.id;
   const { data: assignedPenguji = [] } = useClassPenguji(classId_db);
+  const { data: assignedClassIds } = useMyAssignedClasses();
+  const { isPenguji } = useAuthContext();
+
+  // Check access for penguji
+  const hasAccess = !isPenguji || assignedClassIds === null || assignedClassIds === undefined || (classId_db && assignedClassIds.includes(classId_db));
 
   if (isLoading) {
     return (
@@ -36,6 +43,22 @@ const ClassStudents = () => {
         <Header />
         <div className="flex items-center justify-center py-20 text-destructive">
           Kelas tidak ditemukan
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+          <ShieldAlert className="w-12 h-12 text-destructive/60" />
+          <h2 className="text-lg font-semibold text-foreground">Akses Ditolak</h2>
+          <p className="text-sm">Anda tidak ditugaskan untuk kelas ini.</p>
+          <button onClick={() => navigate("/")} className="mt-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm">
+            Kembali ke Dashboard
+          </button>
         </div>
       </div>
     );
