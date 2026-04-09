@@ -6,7 +6,8 @@ import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { BookOpen, Users, ArrowRight, Loader2, Mail, Shield } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { BookOpen, Users, ArrowRight, Loader2, Mail, Shield, Info } from "lucide-react";
 
 const ProfilPenguji = () => {
   const navigate = useNavigate();
