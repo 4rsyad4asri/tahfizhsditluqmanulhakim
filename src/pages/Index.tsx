@@ -116,6 +116,17 @@ const Dashboard = () => {
           ))}
         </div>
 
+        {/* Onboarding banner for penguji with no classes */}
+        {isPenguji && filteredClasses.length === 0 && !isLoading && (
+          <Alert className="mb-6 border-primary/30 bg-primary/5">
+            <Info className="h-4 w-4 text-primary" />
+            <AlertTitle className="text-sm font-semibold">Selamat Datang, Penguji!</AlertTitle>
+            <AlertDescription className="text-sm text-muted-foreground">
+              Akun Anda belum ditugaskan ke kelas manapun. Hubungi Admin untuk mendapatkan akses ke kelas. Setelah ditugaskan, Anda dapat melihat daftar siswa dan mulai memberikan penilaian.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Grade Filter */}
         <div className="flex flex-wrap items-center gap-2 mb-6">
           <button
