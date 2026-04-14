@@ -34,6 +34,7 @@ const StudentDetail = () => {
   const addSetoran = useAddSetoran();
   
   const addTahfizhUjian = useAddTahfizhUjian();
+  const addTahsinUjian = useAddTahsinUjian();
   const updateCatatan = useUpdateCatatan();
 
   const [catatan, setCatatan] = useState("");
@@ -55,6 +56,7 @@ const StudentDetail = () => {
 
   // Ujian form state
   const [showUjianForm, setShowUjianForm] = useState(false);
+  const [ujianMode, setUjianMode] = useState<'Tahfizh' | 'Tahsin Dasar' | 'Tahsin Lanjutan' | null>(null);
 
   // Tahfizh form state
   const [tahfizhEntries, setTahfizhEntries] = useState<TahfizhSurahEntry[]>([
