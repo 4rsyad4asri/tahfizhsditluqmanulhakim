@@ -931,7 +931,9 @@ const StudentDetail = () => {
             <div className="space-y-3">
               {ujian.map((u: any) => {
                 const isTahfizh = u.mode === 'Tahfizh' && u.nilai_aspek?.surahEntries;
-                const predikat = u.nilai_akhir >= 90 ? 'Mumtaz' : u.nilai_akhir >= 80 ? 'Jiddan Jayyid' : u.nilai_akhir >= 70 ? 'Jayyid' : 'Perlu Perbaikan';
+                const isTahsinDasar = u.mode === 'Tahsin Dasar' && u.nilai_aspek?.entries;
+                const isTahsinLanjutan = u.mode === 'Tahsin Lanjutan' && u.nilai_aspek?.entries;
+                const predikat = u.nilai_aspek?.predikat || (u.nilai_akhir >= 90 ? 'Mumtaz' : u.nilai_akhir >= 80 ? 'Jayyid Jiddan' : u.nilai_akhir >= 70 ? 'Jayyid' : 'Perlu Perbaikan');
 
                 return (
                   <div key={u.id} className={`bg-card rounded-lg border p-4 shadow-card ${u.status === 'Lulus' ? 'border-success/30' : 'border-destructive/30'}`}>
@@ -946,7 +948,7 @@ const StudentDetail = () => {
                       <div className="text-right">
                         <p className="text-2xl font-bold text-foreground">{u.nilai_akhir}</p>
                         <p className={`text-xs font-medium ${u.status === 'Lulus' ? 'text-success' : 'text-destructive'}`}>
-                          {isTahfizh ? predikat : `Grade ${u.grade}`} · {u.status === 'Lulus' ? '✅ Lulus' : '❌ Tidak Lulus'}
+                          {predikat} · {u.status === 'Lulus' ? '✅ Lulus' : '❌ Tidak Lulus'}
                         </p>
                       </div>
                     </div>
@@ -964,6 +966,60 @@ const StudentDetail = () => {
                             <div><p className="text-muted-foreground">Nilai</p><p className="font-bold text-primary">{calculateNilaiSurah(entry)}</p></div>
                           </div>
                         ))}
+                        {u.nilai_aspek.catatanGuru && (
+                          <p className="text-xs text-muted-foreground italic mt-2">📝 {u.nilai_aspek.catatanGuru}</p>
+                        )}
+                      </div>
+                    ) : isTahsinDasar ? (
+                      <div className="space-y-2">
+                        {(u.nilai_aspek.entries as TahsinDasarEntry[]).map((entry: TahsinDasarEntry, i: number) => {
+                          const cfg = u.nilai_aspek.config || { penalti_lahn_jali: 2, penalti_lahn_khofi: 1, bobot_kelancaran: 40 };
+                          return (
+                            <div key={i} className="p-2 rounded-md bg-muted text-xs">
+                              <p className="font-semibold text-foreground mb-1">{entry.nama_ebta}</p>
+                              <div className="grid grid-cols-4 gap-2 text-center">
+                                <div><p className="text-muted-foreground">LJ</p><p className="font-bold text-foreground">{entry.salah_huruf + entry.salah_harakat + entry.salah_makhraj}</p></div>
+                                <div><p className="text-muted-foreground">LK</p><p className="font-bold text-foreground">{entry.kesalahan_mad + entry.kesalahan_ghunnah + entry.kesalahan_tajwid + entry.kesalahan_waqaf}</p></div>
+                                <div><p className="text-muted-foreground">Lancar</p><p className="font-bold text-foreground">{entry.kelancaran}</p></div>
+                                <div><p className="text-muted-foreground">Nilai</p><p className="font-bold text-primary">{calculateNilaiTahsinDasar(entry, cfg)}</p></div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {u.nilai_aspek.catatanGuru && (
+                          <p className="text-xs text-muted-foreground italic mt-2">📝 {u.nilai_aspek.catatanGuru}</p>
+                        )}
+                      </div>
+                    ) : isTahsinLanjutan ? (
+                      <div className="space-y-2">
+                        {(u.nilai_aspek.entries as TahsinLanjutanEntry[]).map((entry: TahsinLanjutanEntry, i: number) => {
+                          const cfg = u.nilai_aspek.config || { penalti_lahn_jali: 2, penalti_lahn_khofi: 1, bobot_kelancaran: 40 };
+                          const pw = u.nilai_aspek.penaltiWaqaf || 2;
+                          return (
+                            <div key={i} className="p-2 rounded-md bg-muted text-xs">
+                              <p className="font-semibold text-foreground mb-1">{entry.surah} {entry.ayat ? `(${entry.ayat})` : ''}</p>
+                              <div className="grid grid-cols-5 gap-2 text-center">
+                                <div><p className="text-muted-foreground">LJ</p><p className="font-bold text-foreground">{entry.salah_huruf + entry.salah_harakat + entry.salah_makhraj}</p></div>
+                                <div><p className="text-muted-foreground">LK</p><p className="font-bold text-foreground">{entry.kesalahan_mad + entry.kesalahan_ghunnah + entry.kesalahan_tajwid}</p></div>
+                                <div><p className="text-muted-foreground">Waqaf</p><p className="font-bold text-foreground">{entry.waqaf_ibtida}</p></div>
+                                <div><p className="text-muted-foreground">Lancar</p><p className="font-bold text-foreground">{entry.kelancaran}</p></div>
+                                <div><p className="text-muted-foreground">Nilai</p><p className="font-bold text-primary">{calculateNilaiTahsinLanjutan(entry, cfg, pw)}</p></div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {u.nilai_aspek.waqafTest && (
+                          <div className="p-2 rounded-md bg-violet-500/5 border border-violet-500/20 text-xs">
+                            <p className="font-semibold text-foreground mb-1">🔖 Tes Simbol Waqaf</p>
+                            <div className="flex flex-wrap gap-1">
+                              {Object.entries(u.nilai_aspek.waqafTest).map(([key, val]) => (
+                                <span key={key} className={`px-1.5 py-0.5 rounded text-[10px] ${val ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'}`}>
+                                  {key.replace(/_/g, ' ')} {val ? '✅' : '❌'}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         {u.nilai_aspek.catatanGuru && (
                           <p className="text-xs text-muted-foreground italic mt-2">📝 {u.nilai_aspek.catatanGuru}</p>
                         )}
