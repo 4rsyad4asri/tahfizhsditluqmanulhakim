@@ -160,6 +160,7 @@ export function useAddTahfizhUjian() {
       grade: string;
       predikat: string;
       assessed_by?: string;
+      tanggal?: string;
     }) => {
       const nilai_aspek = {
         surahEntries: data.entries,
@@ -175,6 +176,7 @@ export function useAddTahfizhUjian() {
         status: data.status,
         grade: data.grade,
         assessed_by: data.assessed_by || null,
+        tanggal: data.tanggal || new Date().toISOString().split("T")[0],
       } as any);
       if (ujianError) throw ujianError;
 
