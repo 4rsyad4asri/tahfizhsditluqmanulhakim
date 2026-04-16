@@ -146,6 +146,7 @@ const StudentDetail = () => {
       entries: tahfizhEntries,
       catatan_guru: catatanGuru,
       assessed_by: user?.id,
+      tanggal: tahfizhTanggal,
       ...result,
     }, {
       onSuccess: () => {
