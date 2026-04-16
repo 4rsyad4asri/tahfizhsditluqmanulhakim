@@ -203,6 +203,8 @@ export function useAddTahsinUjian() {
       status: 'Lulus' | 'Tidak Lulus';
       grade: string;
       assessed_by?: string;
+      tanggal?: string;
+      waktu?: string;
     }) => {
       const { error: ujianError } = await supabase.from("ujian").insert({
         student_id: data.student_id,
@@ -212,6 +214,7 @@ export function useAddTahsinUjian() {
         status: data.status,
         grade: data.grade,
         assessed_by: data.assessed_by || null,
+        tanggal: data.tanggal || new Date().toISOString().split("T")[0],
       } as any);
       if (ujianError) throw ujianError;
     },
