@@ -64,6 +64,9 @@ const StudentDetail = () => {
     { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100, waqaf_ibtida: 0, salah_sambung_ayat: 0 }
   ]);
   const [catatanGuru, setCatatanGuru] = useState("");
+  const tahfizhNow = new Date();
+  const [tahfizhTanggal, setTahfizhTanggal] = useState(tahfizhNow.toISOString().split("T")[0]);
+  const [tahfizhWaktu, setTahfizhWaktu] = useState(tahfizhNow.toTimeString().slice(0, 5));
 
   if (isLoading) {
     return (
