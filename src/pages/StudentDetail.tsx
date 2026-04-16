@@ -618,6 +618,11 @@ const StudentDetail = () => {
                     status: data.status,
                     grade: data.grade,
                     assessed_by: user?.id,
+                    tanggal: data.tanggal,
+                    waktu: data.waktu,
+                    status: data.status,
+                    grade: data.grade,
+                    assessed_by: user?.id,
                   }, {
                     onSuccess: () => { toast.success("Hasil Ujian Tahsin Dasar berhasil disimpan!"); setShowUjianForm(false); setUjianMode(null); },
                     onError: (err) => toast.error(getSafeErrorMessage(err)),
@@ -641,6 +646,11 @@ const StudentDetail = () => {
                     status: data.status,
                     grade: data.grade,
                     assessed_by: user?.id,
+                    tanggal: data.tanggal,
+                    waktu: data.waktu,
+                    status: data.status,
+                    grade: data.grade,
+                    assessed_by: user?.id,
                   }, {
                     onSuccess: () => { toast.success("Hasil Ujian Tahsin Lanjutan berhasil disimpan!"); setShowUjianForm(false); setUjianMode(null); },
                     onError: (err) => toast.error(getSafeErrorMessage(err)),
@@ -652,6 +662,24 @@ const StudentDetail = () => {
             {showUjianForm && ujianMode === 'Tahfizh' && (
               <div className="bg-card rounded-lg border border-border p-5 shadow-card animate-scale-in space-y-4">
                 <h4 className="font-semibold text-foreground">Form Ujian Sertifikasi</h4>
+
+                {/* Date & Time */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="flex items-center gap-1 text-xs font-medium text-muted-foreground mb-1">
+                      <Calendar className="w-3.5 h-3.5" /> Tanggal Ujian
+                    </label>
+                    <input type="date" value={tahfizhTanggal} onChange={e => setTahfizhTanggal(e.target.value)}
+                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-1 text-xs font-medium text-muted-foreground mb-1">
+                      <Clock className="w-3.5 h-3.5" /> Waktu Ujian
+                    </label>
+                    <input type="time" value={tahfizhWaktu} onChange={e => setTahfizhWaktu(e.target.value)}
+                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                  </div>
+                </div>
 
                 {/* Keterangan Rumus Penilaian */}
                 <div className="p-4 rounded-lg border border-border bg-muted/40 space-y-3">
