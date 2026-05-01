@@ -5,9 +5,9 @@ import { useMyAssignedClasses } from "@/hooks/useMyAssignedClasses";
 import Header from "@/components/Header";
 import { calculateNilaiSetoran, calculateNilaiTahfizh, calculateNilaiSurah } from "@/data/mockData";
 import type { Koreksi, TahfizhSurahEntry } from "@/data/mockData";
-import { useStudentDetail, useAddSetoran, useAddTahfizhUjian, useAddTahsinUjian, useUpdateCatatan } from "@/hooks/useStudentDetail";
+import { useStudentDetail, useAddSetoran, useAddTahfizhUjian, useAddTahsinUjian, useUpdateCatatan, useUpdateUjian, useDeleteUjian } from "@/hooks/useStudentDetail";
 import { JUZ_SURAH_MAP, getSurahsForJuz, getSurahLabel } from "@/data/quranData";
-import { ArrowLeft, Plus, FileText, Award, BookOpen, PenLine, Loader2, Trash2, Info, Calendar, Clock, Download } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Award, BookOpen, PenLine, Loader2, Trash2, Info, Calendar, Clock, Download, Pencil } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import UjianTahsinLanjutanForm from "@/components/UjianTahsinLanjutanForm";
 import { calculateNilaiTahsinDasar, calculateNilaiTahsinLanjutan } from "@/data/tahsinScoring";
 import type { TahsinDasarEntry, TahsinLanjutanEntry, TahsinPenaltyConfig, WaqafSymbolTest } from "@/data/tahsinScoring";
 import { generateTahsinPDF } from "@/utils/generateTahsinPDF";
+import EditUjianDialog from "@/components/EditUjianDialog";
 
 const KELANCARAN_OPTIONS = [
   { value: 100, label: "Sangat Lancar (100)" },
@@ -37,6 +38,9 @@ const StudentDetail = () => {
   const addTahfizhUjian = useAddTahfizhUjian();
   const addTahsinUjian = useAddTahsinUjian();
   const updateCatatan = useUpdateCatatan();
+  const updateUjian = useUpdateUjian();
+  const deleteUjian = useDeleteUjian();
+  const [editingUjian, setEditingUjian] = useState<any | null>(null);
 
   const [catatan, setCatatan] = useState("");
   const [catatanInitialized, setCatatanInitialized] = useState(false);
@@ -977,6 +981,30 @@ const StudentDetail = () => {
                         <p className={`text-xs font-medium ${u.status === 'Lulus' ? 'text-success' : 'text-destructive'}`}>
                           {predikat} · {u.status === 'Lulus' ? '✅ Lulus' : '❌ Tidak Lulus'}
                         </p>
+                        {isLoggedIn && (
+                          <div className="flex gap-1 mt-1">
+                            <button
+                              onClick={() => setEditingUjian(u)}
+                              className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                              title="Edit hasil ujian"
+                            >
+                              <Pencil className="w-3 h-3" /> Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (!confirm(`Hapus hasil ujian ${u.mode} tanggal ${u.tanggal}? Tindakan ini tidak dapat dibatalkan.`)) return;
+                                deleteUjian.mutate({ ujian_id: u.id, student_id: studentId! }, {
+                                  onSuccess: () => toast.success("Hasil ujian dihapus"),
+                                  onError: (err) => toast.error(getSafeErrorMessage(err)),
+                                });
+                              }}
+                              className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                              title="Hapus hasil ujian"
+                            >
+                              <Trash2 className="w-3 h-3" /> Hapus
+                            </button>
+                          </div>
+                        )}
                         {(isTahsinDasar || isTahsinLanjutan) && (
                           <button
                             onClick={() => {
@@ -1128,6 +1156,30 @@ const StudentDetail = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {editingUjian && (
+        <EditUjianDialog
+          open={!!editingUjian}
+          onClose={() => setEditingUjian(null)}
+          ujian={editingUjian}
+          studentName={student.name}
+          isSaving={updateUjian.isPending}
+          onSave={(updated) => {
+            updateUjian.mutate({
+              ujian_id: editingUjian.id,
+              student_id: studentId!,
+              nilai_aspek: updated.nilai_aspek,
+              nilai_akhir: updated.nilai_akhir,
+              status: updated.status,
+              grade: updated.grade,
+              tanggal: updated.tanggal,
+            }, {
+              onSuccess: () => { toast.success("Hasil ujian diperbarui"); setEditingUjian(null); },
+              onError: (err) => toast.error(getSafeErrorMessage(err)),
+            });
+          }}
+        />
+      )}
     </div>
   );
 };
