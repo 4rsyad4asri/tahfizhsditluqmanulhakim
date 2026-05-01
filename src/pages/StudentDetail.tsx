@@ -5,9 +5,9 @@ import { useMyAssignedClasses } from "@/hooks/useMyAssignedClasses";
 import Header from "@/components/Header";
 import { calculateNilaiSetoran, calculateNilaiTahfizh, calculateNilaiSurah } from "@/data/mockData";
 import type { Koreksi, TahfizhSurahEntry } from "@/data/mockData";
-import { useStudentDetail, useAddSetoran, useAddTahfizhUjian, useAddTahsinUjian, useUpdateCatatan } from "@/hooks/useStudentDetail";
+import { useStudentDetail, useAddSetoran, useAddTahfizhUjian, useAddTahsinUjian, useUpdateCatatan, useUpdateUjian, useDeleteUjian } from "@/hooks/useStudentDetail";
 import { JUZ_SURAH_MAP, getSurahsForJuz, getSurahLabel } from "@/data/quranData";
-import { ArrowLeft, Plus, FileText, Award, BookOpen, PenLine, Loader2, Trash2, Info, Calendar, Clock, Download } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Award, BookOpen, PenLine, Loader2, Trash2, Info, Calendar, Clock, Download, Pencil } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import UjianTahsinLanjutanForm from "@/components/UjianTahsinLanjutanForm";
 import { calculateNilaiTahsinDasar, calculateNilaiTahsinLanjutan } from "@/data/tahsinScoring";
 import type { TahsinDasarEntry, TahsinLanjutanEntry, TahsinPenaltyConfig, WaqafSymbolTest } from "@/data/tahsinScoring";
 import { generateTahsinPDF } from "@/utils/generateTahsinPDF";
+import EditUjianDialog from "@/components/EditUjianDialog";
 
 const KELANCARAN_OPTIONS = [
   { value: 100, label: "Sangat Lancar (100)" },
@@ -37,6 +38,9 @@ const StudentDetail = () => {
   const addTahfizhUjian = useAddTahfizhUjian();
   const addTahsinUjian = useAddTahsinUjian();
   const updateCatatan = useUpdateCatatan();
+  const updateUjian = useUpdateUjian();
+  const deleteUjian = useDeleteUjian();
+  const [editingUjian, setEditingUjian] = useState<any | null>(null);
 
   const [catatan, setCatatan] = useState("");
   const [catatanInitialized, setCatatanInitialized] = useState(false);
