@@ -1156,6 +1156,30 @@ const StudentDetail = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {editingUjian && (
+        <EditUjianDialog
+          open={!!editingUjian}
+          onClose={() => setEditingUjian(null)}
+          ujian={editingUjian}
+          studentName={student.name}
+          isSaving={updateUjian.isPending}
+          onSave={(updated) => {
+            updateUjian.mutate({
+              ujian_id: editingUjian.id,
+              student_id: studentId!,
+              nilai_aspek: updated.nilai_aspek,
+              nilai_akhir: updated.nilai_akhir,
+              status: updated.status,
+              grade: updated.grade,
+              tanggal: updated.tanggal,
+            }, {
+              onSuccess: () => { toast.success("Hasil ujian diperbarui"); setEditingUjian(null); },
+              onError: (err) => toast.error(getSafeErrorMessage(err)),
+            });
+          }}
+        />
+      )}
     </div>
   );
 };
