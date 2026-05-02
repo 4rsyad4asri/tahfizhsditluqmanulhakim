@@ -149,6 +149,16 @@ export default function UjianTahsinLanjutanForm({ onSubmit, onCancel, isPending 
             </div>
           </div>
         )}
+
+        <div className="p-3 rounded-md bg-accent/50 border border-border space-y-1">
+          <p className="text-xs font-semibold text-foreground">📝 Rumus Nilai Per Surat (Tahsin Lanjutan):</p>
+          <p className="text-xs text-muted-foreground font-mono bg-background/80 px-2 py-1 rounded">
+            Koreksi = Kelancaran (60–100) − (LJ × {config.penalti_lahn_jali}) − (LK × {config.penalti_lahn_khofi}) − (Waqaf × {penaltiWaqaf})
+          </p>
+          <p className="text-xs font-semibold text-primary font-mono bg-background/80 px-2 py-1 rounded">
+            Nilai akhir = Kelancaran − ({config.penalti_lahn_jali} × LJ) − ({config.penalti_lahn_khofi} × LK) − ({penaltiWaqaf} × Waqaf & Ibtida)
+          </p>
+        </div>
       </div>
 
       {/* Surah Entries */}
