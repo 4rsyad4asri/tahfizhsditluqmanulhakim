@@ -65,9 +65,12 @@ const StudentDetail = () => {
 
   // Tahfizh form state
   const [tahfizhEntries, setTahfizhEntries] = useState<TahfizhSurahEntry[]>([
-    { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 100, waqaf_ibtida: 0, salah_sambung_ayat: 0 }
+    { surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 90, waqaf_ibtida: 0, salah_sambung_ayat: 0 }
   ]);
   const [catatanGuru, setCatatanGuru] = useState("");
+  // Tahfizh penalty config (editable)
+  const [tahfizhPenalti, setTahfizhPenalti] = useState({ lj: 2, lk: 1, waqaf: 2, sambung: 2 });
+  const [showTahfizhConfig, setShowTahfizhConfig] = useState(false);
   const tahfizhNow = new Date();
   const [tahfizhTanggal, setTahfizhTanggal] = useState(tahfizhNow.toISOString().split("T")[0]);
   const [tahfizhWaktu, setTahfizhWaktu] = useState(tahfizhNow.toTimeString().slice(0, 5));
