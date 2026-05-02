@@ -804,35 +804,60 @@ const StudentDetail = () => {
                             </div>
                           </div>
 
+                          {/* Kelancaran (priority #1) */}
+                          <div className="p-3 rounded-md bg-primary/10 border-2 border-primary/30">
+                            <h6 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1">
+                              ⭐ 1️⃣ Kelancaran (Prioritas Utama)
+                              <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-primary cursor-help transition-colors" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-[240px] whitespace-pre-line text-xs">
+                                    {"Panduan kelancaran:\n• 100: Sangat lancar tanpa jeda\n• 90: Lancar (default)\n• 80: Cukup lancar\n• 70: Kurang lancar\n• 60: Tidak lancar"}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </h6>
+                            <select value={entry.kelancaran}
+                              onChange={e => updateTahfizhEntry(index, 'kelancaran', parseInt(e.target.value))}
+                              className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                              {KELANCARAN_OPTIONS.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                            <p className="text-[10px] text-muted-foreground mt-1">Default 90 — dapat diubah oleh penguji</p>
+                          </div>
+
                           {/* Lahn Jali */}
                           <div className="p-3 rounded-md bg-destructive/5 border border-destructive/20">
                             <h6 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1">
-                              1️⃣ Lahn Jali (Kesalahan Nyata)
+                              2️⃣ Lahn Jali (Kesalahan Nyata) − {tahfizhPenalti.lj}/kesalahan
                               <TooltipProvider delayDuration={200}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-destructive cursor-help transition-colors" />
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="max-w-[240px] whitespace-pre-line text-xs">
-                                    {"Contoh Lahn Jali:\n• Huruf ث dibaca س\n• Harakat fathah dibaca kasrah\n• Huruf ع dibaca hamzah\n• Huruf ص dibaca س\n• Menambah/mengurangi huruf"}
+                                    {"Contoh Lahn Jali:\n• Huruf ث dibaca س\n• Harakat fathah dibaca kasrah\n• Salah tasydid (kurang/lebih)\n• Menambah/mengurangi huruf"}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
                             </h6>
-                            <p className="text-[10px] text-muted-foreground mb-2">Salah huruf · Salah harakat · Huruf tertukar · Makhraj jelas salah</p>
+                            <p className="text-[10px] text-muted-foreground mb-2">Salah Huruf · Salah Harakat · Salah Tasydid</p>
                             <div>
                               <label className="block text-xs font-medium text-muted-foreground mb-1">Jumlah Kesalahan</label>
                               <input type="number" min={0} max={50} value={entry.lahn_jali}
                                 onChange={e => updateTahfizhEntry(index, 'lahn_jali', parseInt(e.target.value) || 0)}
                                 className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                              <p className="text-[10px] text-muted-foreground mt-1">Skor: 100 - ({entry.lahn_jali} × 4) = <span className="font-bold text-foreground">{Math.max(0, 100 - entry.lahn_jali * 4)}</span></p>
+                              <p className="text-[10px] text-muted-foreground mt-1">Penalti: −{entry.lahn_jali * tahfizhPenalti.lj} poin</p>
                             </div>
                           </div>
 
                           {/* Lahn Khofi */}
                           <div className="p-3 rounded-md bg-warning/5 border border-warning/20">
                             <h6 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1">
-                              2️⃣ Lahn Khofi (Kesalahan Samar)
+                              3️⃣ Lahn Khofi (Kesalahan Samar) − {tahfizhPenalti.lk}/kesalahan
                               <TooltipProvider delayDuration={200}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -850,38 +875,14 @@ const StudentDetail = () => {
                               <input type="number" min={0} max={50} value={entry.lahn_khofi}
                                 onChange={e => updateTahfizhEntry(index, 'lahn_khofi', parseInt(e.target.value) || 0)}
                                 className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                              <p className="text-[10px] text-muted-foreground mt-1">Skor: 100 - ({entry.lahn_khofi} × 2) = <span className="font-bold text-foreground">{Math.max(0, 100 - entry.lahn_khofi * 2)}</span></p>
+                              <p className="text-[10px] text-muted-foreground mt-1">Penalti: −{entry.lahn_khofi * tahfizhPenalti.lk} poin</p>
                             </div>
-                          </div>
-
-                          {/* Kelancaran */}
-                          <div className="p-3 rounded-md bg-primary/5 border border-primary/20">
-                            <h6 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1">
-                              3️⃣ Kelancaran
-                              <TooltipProvider delayDuration={200}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-primary cursor-help transition-colors" />
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top" className="max-w-[240px] whitespace-pre-line text-xs">
-                                    {"Panduan kelancaran:\n• 100: Sangat lancar tanpa jeda\n• 90: Lancar, jeda sangat sedikit\n• 80: Cukup lancar, beberapa jeda\n• 70: Kurang lancar, sering jeda\n• 60: Tidak lancar, sangat terbata"}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </h6>
-                            <select value={entry.kelancaran}
-                              onChange={e => updateTahfizhEntry(index, 'kelancaran', parseInt(e.target.value))}
-                              className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
-                              {KELANCARAN_OPTIONS.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                              ))}
-                            </select>
                           </div>
 
                           {/* Waqaf & Ibtida */}
                           <div className="p-3 rounded-md bg-accent/50 border border-border">
                             <h6 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1">
-                              4️⃣ Waqaf & Ibtida (−2 poin/kesalahan)
+                              4️⃣ Waqaf & Ibtida (−{tahfizhPenalti.waqaf} poin/kesalahan)
                               <TooltipProvider delayDuration={200}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -893,7 +894,7 @@ const StudentDetail = () => {
                                 </Tooltip>
                               </TooltipProvider>
                             </h6>
-                            <p className="text-[10px] text-muted-foreground mb-2">Kesalahan berhenti (waqaf) dan memulai (ibtida) bacaan · Setiap kesalahan −2 poin</p>
+                            <p className="text-[10px] text-muted-foreground mb-2">Kesalahan berhenti (waqaf) dan memulai (ibtida) bacaan · Setiap kesalahan −{tahfizhPenalti.waqaf} poin</p>
                             <div>
                               <label className="text-[10px] text-muted-foreground">Jumlah Kesalahan</label>
                               <input type="number" min={0} value={entry.waqaf_ibtida}
@@ -905,7 +906,7 @@ const StudentDetail = () => {
                           {/* Salah/Lupa Sambung Ayat */}
                           <div className="p-3 rounded-md bg-violet-500/5 border border-violet-500/20">
                             <h6 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1">
-                              5️⃣ Salah/Lupa Sambung Ayat (−2 poin/kesalahan)
+                              5️⃣ Salah/Lupa Sambung Ayat (−{tahfizhPenalti.sambung} poin/kesalahan)
                               <TooltipProvider delayDuration={200}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -917,7 +918,7 @@ const StudentDetail = () => {
                                 </Tooltip>
                               </TooltipProvider>
                             </h6>
-                            <p className="text-[10px] text-muted-foreground mb-2">Kesalahan atau lupa menyambung antar ayat · Setiap kesalahan −2 poin</p>
+                            <p className="text-[10px] text-muted-foreground mb-2">Kesalahan atau lupa menyambung antar ayat · Setiap kesalahan −{tahfizhPenalti.sambung} poin</p>
                             <div>
                               <label className="text-[10px] text-muted-foreground">Jumlah Kesalahan</label>
                               <input type="number" min={0} value={entry.salah_sambung_ayat}
@@ -928,7 +929,9 @@ const StudentDetail = () => {
 
                           {/* Nilai Surat */}
                           <div className="p-3 rounded-md bg-muted text-center">
-                            <p className="text-xs text-muted-foreground">Koreksi = {Math.max(0, 100 - entry.lahn_jali * 4 - entry.lahn_khofi * 2 - entry.waqaf_ibtida * 2 - (entry.salah_sambung_ayat || 0) * 2)} → Nilai = ({Math.max(0, 100 - entry.lahn_jali * 4 - entry.lahn_khofi * 2 - entry.waqaf_ibtida * 2 - (entry.salah_sambung_ayat || 0) * 2)} × 60%) + ({entry.kelancaran} × 40%)</p>
+                            <p className="text-xs text-muted-foreground">
+                              Nilai = {entry.kelancaran} − ({tahfizhPenalti.lj}×{entry.lahn_jali}) − ({tahfizhPenalti.lk}×{entry.lahn_khofi}) − ({tahfizhPenalti.waqaf}×{entry.waqaf_ibtida}) − ({tahfizhPenalti.sambung}×{entry.salah_sambung_ayat || 0})
+                            </p>
                             <p className="text-2xl font-bold text-primary">{calculateNilaiSurah(entry)}</p>
                           </div>
                         </div>
