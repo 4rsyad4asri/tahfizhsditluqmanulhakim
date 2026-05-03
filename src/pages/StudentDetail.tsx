@@ -18,6 +18,7 @@ import { calculateNilaiTahsinDasar, calculateNilaiTahsinLanjutan } from "@/data/
 import type { TahsinDasarEntry, TahsinLanjutanEntry, TahsinPenaltyConfig, WaqafSymbolTest } from "@/data/tahsinScoring";
 import { generateTahsinPDF } from "@/utils/generateTahsinPDF";
 import EditUjianDialog from "@/components/EditUjianDialog";
+import RaportPreviewDialog from "@/components/RaportPreviewDialog";
 
 const KELANCARAN_OPTIONS = [
   { value: 100, label: "Sangat Lancar (100)" },
@@ -41,6 +42,7 @@ const StudentDetail = () => {
   const updateUjian = useUpdateUjian();
   const deleteUjian = useDeleteUjian();
   const [editingUjian, setEditingUjian] = useState<any | null>(null);
+  const [raportUjian, setRaportUjian] = useState<any | null>(null);
 
   const [catatan, setCatatan] = useState("");
   const [catatanInitialized, setCatatanInitialized] = useState(false);
