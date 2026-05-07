@@ -292,34 +292,89 @@ export const generateCertificatePDF = async (
   );
 
   // Signature
-  doc.setFontSize(9);
+// ======================
+// SIGNATURE SECTION
+// ======================
 
-  doc.text(
-    "Kepala Sekolah",
-    w - 60,
-    185,
-    {
-      align: "center",
-    },
-  );
+y += 14;
 
-  doc.line(
-    w - 85,
-    210,
-    w - 35,
-    210,
-  );
+const signBoxY = y;
+const signBoxW = 70;
+const signBoxH = 38;
 
-  doc.setFont("helvetica", "bold");
+// LEFT SIGNATURE BOX
+const leftBoxX = 38;
 
-  doc.text(
-    "__________________",
-    w - 60,
-    214,
-    {
-      align: "center",
-    },
-  );
+doc.setDrawColor(210, 210, 210);
+doc.setFillColor(250, 250, 250);
+
+doc.roundedRect(leftBoxX, signBoxY, signBoxW, signBoxH, 2, 2, "FD");
+
+doc.setFont("helvetica", "bold");
+doc.setFontSize(10);
+doc.setTextColor(22, 101, 52);
+
+doc.text("Koordinator Tahfizh", leftBoxX + signBoxW / 2, signBoxY + 8, {
+  align: "center",
+});
+
+// signature line
+doc.setDrawColor(120, 120, 120);
+doc.setLineWidth(0.5);
+
+doc.line(
+  leftBoxX + 10,
+  signBoxY + 24,
+  leftBoxX + signBoxW - 10,
+  signBoxY + 24
+);
+
+doc.setFont("helvetica", "normal");
+doc.setFontSize(8);
+doc.setTextColor(90, 90, 90);
+
+doc.text("Nama Koordinator", leftBoxX + signBoxW / 2, signBoxY + 29, {
+  align: "center",
+});
+
+doc.text("NIP. ........................", leftBoxX + signBoxW / 2, signBoxY + 34, {
+  align: "center",
+});
+
+// RIGHT SIGNATURE BOX
+const rightBoxX = w - signBoxW - 38;
+
+doc.roundedRect(rightBoxX, signBoxY, signBoxW, signBoxH, 2, 2, "FD");
+
+doc.setFont("helvetica", "bold");
+doc.setFontSize(10);
+doc.setTextColor(22, 101, 52);
+
+doc.text("Kepala Sekolah", rightBoxX + signBoxW / 2, signBoxY + 8, {
+  align: "center",
+});
+
+// signature line
+doc.setDrawColor(120, 120, 120);
+
+doc.line(
+  rightBoxX + 10,
+  signBoxY + 24,
+  rightBoxX + signBoxW - 10,
+  signBoxY + 24
+);
+
+doc.setFont("helvetica", "normal");
+doc.setFontSize(8);
+doc.setTextColor(90, 90, 90);
+
+doc.text("Nama Kepala Sekolah", rightBoxX + signBoxW / 2, signBoxY + 29, {
+  align: "center",
+});
+
+doc.text("NIP. ........................", rightBoxX + signBoxW / 2, signBoxY + 34, {
+  align: "center",
+});
 
   // Footer
   doc.setFont("helvetica", "normal");
