@@ -1,6 +1,5 @@
 import jsPDF from "jspdf";
 import QRCode from "qrcode";
-import logoSekolah from "@/assets/logo.png";
 
 interface CertificateData {
   studentName: string;
@@ -48,7 +47,7 @@ const drawBorder = (doc: jsPDF, w: number, h: number) => {
 
   doc.rect(16, 16, w - 32, h - 32);
 
-  // ornament
+  // corner ornaments
   doc.setFillColor(180, 140, 50);
 
   doc.circle(25, 25, 3, "F");
@@ -83,14 +82,50 @@ export const generateCertificatePDF = async (
   drawBorder(doc, w, h);
 
   // ======================
-  // LOGO
+  // SIMPLE ISLAMIC LOGO
   // ======================
 
-  try {
-    doc.addImage(logoSekolah, "PNG", 20, 20, 28, 28);
-  } catch (err) {
-    console.error("Logo error:", err);
-  }
+  const logoX = 34;
+  const logoY = 30;
+
+  // outer circle
+  doc.setDrawColor(22, 101, 52);
+  doc.setLineWidth(1.2);
+
+  doc.circle(logoX, logoY, 10);
+
+  // inner circle
+  doc.setDrawColor(180, 140, 50);
+
+  doc.circle(logoX, logoY, 7);
+
+  // moon
+  doc.setFillColor(22, 101, 52);
+
+  doc.circle(logoX - 2, logoY, 3, "F");
+
+  doc.setFillColor(250, 248, 240);
+
+  doc.circle(logoX - 1, logoY, 2.5, "F");
+
+  // star
+  doc.setFillColor(180, 140, 50);
+
+  doc.circle(logoX + 4, logoY - 3, 1.2, "F");
+
+  // school text
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(22, 101, 52);
+
+  doc.text(
+    "SDIT",
+    logoX,
+    logoY + 15,
+    {
+      align: "center",
+    },
+  );
 
   // ======================
   // BISMILLAH
@@ -206,8 +241,6 @@ export const generateCertificatePDF = async (
     },
   );
 
-  // underline
-
   const lineWidth = doc.getTextWidth(
     safeText(data.studentName),
   );
@@ -293,8 +326,6 @@ export const generateCertificatePDF = async (
     "S",
   );
 
-  // nilai
-
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
@@ -323,8 +354,6 @@ export const generateCertificatePDF = async (
     boxX + 60,
     boxY + 23,
   );
-
-  // isi nilai
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
@@ -379,7 +408,7 @@ export const generateCertificatePDF = async (
   const signBoxW = 70;
   const signBoxH = 28;
 
-  // kiri
+  // LEFT
 
   const leftX = 32;
 
@@ -419,7 +448,6 @@ export const generateCertificatePDF = async (
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.setTextColor(80, 80, 80);
 
   doc.text(
     "Nama Koordinator",
@@ -430,7 +458,7 @@ export const generateCertificatePDF = async (
     },
   );
 
-  // kanan
+  // RIGHT
 
   const rightX = w - signBoxW - 32;
 
@@ -446,7 +474,6 @@ export const generateCertificatePDF = async (
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.setTextColor(22, 101, 52);
 
   doc.text(
     "Kepala Sekolah",
@@ -466,7 +493,6 @@ export const generateCertificatePDF = async (
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.setTextColor(80, 80, 80);
 
   doc.text(
     "Nama Kepala Sekolah",
@@ -532,14 +558,13 @@ export const generateCertificatePDF = async (
   }
 
   // ======================
-  // SAVE PDF
+  // OPEN + DOWNLOAD
   // ======================
 
   const blobUrl = doc.output("bloburl");
 
   window.open(blobUrl, "_blank");
 
-  // OPTIONAL AUTO DOWNLOAD
   doc.save(
     `Sertifikat_${safeFileName(
       data.studentName,
