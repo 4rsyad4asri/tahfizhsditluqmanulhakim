@@ -357,14 +357,33 @@ function drawStudentInfo(doc: jsPDF, data: RaportData, pageW: number, margin: nu
   doc.setFontSize(5.8);
   doc.setTextColor(120, 120, 120);
 
-  doc.text(
-    "Predikat :",
-    statusX + boxW / 2,
-    startY + 16.5,
-    {
-      align: "center",
-    }
-  );
+doc.setFont("helvetica", "normal");
+doc.setFontSize(6);
+doc.setTextColor(120, 120, 120);
+
+const predY = startY + 17;
+
+doc.text(
+  "Predikat :",
+  statusX + 7,
+  predY
+);
+
+doc.setFont("helvetica", "bold");
+
+doc.setFontSize(
+  data.predikat.length > 14
+    ? 6.5
+    : 8
+);
+
+doc.setTextColor(...EMERALD);
+
+doc.text(
+  data.predikat,
+  statusX + 24,
+  predY
+);
 
   // =========================
   // ISI PREDIKAT
@@ -547,25 +566,101 @@ function drawSignatures(doc: jsPDF, data: RaportData, header: RaportHeader, asse
   doc.setFontSize(opts.fontSize - 1);
   doc.setTextColor(...GRAY_TEXT);
 
-  cells.forEach((cell, i) => {
-    const x = margin + colW * i + colW / 2;
-    let y = baseY + 5;
-    doc.text(cell.title1, x, y, { align: "center" });
-    if (cell.title2) { y += 4; doc.text(cell.title2, x, y, { align: "center" }); }
-    if (cell.sig) safeAddImage(doc, cell.sig, x - 12, y + 2, 24, 14);
-    y += 20;
-    doc.setFont("helvetica", "bold");
-    doc.text(cell.name, x, y, { align: "center" });
-    doc.setLineWidth(0.2); doc.setDrawColor(...GRAY_TEXT);
-    const tw = doc.getTextWidth(cell.name);
-    doc.line(x - tw / 2, y + 0.8, x + tw / 2, y + 0.8);
-    if (cell.sub) {
-      y += 4;
-      doc.setFont("helvetica", "normal"); doc.setFontSize(opts.fontSize - 2);
-      doc.text(cell.sub, x, y, { align: "center" });
-      doc.setFontSize(opts.fontSize - 1);
-    }
+cells.forEach((cell, i) => {
+  const x = margin + colW * i + colW / 2;
+
+  // =========================
+  // TITLE ATAS
+  // =========================
+
+  let y = baseY + 5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(opts.fontSize - 1);
+
+  doc.text(cell.title1, x, y, {
+    align: "center",
   });
+
+  if (cell.title2) {
+    y += 4;
+
+    doc.text(cell.title2, x, y, {
+      align: "center",
+    });
+  }
+
+  // =========================
+  // POSISI TTD
+  // =========================
+
+  const signY = y + 28;
+
+  // =========================
+  // ORANG TUA / WALI
+  // =========================
+
+  if (i === 0 && cols === 3) {
+    doc.setFont("helvetica", "normal");
+
+    doc.text(
+      "(.................................)",
+      x,
+      signY,
+      {
+        align: "center",
+      }
+    );
+  }
+
+  // =========================
+  // PENGUJI & KEPSEK
+  // =========================
+
+  else {
+    // Nama di atas garis
+    doc.setFont("helvetica", "bold");
+
+    doc.text(
+      cell.name,
+      x,
+      signY - 2,
+      {
+        align: "center",
+      }
+    );
+
+    // Garis tanda tangan
+    const lineW = 42;
+
+    doc.setLineWidth(0.3);
+
+    doc.setDrawColor(...GRAY_TEXT);
+
+    doc.line(
+      x - lineW / 2,
+      signY,
+      x + lineW / 2,
+      signY
+    );
+
+    // Jabatan / NIP
+    if (cell.sub) {
+      doc.setFont("helvetica", "normal");
+
+      doc.setFontSize(opts.fontSize - 2);
+
+      doc.text(
+        cell.sub,
+        x,
+        signY + 5,
+        {
+          align: "center",
+        }
+      );
+    }
+  }
+});
 }
 
 export async function generateRaportPDF(
