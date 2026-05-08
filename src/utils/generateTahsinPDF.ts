@@ -214,18 +214,239 @@ export const generateTahsinPDF = (data: TahsinExamData) => {
         waqaf_jaiz: "Waqaf Jaiz (ج)",
         waqaf_mujawwaz: "Waqaf Mujawwaz (صلى)",
         waqaf_mamnu: "Waqaf Mamnu' (لا)",
-        washol_lazim: "Washol Lazim",
+        waqaf_muanaqaf: "Waqaf Muanaqah (∴)",
       };
 
-      Object.entries(data.waqafTest).forEach(([key, val]) => {
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(40, 40, 40);
-        const label = waqafLabels[key] || key;
-        const status = val ? "✓ Benar" : "✗ Salah";
-        doc.text(`${label}: ${status}`, margin + 5, y);
-        y += 4.5;
-      });
+      // ======================================================
+// SECTION : TES SIMBOL WAQAF
+// STYLE   : RAPORT DIGITAL MODERN SDIT
+// ======================================================
+
+const waqafEntries = Object.entries(data.waqafTest);
+
+// =========================
+// HEADER SECTION
+// =========================
+
+doc.setFillColor(7, 94, 84);
+doc.roundedRect(
+  margin,
+  y,
+  pageWidth - (margin * 2),
+  10,
+  2,
+  2,
+  "F"
+);
+
+doc.setFont("helvetica", "bold");
+doc.setFontSize(12);
+doc.setTextColor(255, 255, 255);
+
+doc.text("TES SIMBOL WAQAF", margin + 5, y + 6.5);
+
+y += 15;
+
+// ======================================================
+// CONFIG GRID
+// ======================================================
+
+const columns = 2;
+
+const cardWidth = 87;
+const cardHeight = 18;
+
+const gapX = 8;
+const gapY = 6;
+
+// ======================================================
+// ICON WAQAF ARAB
+// ======================================================
+
+const waqafArabic: Record<string, string> = {
+  waqaf_lazim: "مـ",
+  waqaf_mustahab: "قلى",
+  waqaf_jaiz: "ج",
+  waqaf_mujawwaz: "صلى",
+  waqaf_mamnu: "لا",
+  waqaf_muanaqah: "(∴)",
+};
+
+// ======================================================
+// CARD LOOP
+// ======================================================
+
+waqafEntries.forEach(([key, val], index) => {
+
+  const col = index % columns;
+  const row = Math.floor(index / columns);
+
+  const x =
+    margin +
+    (col * (cardWidth + gapX));
+
+  const cardY =
+    y +
+    (row * (cardHeight + gapY));
+
+  const label = waqafLabels[key] || key;
+
+  const arabic = waqafArabic[key] || "ۘ";
+
+  // ======================================================
+  // COLOR SYSTEM
+  // ======================================================
+
+  const bgColor = val
+    ? [240, 252, 245]
+    : [255, 243, 243];
+
+  const borderColor = val
+    ? [22, 163, 74]
+    : [220, 38, 38];
+
+  const badgeColor = val
+    ? [22, 163, 74]
+    : [220, 38, 38];
+
+  // ======================================================
+  // CARD SHADOW
+  // ======================================================
+
+  doc.setFillColor(220, 220, 220);
+
+  doc.roundedRect(
+    x + 1,
+    cardY + 1,
+    cardWidth,
+    cardHeight,
+    3,
+    3,
+    "F"
+  );
+
+  // ======================================================
+  // MAIN CARD
+  // ======================================================
+
+  doc.setFillColor(...bgColor);
+  doc.setDrawColor(...borderColor);
+
+  doc.roundedRect(
+    x,
+    cardY,
+    cardWidth,
+    cardHeight,
+    3,
+    3,
+    "FD"
+  );
+
+  // ======================================================
+  // ICON BOX
+  // ======================================================
+
+  doc.setFillColor(...borderColor);
+
+  doc.roundedRect(
+    x + 3,
+    cardY + 3,
+    14,
+    12,
+    2,
+    2,
+    "F"
+  );
+
+  // ======================================================
+  // ARABIC SYMBOL
+  // ======================================================
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(255, 255, 255);
+
+  doc.text(
+    arabic,
+    x + 10,
+    cardY + 10,
+    {
+      align: "center"
+    }
+  );
+
+  // ======================================================
+  // LABEL
+  // ======================================================
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+
+  doc.setTextColor(35, 35, 35);
+
+  doc.text(
+    label,
+    x + 21,
+    cardY + 7
+  );
+
+  // ======================================================
+  // STATUS TEXT
+  // ======================================================
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+
+  doc.setTextColor(90, 90, 90);
+
+  doc.text(
+    val
+      ? "Jawaban Benar"
+      : "Jawaban Salah",
+    x + 21,
+    cardY + 12
+  );
+
+  // ======================================================
+  // STATUS BADGE
+  // ======================================================
+
+  doc.setFillColor(...badgeColor);
+
+  doc.roundedRect(
+    x + cardWidth - 22,
+    cardY + 4,
+    18,
+    6,
+    2,
+    2,
+    "F"
+  );
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(6);
+
+  doc.setTextColor(255, 255, 255);
+
+  doc.text(
+    val ? "BENAR" : "SALAH",
+    x + cardWidth - 13,
+    cardY + 8,
+    {
+      align: "center"
+    }
+  );
+});
+
+// ======================================================
+// UPDATE Y
+// ======================================================
+
+y +=
+  (
+    Math.ceil(waqafEntries.length / columns)
+    * (cardHeight + gapY)
+  ) + 8;
     }
   }
 
