@@ -273,10 +273,7 @@ function drawStudentInfo(doc: jsPDF, data: RaportData, pageW: number, margin: nu
     );
   };
 
-  // =========================
   // BOX NILAI
-  // =========================
-
   draw(
     margin,
     "Nilai Akhir",
@@ -284,10 +281,7 @@ function drawStudentInfo(doc: jsPDF, data: RaportData, pageW: number, margin: nu
     EMERALD
   );
 
-  // =========================
   // BOX GRADE
-  // =========================
-
   draw(
     margin + boxW + gap,
     "Grade",
@@ -300,8 +294,6 @@ function drawStudentInfo(doc: jsPDF, data: RaportData, pageW: number, margin: nu
   // =========================
 
   doc.setDrawColor(...EMERALD);
-  doc.setLineWidth(0.6);
-  doc.setFillColor(255, 255, 255);
 
   doc.roundedRect(
     statusX,
@@ -325,7 +317,7 @@ function drawStudentInfo(doc: jsPDF, data: RaportData, pageW: number, margin: nu
     { align: "center" }
   );
 
-  // TEXT LULUS
+  // TEXT STATUS
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
 
@@ -343,70 +335,65 @@ function drawStudentInfo(doc: jsPDF, data: RaportData, pageW: number, margin: nu
   doc.text(
     statusText,
     statusX + boxW / 2,
-    startY + 11.5,
+    startY + 11,
     {
       align: "center",
     }
   );
 
   // =========================
-  // LABEL PREDIKAT
+  // PREDIKAT
   // =========================
 
+  const predY = startY + 17;
+
+  // Label
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(5.8);
+  doc.setFontSize(6.5);
   doc.setTextColor(120, 120, 120);
 
-doc.setFont("helvetica", "normal");
-doc.setFontSize(6);
-doc.setTextColor(120, 120, 120);
+  const label = "Predikat :";
+  const labelWidth = doc.getTextWidth(label);
 
-const predY = startY + 17;
-
-doc.text(
-  "Predikat :",
-  statusX + 7,
-  predY
-);
-
-doc.setFont("helvetica", "bold");
-
-doc.setFontSize(
-  data.predikat.length > 14
-    ? 6.5
-    : 8
-);
-
-doc.setTextColor(...EMERALD);
-
-doc.text(
-  data.predikat,
-  statusX + 24,
-  predY
-);
-
-  // =========================
-  // ISI PREDIKAT
-  // =========================
-
+  // Isi
   doc.setFont("helvetica", "bold");
 
   const predikatSize =
     data.predikat.length > 14
       ? 6.5
-      : 8;
+      : 6.5;
 
   doc.setFontSize(predikatSize);
+  doc.setTextColor(...EMERALD);
 
+  const valueWidth = doc.getTextWidth(data.predikat);
+
+  // TOTAL WIDTH
+  const totalWidth = labelWidth + 2 + valueWidth;
+
+  const startX =
+    statusX + (boxW / 2) - (totalWidth / 2);
+
+  // DRAW LABEL
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(120, 120, 120);
+
+  doc.text(
+    label,
+    startX,
+    predY
+  );
+
+  // DRAW VALUE
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(predikatSize);
   doc.setTextColor(...EMERALD);
 
   doc.text(
     data.predikat,
-    statusX + boxW / 2,
-    startY + 20,
-    {
-      align: "center",
-    }
+    startX + labelWidth + 2,
+    predY
   );
 }
 
@@ -573,14 +560,19 @@ cells.forEach((cell, i) => {
   // TITLE ATAS
   // =========================
 
-  let y = baseY + 5;
+let y = baseY + 5;
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(opts.fontSize - 1);
+// KHUSUS PENGUJI TURUN 1 BARIS
+if (cell.title1 === "Penguji,") {
+  y += 4;
+}
 
-  doc.text(cell.title1, x, y, {
-    align: "center",
-  });
+doc.setFont("helvetica", "normal");
+doc.setFontSize(opts.fontSize - 1);
+
+doc.text(cell.title1, x, y, {
+  align: "center",
+});
 
   if (cell.title2) {
     y += 4;
@@ -594,7 +586,7 @@ cells.forEach((cell, i) => {
   // POSISI TTD
   // =========================
 
-  const signY = y + 28;
+  const signY = y + 20;
 
   // =========================
   // ORANG TUA / WALI
