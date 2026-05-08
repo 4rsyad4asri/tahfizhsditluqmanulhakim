@@ -294,16 +294,17 @@ function drawStudentInfo(doc: jsPDF, data: RaportData, pageW: number, margin: nu
   // =========================
 
   doc.setDrawColor(...EMERALD);
+doc.setFillColor(255, 255, 255);
 
-  doc.roundedRect(
-    statusX,
-    startY,
-    boxW,
-    h,
-    2,
-    2,
-    "FD"
-  );
+doc.roundedRect(
+  statusX,
+  startY,
+  boxW,
+  h,
+  2,
+  2,
+  "FD"
+);
 
   // LABEL STATUS
   doc.setFont("helvetica", "normal");
