@@ -223,34 +223,93 @@ function drawStudentInfo(doc: jsPDF, data: RaportData, pageW: number, margin: nu
   });
 }
 
-function drawScoreSummary(doc: jsPDF, data: RaportData, pageW: number, margin: number, startY: number) {
+function drawScoreSummary(
+  doc: jsPDF,
+  data: RaportData,
+  pageW: number,
+  margin: number,
+  startY: number
+) {
   const gap = 4;
-  const w = (pageW - margin * 2 - gap * 2) / 3;
+  const boxW = (pageW - margin * 2 - gap * 2) / 3;
   const h = 18;
-  const draw = (x: number, label: string, value: string, color: [number, number, number]) => {
+
+  const statusX = margin + (boxW + gap) * 2;
+
+  const draw = (
+    x: number,
+    label: string,
+    value: string,
+    color: [number, number, number]
+  ) => {
     doc.setDrawColor(...color);
     doc.setLineWidth(0.6);
     doc.setFillColor(255, 255, 255);
-    doc.roundedRect(x, startY, w, h, 1.5, 1.5, "FD");
+
+    doc.roundedRect(x, startY, boxW, h, 1.5, 1.5, "FD");
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(110, 110, 110);
-    doc.text(label.toUpperCase(), x + w / 2, startY + 5, { align: "center" });
+
+    doc.text(label.toUpperCase(), x + boxW / 2, startY + 5, {
+      align: "center",
+    });
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(15);
     doc.setTextColor(...color);
-    doc.text(value, x + w / 2, startY + 13, { align: "center" });
-  };
-  draw(margin, "Nilai Akhir", String(data.nilaiAkhir), EMERALD);
-  draw(margin + w + gap, "Grade", data.grade, GOLD);
-  draw(margin + (w + gap) * 2, "Status", data.status === "Lulus" ? "✓ LULUS" : "✗ T.LULUS",
-    data.status === "Lulus" ? EMERALD : [185, 28, 28]);
 
-  // Predikat line
+    doc.text(value, x + boxW / 2, startY + 13, {
+      align: "center",
+    });
+  };
+
+  // BOX NILAI
+  draw(
+    margin,
+    "Nilai Akhir",
+    String(data.nilaiAkhir),
+    EMERALD
+  );
+
+  // BOX GRADE
+  draw(
+    margin + boxW + gap,
+    "Grade",
+    data.grade,
+    GOLD
+  );
+
+  // BOX STATUS
+  draw(
+    statusX,
+    "Status",
+    data.status === "Lulus"
+      ? "✓ LULUS"
+      : "✗ T.LULUS",
+    data.status === "Lulus"
+      ? EMERALD
+      : [185, 28, 28]
+  );
+
+  // =========================
+  // PREDIKAT DI BAWAH STATUS
+  // =========================
+
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
+  doc.setFontSize(9);
+
   doc.setTextColor(...EMERALD);
-  doc.text(`Predikat: ${data.predikat}`, pageW / 2, startY + h + 5, { align: "center" });
+
+  doc.text(
+    `Predikat: ${data.predikat}`,
+    statusX + boxW / 2,
+    startY + h + 10,
+    {
+      align: "center",
+    }
+  );
 }
 
 function drawDetail(doc: jsPDF, data: RaportData, pageW: number, margin: number, startY: number, opts: RaportPdfOptions): number {
@@ -288,9 +347,9 @@ function drawDetail(doc: jsPDF, data: RaportData, pageW: number, margin: number,
       columnStyles: { 0: { halign: "left", fontStyle: "bold" }, 7: { fontStyle: "bold", textColor: EMERALD as any } },
       didDrawPage: () => {},
     });
-    y = (doc as any).lastAutoTable.finalY + 2;
+    y = (doc as any).lastAutoTable.finalY + 6;
     doc.setFont("helvetica", "italic");
-    doc.setFontSize(7);
+    doc.setFontSize(5.5);
     doc.setTextColor(120, 120, 120);
     doc.text("Rumus: Nilai = Kelancaran − (LJ×2) − (LK×1) − (Waqaf×2) − (Sambung×2)", margin, y);
     y += 5;
