@@ -154,7 +154,7 @@ function drawHeader(
   doc.setTextColor(...EMERALD);
   const title =
     data.mode === "Tahfizh"
-      ? "RAPOR HASIL UJIAN SERTIFIKASI TAHFIZH AL-QUR'AN"
+      ? "RAPOR HASIL UJIAN TAHFIZH AL-QUR'AN"
       : `RAPOR HASIL UJIAN ${data.mode.toUpperCase()}`;
   doc.text(title, pageW / 2, titleY, { align: "center" });
 
