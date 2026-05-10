@@ -605,106 +605,77 @@ function sectionTitle(
   return y + 7;
 }
 
-function drawDetail(
-  doc: jsPDF,
-  data: RaportData,
-  pageW: number,
-  margin: number,
-  startY: number,
-  opts: RaportPdfOptions
-): number {
-  let y = startY;
-  const formulaFontSize = 7;
-  const EMERALD_RGB = [16, 185, 129]; 
+// 2. TES SIMBOL WAQAF (VERSI FINAL - FIX WASHOL LAZIM)
+    if (data.waqafTest && Object.keys(data.waqafTest).length > 0) {
+      y = sectionTitle(doc, "TES SIMBOL WAQAF", margin, y) || y;
+      const entries = Object.entries(data.waqafTest);
+      const cols = entries.length; 
+      const gap = 2;
+      const cardW = (pageW - margin * 2 - (cols - 1) * gap) / (cols || 1);
+      const cardH = 11;
 
-  const tableStyles: any = { 
-    font: "helvetica", 
-    fontSize: opts.tableFontSize - 1, 
-    halign: "center",
-    textColor: [50, 50, 50],
-    lineColor: [220, 220, 220],
-    lineWidth: 0.1
-  };
+      // Daftar ejaan yang mungkin muncul dari database
+      const waqafArabic: Record<string, string> = { 
+        waqaf_lazim: "م", 
+        waqaf_mustahab: "قلى", 
+        waqaf_jaiz: "ج", 
+        waqaf_mujawwaz: "ص", 
+        waqaf_mamnu: "لا", 
+        waqaf_muanaqah: "ۛ", 
+        washol_lazim: "ۛ", // Ejaan user
+        washal_lazim: "ۛ", 
+        wasol_lazim: "ۛ"
+      };
 
-  const headStyles: any = { 
-    fillColor: EMERALD_RGB, 
-    textColor: [255, 255, 255], 
-    fontStyle: "bold",
-    lineColor: [255, 255, 255],
-    lineWidth: 0.3
-  };
+      const labels: Record<string, string> = { 
+        waqaf_lazim: "Lazim", 
+        waqaf_mustahab: "Mustahab", 
+        waqaf_jaiz: "Jaiz", 
+        waqaf_mujawwaz: "Mujawwaz", 
+        waqaf_mamnu: "Mamnu'", 
+        waqaf_muanaqah: "Muanaqah", 
+        washol_lazim: "Muanaqah", // Ejaan user
+        washal_lazim: "Muanaqah",
+        wasol_lazim: "Muanaqah"
+      };
 
-  // 1. DETAIL TABEL (Hanya muncul jika mode sesuai)
-  if (data.mode === "Tahsin Lanjutan" && data.lanjutanEntries) {
-    y = sectionTitle(doc, "DETAIL TAHSIN LANJUTAN", margin, y) || y;
-    autoTable(doc, {
-      startY: y,
-      margin: { left: margin, right: margin },
-      theme: "grid",
-      head: [["Surat", "Ayat", "Salah Huruf", "Salah Harakat", "Salah Makhraj", "Mad", "Qalqalah", "Tajwid", "Waqaf", "Kelancaran", "Nilai"]],
-      body: data.lanjutanEntries.map((e) => [
-        e.surah || "-", e.ayat || "-", e.salah_huruf ?? 0, e.salah_harakat ?? 0, e.salah_makhraj ?? 0,
-        e.kesalahan_mad ?? 0, e.kesalahan_qalqalah ?? 0, e.kesalahan_tajwid ?? 0, e.waqaf_ibtida ?? 0,
-        e.kelancaran ?? 0,
-        calculateNilaiTahsinLanjutan(e, data.lanjutanConfig || { penalti_lahn_jali: 2, penalti_lahn_khofi: 1, bobot_kelancaran: 40 }, data.penaltiWaqaf ?? 2),
-      ]),
-      styles: tableStyles,
-      headStyles: headStyles,
-      alternateRowStyles: { fillColor: [250, 250, 250] }
-    });
-    y = (doc as any).lastAutoTable.finalY + 3;
-    doc.setFontSize(formulaFontSize);
-    doc.setTextColor(100, 100, 100);
-    doc.text("*Rumus: Kelancaran - (2 x Lahn Jali) - (1 x Lahn Khofi) - (2 x Waqaf)", margin, y);
-    y += 6;
-  }
+      entries.forEach(([key, val], index) => {
+        const x = margin + index * (cardW + gap);
+        const color: [number, number, number] = val ? [22, 163, 74] : [220, 38, 38];
+        
+        doc.setDrawColor(color[0], color[1], color[2]);
+        doc.roundedRect(x, y, cardW, cardH, 1, 1, "D");
 
-  // 2. TES SIMBOL WAQAF
-  if (data.waqafTest && Object.keys(data.waqafTest).length > 0) {
-    y = sectionTitle(doc, "TES SIMBOL WAQAF", margin, y) || y;
-    const entries = Object.entries(data.waqafTest);
-    const cols = entries.length; 
-    const gap = 2;
-    const cardW = (pageW - margin * 2 - (cols - 1) * gap) / (cols || 1);
-    const cardH = 11;
+        // --- LOGIKA SAPU JAGAT ---
+        // Jika nama mengandung 'washol', 'washal', atau 'wasol', paksa jadi Muanaqah
+        let finalLabel = labels[key] || key.replace(/_/g, ' ').toUpperCase();
+        let finalSymbol = waqafArabic[key] || " ";
 
-    const waqafArabic: Record<string, string> = { 
-      waqaf_lazim: "م", waqaf_mustahab: "قلى", waqaf_jaiz: "ج", 
-      waqaf_mujawwaz: "ص", waqaf_mamnu: "لا", waqaf_muanaqah: "ۛ", 
-      washal_lazim: "ۛ" 
-    };
-    const labels: Record<string, string> = { 
-      waqaf_lazim: "Lazim", waqaf_mustahab: "Mustahab", waqaf_jaiz: "Jaiz", 
-      waqaf_mujawwaz: "Mujawwaz", waqaf_mamnu: "Mamnu'", waqaf_muanaqah: "Muanaqah", 
-      washal_lazim: "Muanaqah" 
-    };
+        const k = key.toLowerCase();
+        if (k.includes("washol") || k.includes("washal") || k.includes("wasol")) {
+          finalLabel = "Muanaqah";
+          finalSymbol = "ۛ";
+        }
 
-    entries.forEach(([key, val], index) => {
-      const x = margin + index * (cardW + gap);
-      const color: [number, number, number] = val ? [22, 163, 74] : [220, 38, 38];
-      doc.setDrawColor(color[0], color[1], color[2]);
-      doc.roundedRect(x, y, cardW, cardH, 1, 1, "D");
+        // Render Simbol Arab
+        doc.setFont("Amiri", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(color[0], color[1], color[2]);
+        doc.text(String(finalSymbol), x + 2.5, y + 7);
 
-      doc.setFont("Amiri", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(color[0], color[1], color[2]);
-      doc.text(String(waqafArabic[key] || " "), x + 2.5, y + 7);
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.5);
-      doc.setTextColor(40, 40, 40);
-      const labelText = labels[key] || key.replace(/_/g, ' ').toUpperCase();
-      doc.text(String(labelText), x + 8, y + 4.5);
-      
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(6);
-      doc.text(val ? "Benar" : "Salah", x + 8, y + 8.5);
-    });
-    y += cardH + 5;
-  }
-
-  return y; // Pastikan return y ada di sini
-} // Tutup fungsi drawDetail dengan benar
+        // Render Label Teks
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(6.5);
+        doc.setTextColor(40, 40, 40);
+        doc.text(String(finalLabel), x + 8, y + 4.5);
+        
+        // Render Status (Benar/Salah)
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6);
+        doc.text(val ? "Benar" : "Salah", x + 8, y + 8.5);
+      });
+      y += cardH + 5;
+    }
 
 function drawCatatan(
   doc: jsPDF,
