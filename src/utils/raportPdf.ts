@@ -756,6 +756,7 @@ function drawDetail(
   }
   return y;
 }
+
 function drawCatatan(
   doc: jsPDF,
   catatan: string,
