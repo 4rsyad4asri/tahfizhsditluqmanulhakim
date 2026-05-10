@@ -1097,7 +1097,20 @@ function drawSignatures(
       colW / 2;
 
     let y = startY + 5;
+let y = baseY + 5;
 
+// KHUSUS PENGUJI TURUN 1 BARIS
+if (cell.title1 === "Penguji,") {
+  y += 4;
+}
+
+doc.setFont("helvetica", "normal");
+doc.setFontSize(opts.fontSize - 1);
+
+doc.text(cell.title1, x, y, {
+  align: "center",
+});
+    
     doc.setFont("helvetica", "normal");
     doc.setFontSize(opts.fontSize - 1);
     doc.setTextColor(...GRAY_TEXT);
