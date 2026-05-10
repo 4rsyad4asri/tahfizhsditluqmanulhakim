@@ -158,10 +158,10 @@ function drawHeader(
   qrDataUrl?: string,
   nomorDokumen?: string,
 ) {
-  const headerH = 22;
+  const headerH = 24;
 
   doc.setDrawColor(...EMERALD);
-  doc.setLineWidth(0.5);
+  doc.setLineWidth(0.7);
 
   doc.line(
     margin,
@@ -170,7 +170,7 @@ function drawHeader(
     margin + headerH
   );
 
-  const logoSize = 16;
+  const logoSize = 17;
 
   if (assets.logoLeft) {
     safeAddImage(
@@ -196,13 +196,16 @@ function drawHeader(
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
+
   doc.setTextColor(...EMERALD);
 
   doc.text(
     header.schoolName.toUpperCase(),
     pageW / 2,
     margin + 5,
-    { align: "center" }
+    {
+      align: "center"
+    }
   );
 
   doc.setFont("helvetica", "normal");
@@ -212,10 +215,12 @@ function drawHeader(
     header.programName,
     pageW / 2,
     margin + 10,
-    { align: "center" }
+    {
+      align: "center"
+    }
   );
 
-  doc.setFontSize(7);
+  doc.setFontSize(7.5);
 
   doc.setTextColor(...GRAY_TEXT);
 
@@ -223,10 +228,13 @@ function drawHeader(
     header.address,
     pageW / 2,
     margin + 15,
-    { align: "center" }
+    {
+      align: "center"
+    }
   );
 
-  const titleY = margin + headerH + 5;
+  const titleY =
+    margin + headerH + 5;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
@@ -242,7 +250,9 @@ function drawHeader(
     title,
     pageW / 2,
     titleY,
-    { align: "center" }
+    {
+      align: "center"
+    }
   );
 
   if (nomorDokumen) {
@@ -255,7 +265,9 @@ function drawHeader(
       `No. Dok: ${nomorDokumen}`,
       pageW / 2,
       titleY + 4,
-      { align: "center" }
+      {
+        align: "center"
+      }
     );
   }
 
@@ -263,10 +275,10 @@ function drawHeader(
     safeAddImage(
       doc,
       qrDataUrl,
-      pageW - margin - 15,
+      pageW - margin - 16,
       margin + headerH + 1,
-      15,
-      15
+      16,
+      16
     );
   }
 }
@@ -426,17 +438,17 @@ function drawScoreSummary(
   const boxW =
     (pageW - margin * 2 - gap * 2) / 3;
 
-  const h = 18;
+  const h = 26;
 
-  const draw = (
+  const drawCard = (
     x: number,
-    label: string,
+    title: string,
     value: string,
     color: [number, number, number]
   ) => {
-    doc.setDrawColor(...color);
 
-    doc.setLineWidth(0.4);
+    doc.setDrawColor(...color);
+    doc.setLineWidth(0.7);
 
     doc.roundedRect(
       x,
@@ -445,58 +457,140 @@ function drawScoreSummary(
       h,
       2,
       2,
-      "D"
+      "S"
     );
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(6);
+    doc.setFontSize(6.5);
 
-    doc.setTextColor(100, 100, 100);
+    doc.setTextColor(120, 120, 120);
 
     doc.text(
-      label.toUpperCase(),
+      title.toUpperCase(),
       x + boxW / 2,
-      startY + 4,
-      { align: "center" }
+      startY + 6,
+      {
+        align: "center"
+      }
     );
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
+    doc.setFontSize(17);
 
     doc.setTextColor(...color);
 
     doc.text(
       value,
       x + boxW / 2,
-      startY + 11,
-      { align: "center" }
+      startY + 16,
+      {
+        align: "center"
+      }
     );
   };
 
-  draw(
+  drawCard(
     margin,
     "Nilai",
     String(data.nilaiAkhir),
     EMERALD
   );
 
-  draw(
+  drawCard(
     margin + boxW + gap,
     "Grade",
     data.grade,
     GOLD
   );
 
-  const statusColor =
-    data.status === "Lulus"
-      ? EMERALD
-      : [185, 28, 28];
+  const statusX =
+    margin + (boxW + gap) * 2;
 
-  draw(
-    margin + (boxW + gap) * 2,
-    "Status",
+  doc.setDrawColor(...EMERALD);
+  doc.setLineWidth(0.7);
+
+  doc.roundedRect(
+    statusX,
+    startY,
+    boxW,
+    h,
+    2,
+    2,
+    "S"
+  );
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+
+  doc.setTextColor(120, 120, 120);
+
+  doc.text(
+    "STATUS",
+    statusX + boxW / 2,
+    startY + 6,
+    {
+      align: "center"
+    }
+  );
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+
+  doc.setTextColor(
+    ...(data.status === "Lulus"
+      ? EMERALD
+      : [220, 38, 38])
+  );
+
+  doc.text(
     data.status.toUpperCase(),
-    statusColor as [number, number, number]
+    statusX + boxW / 2,
+    startY + 14,
+    {
+      align: "center"
+    }
+  );
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6);
+
+  doc.setTextColor(120, 120, 120);
+
+  const label = "Predikat : ";
+
+  const labelWidth =
+    doc.getTextWidth(label);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(6);
+
+  const valueWidth =
+    doc.getTextWidth(data.predikat);
+
+  const totalWidth =
+    labelWidth + valueWidth;
+
+  const startX =
+    statusX +
+    (boxW / 2) -
+    (totalWidth / 2);
+
+  doc.setFont("helvetica", "normal");
+
+  doc.text(
+    label,
+    startX,
+    startY + 22
+  );
+
+  doc.setFont("helvetica", "bold");
+
+  doc.setTextColor(...EMERALD);
+
+  doc.text(
+    data.predikat,
+    startX + labelWidth,
+    startY + 22
   );
 }
 
@@ -1071,6 +1165,7 @@ function drawSignatures(
   margin: number,
   startY: number
 ) {
+
   const colW =
     (pageW - margin * 2) / 3;
 
@@ -1078,134 +1173,109 @@ function drawSignatures(
     {
       title1: "Mengetahui,",
       title2: "Orang Tua/Wali",
-      name: "(........................)"
+      name: "(.................................)",
+      line: false,
     },
-
     {
       title1: "Penguji,",
       name:
         data.assessorName ||
-        "(........................)",
+        "(.................................)",
       sub: header.examinerTitle,
-      sig: assets.sigExaminer,
+      line: true,
     },
-
     {
       title1:
         `${header.city}, ${fmtTanggal(data.tanggal)}`,
-
-      title2:
-        `${header.headmasterTitle},`,
-
-      name:
-        header.headmaster,
-
-      sub:
-        `NIP: ${header.nip}`,
-
-      sig:
-        assets.sigHeadmaster,
+      title2: `${header.headmasterTitle},`,
+      name: header.headmaster,
+      sub: `NIP: ${header.nip}`,
+      line: true,
     },
   ];
 
-  positions.forEach((cell, i) => {
+  positions.forEach((p, i) => {
+
     const x =
       margin +
-      colW * i +
-      colW / 2;
+      (colW * i) +
+      (colW / 2);
 
-    let y = startY + 3;
+    let y = startY + 5;
 
-    doc.setFont(
-      "helvetica",
-      "normal"
-    );
+    if (p.title1 === "Penguji,") {
+      y += 4;
+    }
 
-    doc.setFontSize(6.8);
-
-    doc.setTextColor(
-      ...GRAY_TEXT
-    );
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(opts.fontSize - 1);
 
     doc.text(
-      cell.title1,
+      p.title1,
       x,
       y,
       {
-        align: "center",
+        align: "center"
       }
     );
 
-    if (cell.title2) {
-      y += 3.5;
+    if (p.title2) {
+      y += 4;
 
       doc.text(
-        cell.title2,
+        p.title2,
         x,
         y,
         {
-          align: "center",
+          align: "center"
         }
       );
     }
 
-    const signY =
-      y + 12;
+    const signY = y + 20;
 
-    if (cell.sig) {
-      safeAddImage(
-        doc,
-        cell.sig,
-        x - 10,
-        signY - 9,
-        20,
-        10
-      );
-    }
-
-    doc.setFont(
-      "helvetica",
-      "bold"
-    );
+    doc.setFont("helvetica", "bold");
 
     doc.text(
-      cell.name,
+      p.name,
       x,
-      signY,
+      signY - 2,
       {
-        align: "center",
+        align: "center"
       }
     );
 
-    doc.setLineWidth(0.2);
+    if (p.line) {
 
-    doc.line(
-      x - 18,
-      signY + 0.7,
-      x + 18,
-      signY + 0.7
-    );
+      doc.setLineWidth(0.7);
 
-    if (cell.sub) {
-      doc.setFont(
-        "helvetica",
-        "normal"
+      doc.line(
+        x - 23,
+        signY,
+        x + 23,
+        signY
+      );
+    }
+
+    if (p.sub) {
+
+      doc.setFont("helvetica", "normal");
+
+      doc.setFontSize(
+        opts.fontSize - 2
       );
 
-      doc.setFontSize(6);
-
       doc.text(
-        cell.sub,
+        p.sub,
         x,
-        signY + 4,
+        signY + 5,
         {
-          align: "center",
+          align: "center"
         }
       );
     }
   });
 }
-
 export async function generateRaportPDF(
   data: RaportData,
   header: RaportHeader,
