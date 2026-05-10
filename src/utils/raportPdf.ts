@@ -729,6 +729,7 @@ function drawDetail(
       });
       y += cardH + 5;
     }
+    }
 
 function drawCatatan(
   doc: jsPDF,
