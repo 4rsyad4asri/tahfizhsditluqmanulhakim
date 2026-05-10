@@ -605,121 +605,61 @@ function sectionTitle(
   return y + 7;
 }
 
-function drawDetail(
-  doc: jsPDF,
-  data: RaportData,
-  pageW: number,
-  margin: number,
-  startY: number,
-  opts: RaportPdfOptions
-): number {
-  let y = startY;
-  const formulaFontSize = 7;
-  const EMERALD_RGB = [16, 185, 129]; 
+// --- BAGIAN TES SIMBOL WAQAF ---
+if (data.waqafTest) {
+  y = sectionTitle(doc, "TES SIMBOL WAQAF", margin, y);
+  const entries = Object.entries(data.waqafTest);
+  const cols = entries.length; 
+  const gap = 2;
+  const cardW = (pageW - margin * 2 - (cols - 1) * gap) / cols;
+  const cardH = 11;
 
-  // --- STYLE PROFESIONAL ---
-  const tableStyles: any = { 
-    font: "helvetica", 
-    fontSize: opts.tableFontSize - 1, 
-    halign: "center",
-    textColor: [50, 50, 50],
-    lineColor: [220, 220, 220], // Garis abu-abu lembut
-    lineWidth: 0.1
-  };
-  const headStyles: any = { 
-    fillColor: EMERALD_RGB, 
-    textColor: [255, 255, 255], 
-    fontStyle: "bold",
-    lineColor: [255, 255, 255], // Garis pemisah putih agar elegan
-    lineWidth: 0.3
-  };
+  entries.forEach(([key, val], index) => {
+    const x = margin + index * (cardW + gap);
+    const color: [number, number, number] = val ? [22, 163, 74] : [220, 38, 38];
+    doc.setDrawColor(color[0], color[1], color[2]);
+    doc.roundedRect(x, y, cardW, cardH, 1, 1, "D");
 
-  // 1. DETAIL TAHSIN LANJUTAN (Sesuai Gambar)
-  if (data.mode === "Tahsin Lanjutan" && data.lanjutanEntries) {
-    y = sectionTitle(doc, "DETAIL TAHSIN LANJUTAN", margin, y);
-    autoTable(doc, {
-      startY: y,
-      margin: { left: margin, right: margin },
-      theme: "grid",
-      head: [["Surat", "Ayat", "Salah Huruf", "Salah Harakat", "Salah Makhraj", "Mad", "Qalqalah", "Tajwid", "Waqaf", "Kelancaran", "Nilai"]],
-      body: data.lanjutanEntries.map((e) => [
-        e.surah || "-", 
-        e.ayat || "-", 
-        e.salah_huruf ?? 0, 
-        e.salah_harakat ?? 0, 
-        e.salah_makhraj ?? 0, 
-        e.kesalahan_mad ?? 0, 
-        e.kesalahan_qalqalah ?? 0, 
-        e.kesalahan_tajwid ?? 0, 
-        e.waqaf_ibtida ?? 0, // Ini perbaikannya (pakai ?? 0)
-        e.kelancaran ?? 0,
-        calculateNilaiTahsinLanjutan(e, data.lanjutanConfig || { penalti_lahn_jali: 2, penalti_lahn_khofi: 1, bobot_kelancaran: 40 }, data.penaltiWaqaf ?? 2),
-      ]),
-      styles: tableStyles,
-      headStyles: headStyles,
-      alternateRowStyles: { fillColor: [250, 250, 250] }
-    });
+    // --- PERBAIKAN DI SINI ---
+    // Tambahkan key 'washal_lazim' tapi beri nilai simbol & label Muanaqah
+    const waqafArabic: any = { 
+      waqaf_lazim: "م", 
+      waqaf_mustahab: "قلى", 
+      waqaf_jaiz: "ج", 
+      waqaf_mujawwaz: "ص", 
+      waqaf_mamnu: "لا", 
+      waqaf_muanaqah: "ۛ",
+      washal_lazim: "ۛ" // Jika database mengirim 'washal_lazim', tampilkan simbol muanaqah
+    };
+    
+    const labels: any = { 
+      waqaf_lazim: "Lazim", 
+      waqaf_mustahab: "Mustahab", 
+      waqaf_jaiz: "Jaiz", 
+      waqaf_mujawwaz: "Mujawwaz", 
+      waqaf_mamnu: "Mamnu'", 
+      waqaf_muanaqah: "Muanaqah",
+      washal_lazim: "Muanaqah" // Jika database mengirim 'washal_lazim', tuliskan 'Muanaqah'
+    };
+    // -------------------------
 
-    y = (doc as any).lastAutoTable.finalY + 3;
-    doc.setFontSize(formulaFontSize);
-    doc.setTextColor(100, 100, 100);
-    doc.text("*Rumus: Kelancaran - (2 x Lahn Jali) - (1 x Lahn Khofi) - (2 x Waqaf)", margin, y);
-    y += 6;
+    doc.setFont("Amiri", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(color[0], color[1], color[2]);
+    doc.text(String(waqafArabic[key] || " "), x + 2.5, y + 7);
 
-    // 2. TES SIMBOL WAQAF (SATU BARIS & FIX BUG MUANAQAH)
-    if (data.waqafTest) {
-      y = sectionTitle(doc, "TES SIMBOL WAQAF", margin, y);
-      const entries = Object.entries(data.waqafTest);
-      const cols = entries.length; 
-      const gap = 2;
-      const cardW = (pageW - margin * 2 - (cols - 1) * gap) / cols;
-      const cardH = 11;
-
-      entries.forEach(([key, val], index) => {
-        const x = margin + index * (cardW + gap);
-        
-        // Warna Dinamis (Hijau jika benar, Merah jika salah)
-        const color: [number, number, number] = val ? [22, 163, 74] : [220, 38, 38];
-        doc.setDrawColor(color[0], color[1], color[2]);
-        doc.roundedRect(x, y, cardW, cardH, 1, 1, "D");
-
-        // Kamus Label & Simbol (Termasuk perbaikan Washal Lazim -> Muanaqah)
-        const waqafArabic: any = { 
-          waqaf_lazim: "م", waqaf_mustahab: "قلى", waqaf_jaiz: "ج", 
-          waqaf_mujawwaz: "ص", waqaf_mamnu: "لا", waqaf_muanaqah: "∴",
-        };
-        
-        const labels: any = { 
-          waqaf_lazim: "Lazim", waqaf_mustahab: "Mustahab", waqaf_jaiz: "Jaiz", 
-          waqaf_mujawwaz: "Mujawwaz", waqaf_mamnu: "Mamnu'", waqaf_muanaqah: "Muanaqah",
-        };
-
-        // Render Simbol Arab
-        doc.setFont("Amiri", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(color[0], color[1], color[2]);
-        doc.text(String(waqafArabic[key] || " "), x + 2.5, y + 7);
-
-        // Render Label (Fix Bug Label Kosong: pakai fallback key jika tidak ada di kamus)
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(6.5);
-        doc.setTextColor(40, 40, 40);
-        const labelText = labels[key] || key.replace(/_/g, ' ').toUpperCase();
-        doc.text(String(labelText), x + 8, y + 4.5);
-        
-        // Render Status
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(6);
-        doc.text(val ? "Benar" : "Salah", x + 8, y + 8.5);
-      });
-      y += cardH + 5;
-    }
-  }
-
-  // Bagian Tahfizh & Dasar tetap ada (disingkat untuk fokus pada bug Anda)
-  // ... (Gunakan pola tableStyles & headStyles yang sama untuk bagian lain) ...
-
-  return y;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.5);
+    doc.setTextColor(40, 40, 40);
+    // Sekarang labelText akan otomatis mengambil "Muanaqah" jika key-nya "washal_lazim"
+    const labelText = labels[key] || key.replace(/_/g, ' ').toUpperCase();
+    doc.text(String(labelText), x + 8, y + 4.5);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6);
+    doc.text(val ? "Benar" : "Salah", x + 8, y + 8.5);
+  });
+  y += cardH + 5;
 }
 
 function drawCatatan(
