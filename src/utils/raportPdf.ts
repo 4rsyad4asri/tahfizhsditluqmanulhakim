@@ -617,26 +617,6 @@ function drawDetail(
   const formulaFontSize = 7;
   const EMERALD_RGB = [16, 185, 129]; 
 
-  // --- STYLING GLOBAL UNTUK TABEL ---
-  const tableStyles = { 
-    font: "helvetica", 
-    fontSize: opts.tableFontSize - 0.5, 
-    halign: "center" as const, // agar typescript tidak komplain
-    textColor: [50, 50, 50],   // Teks abu-abu gelap agar lebih nyaman di mata
-    lineColor: [220, 220, 220], // Garis body tabel abu-abu lembut
-    lineWidth: 0.1
-  };
-  const headStyles = { 
-    fillColor: EMERALD_RGB, 
-    textColor: [255, 255, 255], // Teks putih
-    fontStyle: "bold" as const,
-    lineColor: [255, 255, 255], // Garis pemisah antar kolom header berwarna putih (Tampilan Profesional)
-    lineWidth: 0.3              // Ketebalan garis putih header
-  };
-  const alternateRowStyles = {
-    fillColor: [249, 250, 251]  // Efek zebra (belang-belang) sangat tipis agar mudah dibaca
-  };
-
   if (data.mode === "Tahfizh" && data.tahfizhEntries) {
     y = sectionTitle(doc, "DETAIL UJIAN TAHFIZH", margin, y);
     autoTable(doc, {
@@ -648,9 +628,8 @@ function drawDetail(
         e.surah || "", e.juz || "", e.lahn_jali, e.lahn_khofi, e.waqaf_ibtida ?? 0, e.salah_sambung_ayat ?? 0, e.kelancaran,
         calculateNilaiSurahWithRumus(e, "baru"),
       ]),
-      styles: tableStyles,
-      headStyles: headStyles,
-      alternateRowStyles: alternateRowStyles,
+      styles: { font: "helvetica", fontSize: opts.tableFontSize - 0.5, halign: "center" },
+      headStyles: { fillColor: EMERALD_RGB, fontStyle: "bold" },
     });
     y = (doc as any).lastAutoTable.finalY + 3;
     doc.setFontSize(formulaFontSize);
@@ -670,9 +649,8 @@ function drawDetail(
         e.nama_ebta || "", e.salah_huruf, e.salah_harakat, e.salah_makhraj, e.kesalahan_mad, e.kesalahan_qalqalah, e.kesalahan_tajwid, e.kesalahan_waqaf, e.kelancaran,
         calculateNilaiTahsinDasar(e, data.dasarConfig || { penalti_lahn_jali: 2, penalti_lahn_khofi: 1, bobot_kelancaran: 40 }),
       ]),
-      styles: { ...tableStyles, fontSize: opts.tableFontSize - 1 }, // Font sedikit lebih kecil untuk tabel ini
-      headStyles: headStyles,
-      alternateRowStyles: alternateRowStyles,
+      styles: { font: "helvetica", fontSize: opts.tableFontSize - 1, halign: "center" },
+      headStyles: { fillColor: EMERALD_RGB, fontStyle: "bold" },
     });
     y = (doc as any).lastAutoTable.finalY + 3;
     doc.setFontSize(formulaFontSize);
@@ -692,9 +670,8 @@ function drawDetail(
         e.surah || "", e.ayat || "", e.salah_huruf, e.salah_harakat, e.salah_makhraj, e.kesalahan_mad, e.kesalahan_qalqalah, e.kesalahan_tajwid, e.waqaf_ibtida, e.kelancaran,
         calculateNilaiTahsinLanjutan(e, data.lanjutanConfig || { penalti_lahn_jali: 2, penalti_lahn_khofi: 1, bobot_kelancaran: 40 }, data.penaltiWaqaf ?? 2),
       ]),
-      styles: { ...tableStyles, fontSize: opts.tableFontSize - 1 },
-      headStyles: headStyles,
-      alternateRowStyles: alternateRowStyles,
+      styles: { font: "helvetica", fontSize: opts.tableFontSize - 1, halign: "center" },
+      headStyles: { fillColor: EMERALD_RGB, fontStyle: "bold" },
     });
     y = (doc as any).lastAutoTable.finalY + 3;
     doc.setFontSize(formulaFontSize);
@@ -707,14 +684,15 @@ function drawDetail(
       y = sectionTitle(doc, "TES SIMBOL WAQAF", margin, y);
       const entries = Object.entries(data.waqafTest);
       
+      // Ubah agar jadi 1 baris (jumlah kolom disesuaikan dengan jumlah data, biasanya 6)
       const cols = entries.length > 0 ? entries.length : 6; 
-      const gap = 2.5; 
+      const gap = 2.5; // Jarak antar kartu sedikit dirapatkan
       const cardW = (pageW - margin * 2 - (cols - 1) * gap) / cols;
-      const cardH = 10; 
+      const cardH = 10; // Tinggi kartu dibuat lebih pendek agar hemat ruang vertikal
 
       entries.forEach(([key, val], index) => {
         const col = index % cols;
-        const row = Math.floor(index / cols); 
+        const row = Math.floor(index / cols); // Pasti 0 karena 1 baris
         const x = margin + col * (cardW + gap);
         const cardY = y + row * (cardH + gap);
 
@@ -726,27 +704,31 @@ function drawDetail(
         doc.setFillColor(255, 255, 255);
         doc.roundedRect(x, cardY, cardW, cardH, 1, 1, "D");
 
+        // Memasukkan washal_lazim agar di-render sebagai Muanaqah
         const waqafArabic: any = { 
           waqaf_lazim: "م", waqaf_mustahab: "قلى", waqaf_jaiz: "ج", 
           waqaf_mujawwaz: "ص", waqaf_mamnu: "لا", waqaf_muanaqah: "ۛ", 
-          washal_lazim: "ۛ" 
+          washal_lazim: "ۛ" // Perubahan disini
         };
         const labels: any = { 
           waqaf_lazim: "Lazim", waqaf_mustahab: "Mustahab", waqaf_jaiz: "Jaiz", 
           waqaf_mujawwaz: "Mujawwaz", waqaf_mamnu: "Mamnu'", waqaf_muanaqah: "Muanaqah", 
-          washal_lazim: "Muanaqah" 
+          washal_lazim: "Muanaqah" // Perubahan disini
         };
 
+        // Render Simbol Arab
         doc.setFont("Amiri", "normal");
         doc.setFontSize(8.5);
         doc.setTextColor(r, g, b);
         doc.text(waqafArabic[key] || "", x + 2.5, cardY + 6.5);
 
+        // Render Label Teks (Digeser sedikit agar muat di kartu yang lebih sempit)
         doc.setFont("helvetica", "bold");
         doc.setFontSize(6.5);
         doc.setTextColor(40, 40, 40);
         doc.text(labels[key] || "", x + 8, cardY + 4);
         
+        // Render Status (Benar/Salah)
         doc.setFont("helvetica", "normal");
         doc.setFontSize(6);
         doc.text(val ? "Benar" : "Salah", x + 8, cardY + 8);
