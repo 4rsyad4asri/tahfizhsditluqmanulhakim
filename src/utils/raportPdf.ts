@@ -1064,123 +1064,68 @@ function drawSignatures(
   startY: number,
   opts: RaportPdfOptions
 ) {
-const colW = (pageW - margin * 2) / 3;
+  const colW = (pageW - margin * 2) / 3;
+  const fontSize = opts.fontSize - 1;
+  
+  const positions = [
+    {
+      line1: "Mengetahui,",
+      line2: "Orang Tua / Wali",
+      name: "( ................................. )",
+      isParent: true
+    },
+    {
+      line1: "", // Kosongkan baris pertama agar "Penguji" sejajar dengan "Orang Tua"
+      line2: "Penguji,",
+      name: data.assessorName || "( ................................. )",
+      sub: header.examinerTitle,
+    },
+    {
+      line1: `${header.city}, ${fmtTanggal(data.tanggal)}`,
+      line2: header.headmasterTitle || "Kepala Sekolah,",
+      name: header.headmaster,
+      sub: `NIP: ${header.nip}`,
+    },
+  ];
 
-const positions = [
-  {
-    title1: "Mengetahui,",
-    title2: "Orang Tua / Wali",
-    name: "(.................................)",
-  },
-  {
-    title1: "Penguji,",
-    name: data.assessorName || "(.................................)",
-    sub: header.examinerTitle,
-  },
-  {
-    title1: `${header.city}, ${fmtTanggal(data.tanggal)}`,
-    title2: header.headmasterTitle,
-    name: header.headmaster,
-    sub: `NIP: ${header.nip}`,
-  },
-];
+  positions.forEach((item, i) => {
+    const x = margin + colW * i + colW / 2;
+    let y = startY + 5;
 
-positions.forEach((item, i) => {
-  const x = margin + colW * i + colW / 2;
-
-  let y = startY + 5;
-
-  // ✅ KHUSUS PENGUJI TURUN 1 BARIS
-  if (item.title1 === "Penguji,") {
-    y += 6; // bisa 4–8 tergantung tampilan
-  }
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(opts.fontSize - 1);
-
-  doc.text(item.title1, x, y, { align: "center" });
-
-  if (item.title2) {
-    doc.text(item.title2, x, y + 5, { align: "center" });
-  }
-
-  if (item.sub) {
-    doc.text(item.sub, x, y + 10, { align: "center" });
-  }
-
-  doc.text(item.name, x, y + 18, { align: "center" });
-});
-    
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(opts.fontSize - 1);
-    doc.setTextColor(...GRAY_TEXT);
+    doc.setFontSize(fontSize);
+    doc.setTextColor(0, 0, 0); // Pastikan warna hitam, atau gunakan GRAY_TEXT jika perlu
 
-    doc.text(
-      item.title1,
-      x,
-      y,
-      {
-        align: "center",
-      }
-    );
-
-    if (item.title2) {
-      y += 5;
-
-      doc.text(
-        item.title2,
-        x,
-        y,
-        {
-          align: "center",
-        }
-      );
+    // Baris 1: Mengetahui / (Kosong) / Kota, Tanggal
+    if (item.line1) {
+      doc.text(item.line1, x, y, { align: "center" });
     }
 
-    const signY = y + 22;
+    // Baris 2: Jabatan (Orang Tua / Penguji / Kepala Sekolah)
+    y += 5;
+    if (item.line2) {
+      doc.text(item.line2, x, y, { align: "center" });
+    }
 
-    if (i === 0) {
-      doc.text(
-        item.name,
-        x,
-        signY,
-        {
-          align: "center",
-        }
-      );
+    // Nama Terang
+    const signY = y + 25; // Jarak untuk tanda tangan
+    
+    if (item.isParent) {
+      // Orang tua biasanya menggunakan tanda kurung tanpa garis bawah
+      doc.text(item.name, x, signY, { align: "center" });
     } else {
+      // Penguji & Kepsek biasanya Bold + Garis Bawah
       doc.setFont("helvetica", "bold");
-
-      doc.text(
-        item.name,
-        x,
-        signY - 2,
-        {
-          align: "center",
-        }
-      );
-
-      doc.line(
-        x - 22,
-        signY,
-        x + 22,
-        signY
-      );
-
+      doc.text(item.name, x, signY, { align: "center" });
+      
+      const nameWidth = doc.getTextWidth(item.name);
+      doc.line(x - nameWidth / 2, signY + 1, x + nameWidth / 2, signY + 1);
+      
+      // NIP atau Sub-keterangan
       if (item.sub) {
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(
-          opts.fontSize - 2
-        );
-
-        doc.text(
-          item.sub,
-          x,
-          signY + 5,
-          {
-            align: "center",
-          }
-        );
+        doc.setFontSize(fontSize - 1);
+        doc.text(item.sub, x, signY + 5, { align: "center" });
       }
     }
   });
