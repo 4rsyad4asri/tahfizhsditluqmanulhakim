@@ -666,68 +666,72 @@ function drawDetail(
     doc.text("*Rumus: Kelancaran - (2 x Lahn Jali) - (1 x Lahn Khofi) - (2 x Waqaf)", margin, y);
     y += 6;
 
-    // 2. TES SIMBOL WAQAF (SATU BARIS & FIX BUG MUANAQAH)
-// --- BAGIAN TES SIMBOL WAQAF ---
-if (data.waqafTest) {
-  y = sectionTitle(doc, "TES SIMBOL WAQAF", margin, y);
+// --- BAGIAN TES SIMBOL WAQAF (VERSI ANTI-ERROR) ---
+if (data.waqafTest && Object.keys(data.waqafTest).length > 0) {
+  // Pastikan y adalah angka valid, jika sectionTitle bermasalah, kita beri fallback
+  y = sectionTitle(doc, "TES SIMBOL WAQAF", margin, y) || y;
+
   const entries = Object.entries(data.waqafTest);
   const cols = entries.length; 
   const gap = 2;
-  const cardW = (pageW - margin * 2 - (cols - 1) * gap) / cols;
+  
+  // Pengaman: Jangan sampai membagi dengan nol
+  const safeCols = cols > 0 ? cols : 1;
+  const cardW = (pageW - margin * 2 - (safeCols - 1) * gap) / safeCols;
   const cardH = 11;
+
+  // Pindahkan kamus ke luar loop agar lebih ringan (performa lebih cepat)
+  const waqafArabic: Record<string, string> = { 
+    waqaf_lazim: "م", 
+    waqaf_mustahab: "قلى", 
+    waqaf_jaiz: "ج", 
+    waqaf_mujawwaz: "ص", 
+    waqaf_mamnu: "لا", 
+    waqaf_muanaqah: "ۛ",
+    washal_lazim: "ۛ" // Perubahan: Washal Lazim pakai simbol Muanaqah
+  };
+  
+  const labels: Record<string, string> = { 
+    waqaf_lazim: "Lazim", 
+    waqaf_mustahab: "Mustahab", 
+    waqaf_jaiz: "Jaiz", 
+    waqaf_mujawwaz: "Mujawwaz", 
+    waqaf_mamnu: "Mamnu'", 
+    waqaf_muanaqah: "Muanaqah",
+    washal_lazim: "Muanaqah" // Perubahan: Washal Lazim tertulis Muanaqah
+  };
 
   entries.forEach(([key, val], index) => {
     const x = margin + index * (cardW + gap);
+    
+    // Pastikan x dan y bukan NaN sebelum menggambar
+    if (isNaN(x) || isNaN(y)) return;
+
     const color: [number, number, number] = val ? [22, 163, 74] : [220, 38, 38];
     doc.setDrawColor(color[0], color[1], color[2]);
     doc.roundedRect(x, y, cardW, cardH, 1, 1, "D");
 
-    // --- PERBAIKAN DI SINI ---
-    // Tambahkan key 'washal_lazim' tapi beri nilai simbol & label Muanaqah
-    const waqafArabic: any = { 
-      waqaf_lazim: "م", 
-      waqaf_mustahab: "قلى", 
-      waqaf_jaiz: "ج", 
-      waqaf_mujawwaz: "ص", 
-      waqaf_mamnu: "لا", 
-      waqaf_muanaqah: "ۛ",
-      washal_lazim: "ۛ" // Jika database mengirim 'washal_lazim', tampilkan simbol muanaqah
-    };
-    
-    const labels: any = { 
-      waqaf_lazim: "Lazim", 
-      waqaf_mustahab: "Mustahab", 
-      waqaf_jaiz: "Jaiz", 
-      waqaf_mujawwaz: "Mujawwaz", 
-      waqaf_mamnu: "Mamnu'", 
-      waqaf_muanaqah: "Muanaqah",
-      washal_lazim: "Muanaqah" // Jika database mengirim 'washal_lazim', tuliskan 'Muanaqah'
-    };
-    // -------------------------
-
+    // 1. Render Simbol Arab
     doc.setFont("Amiri", "normal");
     doc.setFontSize(9);
     doc.setTextColor(color[0], color[1], color[2]);
-    doc.text(String(waqafArabic[key] || " "), x + 2.5, y + 7);
+    const simbol = waqafArabic[key] || " ";
+    doc.text(String(simbol), x + 2.5, y + 7);
 
+    // 2. Render Label Teks (Muanaqah/Lazim dll)
     doc.setFont("helvetica", "bold");
     doc.setFontSize(6.5);
     doc.setTextColor(40, 40, 40);
-    // Sekarang labelText akan otomatis mengambil "Muanaqah" jika key-nya "washal_lazim"
     const labelText = labels[key] || key.replace(/_/g, ' ').toUpperCase();
     doc.text(String(labelText), x + 8, y + 4.5);
     
+    // 3. Render Status (Benar/Salah)
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6);
     doc.text(val ? "Benar" : "Salah", x + 8, y + 8.5);
   });
+
   y += cardH + 5;
-}
-
-  // Bagian Tahfizh & Dasar tetap ada (disingkat untuk fokus pada bug Anda)
-  // ... (Gunakan pola tableStyles & headStyles yang sama untuk bagian lain) ...
-
-  return y;
 }
 
 function drawCatatan(
