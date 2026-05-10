@@ -617,6 +617,7 @@ function drawDetail(
   const formulaFontSize = 7;
   const EMERALD_RGB = [16, 185, 129]; 
 
+  // --- STYLE PROFESIONAL ---
   const tableStyles: any = { 
     font: "helvetica", 
     fontSize: opts.tableFontSize - 1, 
@@ -625,7 +626,6 @@ function drawDetail(
     lineColor: [220, 220, 220],
     lineWidth: 0.1
   };
-
   const headStyles: any = { 
     fillColor: EMERALD_RGB, 
     textColor: [255, 255, 255], 
@@ -634,7 +634,7 @@ function drawDetail(
     lineWidth: 0.3
   };
 
-  // 1. DETAIL TABEL (Hanya muncul jika mode sesuai)
+  // 1. DETAIL TAHSIN LANJUTAN
   if (data.mode === "Tahsin Lanjutan" && data.lanjutanEntries) {
     y = sectionTitle(doc, "DETAIL TAHSIN LANJUTAN", margin, y) || y;
     autoTable(doc, {
@@ -643,31 +643,28 @@ function drawDetail(
       theme: "grid",
       head: [["Surat", "Ayat", "Salah Huruf", "Salah Harakat", "Salah Makhraj", "Mad", "Qalqalah", "Tajwid", "Waqaf", "Kelancaran", "Nilai"]],
       body: data.lanjutanEntries.map((e) => [
-        e.surah || "-", e.ayat || "-", e.salah_huruf ?? 0, e.salah_harakat ?? 0, e.salah_makhraj ?? 0,
-        e.kesalahan_mad ?? 0, e.kesalahan_qalqalah ?? 0, e.kesalahan_tajwid ?? 0, e.waqaf_ibtida ?? 0,
-        e.kelancaran ?? 0,
+        e.surah || "-", e.ayat || "-", 
+        e.salah_huruf ?? 0, e.salah_harakat ?? 0, e.salah_makhraj ?? 0, 
+        e.kesalahan_mad ?? 0, e.kesalahan_qalqalah ?? 0, e.kesalahan_tajwid ?? 0, 
+        e.waqaf_ibtida ?? 0, e.kelancaran ?? 0,
         calculateNilaiTahsinLanjutan(e, data.lanjutanConfig || { penalti_lahn_jali: 2, penalti_lahn_khofi: 1, bobot_kelancaran: 40 }, data.penaltiWaqaf ?? 2),
       ]),
       styles: tableStyles,
       headStyles: headStyles,
       alternateRowStyles: { fillColor: [250, 250, 250] }
     });
+
     y = (doc as any).lastAutoTable.finalY + 3;
     doc.setFontSize(formulaFontSize);
     doc.setTextColor(100, 100, 100);
     doc.text("*Rumus: Kelancaran - (2 x Lahn Jali) - (1 x Lahn Khofi) - (2 x Waqaf)", margin, y);
     y += 6;
-  }
 
-  // 2. TES SIMBOL WAQAF (VERSI ANTI-CRASH & FIX WASHOL)
+    // 2. TES SIMBOL WAQAF (FIX WASHOL LAZIM)
     if (data.waqafTest && typeof data.waqafTest === 'object') {
-      // PENTING: Gunakan try-catch agar jika bagian ini error, bagian rapor lain tetap muncul
-      try {
-        const entries = Object.entries(data.waqafTest);
-        if (entries.length === 0) return y; // Lewati jika kosong
-
+      const entries = Object.entries(data.waqafTest);
+      if (entries.length > 0) {
         y = sectionTitle(doc, "TES SIMBOL WAQAF", margin, y) || y;
-        
         const cols = entries.length; 
         const gap = 2;
         const cardW = (pageW - margin * 2 - (cols - 1) * gap) / cols;
@@ -678,7 +675,6 @@ function drawDetail(
           waqaf_mujawwaz: "ص", waqaf_mamnu: "لا", waqaf_muanaqah: "ۛ", 
           washol_lazim: "ۛ", washal_lazim: "ۛ", wasol_lazim: "ۛ"
         };
-
         const labels: Record<string, string> = { 
           waqaf_lazim: "Lazim", waqaf_mustahab: "Mustahab", waqaf_jaiz: "Jaiz", 
           waqaf_mujawwaz: "Mujawwaz", waqaf_mamnu: "Mamnu'", waqaf_muanaqah: "Muanaqah", 
@@ -686,26 +682,21 @@ function drawDetail(
         };
 
         entries.forEach(([key, val], index) => {
-          // 1. Safety check untuk key
           const safeKey = String(key || "");
           const x = margin + index * (cardW + gap);
-          
-          // 2. Warna
           const color: [number, number, number] = val ? [22, 163, 74] : [220, 38, 38];
+          
           doc.setDrawColor(color[0], color[1], color[2]);
           doc.roundedRect(x, y, cardW, cardH, 1, 1, "D");
 
-          // 3. Logika Penentuan Teks
           let finalLabel = labels[safeKey] || safeKey.replace(/_/g, ' ').toUpperCase();
           let finalSymbol = waqafArabic[safeKey] || " ";
 
-          const k = safeKey.toLowerCase();
-          if (k.includes("washol") || k.includes("washal") || k.includes("wasol")) {
+          if (safeKey.toLowerCase().includes("wasol") || safeKey.toLowerCase().includes("washol") || safeKey.toLowerCase().includes("washal")) {
             finalLabel = "Muanaqah";
             finalSymbol = "ۛ";
           }
 
-          // 4. Render (Gunakan String() pada semua input teks)
           doc.setFont("Amiri", "normal");
           doc.setFontSize(9);
           doc.setTextColor(color[0], color[1], color[2]);
@@ -720,13 +711,14 @@ function drawDetail(
           doc.setFontSize(6);
           doc.text(val ? "Benar" : "Salah", x + 8, y + 8.5);
         });
-
         y += cardH + 5;
-      } catch (e) {
-        console.error("Error drawing waqafTest:", e);
-        // Jika error, y tidak berubah agar tidak merusak layout bawahnya
       }
     }
+  }
+
+  return y; 
+} // <--- KURUNG INI YANG TADI HILANG DAN BIKIN ERROR BUILD
+
 function drawCatatan(
   doc: jsPDF,
   catatan: string,
