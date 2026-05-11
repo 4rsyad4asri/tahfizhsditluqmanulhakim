@@ -478,7 +478,7 @@ y +=
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(22, 22, 22);
-    doc.text("Catatan Guru:", margin, y);
+    doc.text("Catatan & Evaluasi:", margin, y);
     y += 5;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
