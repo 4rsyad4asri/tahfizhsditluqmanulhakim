@@ -467,13 +467,13 @@ function drawScoreSummary(
     doc.setTextColor(120, 120, 120);
 
     doc.text(
-      title.toUpperCase(),
-      x + boxW / 2,
-      startY + 6,
-      {
-        align: "center"
-      }
-    );
+    title.toUpperCase(),
+    x + boxW / 2,
+    centerY - 4,
+    {
+    align: "center"
+    }
+  );
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(15);
@@ -483,7 +483,7 @@ function drawScoreSummary(
     doc.text(
       value,
       x + boxW / 2,
-      startY + 16,
+      centerY + 1.5,
       {
         align: "center"
       }
@@ -528,7 +528,7 @@ function drawScoreSummary(
   doc.text(
     "STATUS",
     statusX + boxW / 2,
-    centerY - 2,
+    centerY - 5,
     {
       align: "center"
     }
@@ -591,7 +591,7 @@ function drawScoreSummary(
   doc.text(
     data.predikat,
     startX + labelWidth,
-    centerY + 6.5
+    centerY + 4.5
   );
 }
 
