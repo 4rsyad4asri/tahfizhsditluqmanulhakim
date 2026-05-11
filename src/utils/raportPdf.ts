@@ -1335,7 +1335,7 @@ export async function generateRaportPDF(
     nomor
   );
 
-let y = margin + 26 + 24;
+let y = margin + 26 + 16;
 
   drawStudentInfo(
     doc,
