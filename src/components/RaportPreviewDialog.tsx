@@ -29,12 +29,12 @@ const STORAGE_KEY = "raport_settings_v3";
 const DEFAULT_HEADER: RaportHeader = {
   schoolName: "SDIT Luqmanul Hakim",
   programName: "Program Tahfizh & Tahsin Al-Qur'an",
-  address: "Jl. Pendidikan No. 1, Indonesia",
-  headmaster: "Miftahul Arsyad Asri, S.H",
+  address: "Jl. Jati No.4, Tj. Selamat, Kec. Sunggal, Kabupaten Deli Serdang, Sumatera Utara 20351",
+  headmaster: "Amrullah Rozy Dalimunthe, S.Si",
   headmasterTitle: "Kepala Sekolah",
   nip: "-",
-  city: "Jakarta",
-  examinerTitle: "Koordinator Tahfizh",
+  city: "Sunggal",
+  examinerTitle: "Guru Tahfizh",
 };
 
 const DEFAULT_OPTS: RaportPdfOptions = {
@@ -89,9 +89,7 @@ const [tanggal, setTanggal] = useState<string>(
 useEffect(() => {
   if (open) {
 
-    setCatatan(
-      ujian?.nilai_aspek?.catatanGuru || generatedCatatan
-    );
+setCatatan(generatedCatatan);
 
     setTanggal(
       ujian?.tanggal ||
