@@ -1,9 +1,22 @@
+import { syncStudentStatus } from "@/utils/syncStudentStatus";
+import {
+  RefreshCcw,
+  Loader2,
+  Pencil,
+  Trash2,
+  Search,
+  UserPlus,
+  Users,
+  ChevronDown,
+  FileSpreadsheet,
+  AlertTriangle,
+  Download
+} from "lucide-react";
 import { useState } from "react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
-import { Plus, Pencil, Trash2, Search, Loader2, UserPlus, Users, ChevronDown, FileSpreadsheet, AlertTriangle, Download } from "lucide-react";
 import { exportJsonToExcel } from "@/utils/excel";
 import ImportStudentsDialog from "@/components/ImportStudentsDialog";
 import { toast } from "sonner";
@@ -37,8 +50,23 @@ const emptyForm: StudentForm = {
   progress_hafalan: 0,
   status_sertifikasi: "Belum Ujian"
 };
+interface Student {
+  id: string;
+  name: string;
+  class_id: string;
+  target_juz: number;
+  level: StudentLevel;
+  progress_hafalan: number;
+  status_sertifikasi: CertStatus;
 
+  classes?: {
+    name: string;
+    grade: number;
+    section: string;
+  } | null;
+}
 const ManageStudents = () => {
+  const [syncing, setSyncing] = useState(false);
   const { user } = useAuthContext();
   const isLoggedIn = !!user;
   const queryClient = useQueryClient();
@@ -51,19 +79,44 @@ const ManageStudents = () => {
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
+  const handleSyncStatus = async () => {
+
+  try {
+
+    setSyncing(true);
+
+    const total = await syncStudentStatus();
+    await queryClient.invalidateQueries({
+      queryKey: ["all-students"]
+    });
+    
+    toast.success(`${total} status siswa berhasil disinkronkan`);
+
+  } catch (e) {
+
+    toast.error("Gagal sinkronisasi status");
+
+  } finally {
+
+    setSyncing(false);
+
+  }
+};
   // Fetch classes
-  const { data: classes } = useQuery({
-    queryKey: ["all-classes"],
-    queryFn: async () => {
-      const { data, error } = await supabase.
-      from("classes").
-      select("*").
-      order("grade").
-      order("section");
-      if (error) throw error;
-      return data;
-    }
-  });
+const { data: classes } = useQuery({
+  queryKey: ["all-classes"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("classes")
+      .select("*")
+      .order("grade")
+      .order("section");
+
+    if (error) throw error;
+
+    return data;
+  }
+});
 
   // Fetch students with class info
   const { data: students, isLoading } = useQuery({
@@ -146,18 +199,21 @@ const ManageStudents = () => {
     onError: (err) => toast.error(getSafeErrorMessage(err))
   });
 
-  // Delete all students
-  const deleteAllMutation = useMutation({
-    mutationFn: async () => {
-      let query = supabase.from("students").delete();
-      if (selectedClass !== "all") {
-        query = query.eq("class_id", selectedClass);
-      } else {
-        query = query.neq("id", "00000000-0000-0000-0000-000000000000"); // delete all rows
-      }
-      const { error } = await query;
-      if (error) throw error;
-    },
+const deleteAllMutation = useMutation({
+  mutationFn: async () => {
+    let query = supabase.from("students").delete();
+
+    if (selectedClass !== "all") {
+      query = query.eq("class_id", selectedClass);
+    } else {
+      query = query.not("id", "is", null);
+    }
+
+    const { error } = await query;
+
+    if (error) throw error;
+  },
+    
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-students"] });
       queryClient.invalidateQueries({ queryKey: ["classes"] });
@@ -173,7 +229,7 @@ const ManageStudents = () => {
     setFormOpen(false);
   };
 
-  const openEdit = (student: any) => {
+  const openEdit = (student: Student) => {
     setForm({
       name: student.name,
       class_id: student.class_id,
@@ -186,7 +242,10 @@ const ManageStudents = () => {
     setFormOpen(true);
   };
 
+  const isPending = addMutation.isPending || updateMutation.isPending;
   const handleSubmit = () => {
+    if (isPending) return;
+    
     if (!form.name.trim()) {
       toast.error("Nama siswa wajib diisi!");
       return;
@@ -203,12 +262,13 @@ const ManageStudents = () => {
     }
   };
 
-  const filteredStudents = (students || []).filter((s: any) =>
-  s.name.toLowerCase().includes(search.toLowerCase())
-  );
+const filteredStudents: Student[] = (students || []).filter(
+  (s: Student) =>
+    (s.name || "").toLowerCase().includes(search.toLowerCase())
+);
 
   const handleExport = () => {
-    const dataToExport = filteredStudents.map((s: any) => ({
+    const dataToExport = filteredStudents.map((s: Student) => ({
       "Nama": s.name,
       "Kelas": s.classes?.name || "",
       "Target Juz": s.target_juz,
@@ -223,13 +283,11 @@ const ManageStudents = () => {
     }
 
     const className = selectedClass !== "all"
-      ? `_${(classes || []).find(c => c.id === selectedClass)?.name || "kelas"}`
+      ? `_${(classes || []).find((c: { id: string; name: string }) => c.id === selectedClass)?.name || "kelas"}`
       : "";
     exportJsonToExcel(dataToExport, "Data Siswa", `data_siswa${className}_${new Date().toISOString().slice(0, 10)}.xlsx`);
     toast.success(`${dataToExport.length} data siswa berhasil diexport!`);
   };
-
-  const isPending = addMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="min-h-screen bg-background">
@@ -261,15 +319,41 @@ const ManageStudents = () => {
               <Download className="w-4 h-4" />
               Export Excel
             </button>
+
             <button
-              onClick={() => setImportOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-accent/10 hover:bg-accent/20 transition-colors border border-accent/20 text-amber-700">
+  onClick={handleSyncStatus}
+  disabled={syncing}
+  className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-green-100 hover:bg-green-200 transition-colors border border-green-300 text-green-700 disabled:opacity-50"
+>
+  {syncing ? (
+    <>
+      <Loader2 className="w-4 h-4 animate-spin" />
+      Sinkronisasi...
+    </>
+  ) : (
+    <>
+      <RefreshCcw className="w-4 h-4" />
+      Sinkronkan Status
+    </>
+  )}
+</button>
 
-              <FileSpreadsheet className="w-4 h-4" />
-              Import Excel/CSV
-            </button>
+<button
+  onClick={() => setImportOpen(true)}
+  className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-accent/10 hover:bg-accent/20 transition-colors border border-accent/20 text-amber-700"
+>
+  <FileSpreadsheet className="w-4 h-4" />
+  Import Excel/CSV
+</button>
 
-          <Dialog open={formOpen} onOpenChange={(open) => {if (!open) resetForm();setFormOpen(open);}}>
+          <Dialog open={formOpen} onOpenChange={(open) => {
+  if (!open) {
+    resetForm();
+  } else {
+    setFormOpen(true);
+  }
+}}
+>            
             <DialogTrigger asChild>
               <button
                   onClick={() => {setForm(emptyForm);setEditingId(null);}}
@@ -315,7 +399,7 @@ const ManageStudents = () => {
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Target Juz</label>
                     <select
                         value={form.target_juz}
-                        onChange={(e) => setForm({ ...form, target_juz: parseInt(e.target.value) })}
+                        onChange={(e) => setForm({ ...form, target_juz: Number(e.target.value) || 0 })}
                         className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
 
                       {Array.from({ length: 30 }, (_, i) => i + 1).map((j) =>
@@ -345,7 +429,7 @@ const ManageStudents = () => {
                         min={0}
                         max={100}
                         value={form.progress_hafalan}
-                        onChange={(e) => setForm({ ...form, progress_hafalan: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) })}
+                        onChange={(e) => setForm({ ...form, progress_hafalan: Math.min(100, Math.max(0, Number(e.target.value) || 0)) })}
                         className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
 
                   </div>
@@ -373,7 +457,7 @@ const ManageStudents = () => {
                   <button
                       onClick={handleSubmit}
                       disabled={isPending}
-                      className="px-4 py-2 rounded-md text-sm font-medium gradient-islamic text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50">
+                      className="px-4 py-2 rounded-md text-sm font-medium gradient-islamic text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
 
                     {isPending ? "Menyimpan..." : editingId ? "Simpan Perubahan" : "Tambah Siswa"}
                   </button>
@@ -427,7 +511,7 @@ const ManageStudents = () => {
         <>
             {/* Mobile Cards */}
             <div className="md:hidden space-y-3">
-              {filteredStudents.map((student: any) =>
+              {filteredStudents.map((student: Student) =>
             <div key={student.id} className="bg-card rounded-lg border border-border p-4 shadow-card">
                   <div className="flex items-start justify-between mb-2">
                     <div>
@@ -475,7 +559,7 @@ const ManageStudents = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredStudents.map((student: any, idx: number) =>
+                    {filteredStudents.map((student: Student, idx: number) =>
                   <tr key={student.id} className={`border-b border-border/50 hover:bg-muted/30 transition-colors ${idx % 2 ? 'bg-muted/10' : ''}`}>
                         <td className="px-4 py-3 font-medium text-foreground">{student.name}</td>
                         <td className="px-4 py-3 text-muted-foreground">{student.classes?.name}</td>
