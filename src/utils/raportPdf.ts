@@ -1096,61 +1096,85 @@ function drawCatatan(
     "F"
   );
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
+doc.setFont("helvetica", "bold");
+doc.setFontSize(7);
 
-  doc.setTextColor(
-    255,
-    255,
-    255
+doc.setTextColor(255, 255, 255);
+
+doc.text(
+  "CATATAN",
+  margin + 2,
+  startY + 2.8
+);
+
+const text = catatan || "—";
+
+const isArabicText =
+  /[\u0600-\u06FF]/.test(text);
+
+doc.setFont(
+  isArabicText
+    ? "Amiri"
+    : "helvetica",
+  "normal"
+);
+
+doc.setFontSize(
+  isArabicText ? 8 : 6.8
+);
+
+doc.setCharSpace(0);
+
+doc.setLineHeightFactor(
+  isArabicText ? 1.9 : 1.5
+);
+
+doc.setTextColor(...GRAY_TEXT);
+
+const textWidth =
+  pageW - margin * 2 - 6;
+
+const lines =
+  doc.splitTextToSize(
+    text,
+    textWidth
   );
 
-  doc.text(
-    "CATATAN",
-    margin + 2,
-    startY + 2.8
+const lineHeight =
+  isArabicText ? 4.8 : 3.2;
+
+const blockH =
+  Math.max(
+    12,
+    lines.length * lineHeight + 6
   );
 
-  const text =
-    catatan || "—";
+doc.setDrawColor(...GRAY_LINE);
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.8);
+doc.rect(
+  margin,
+  startY + 4,
+  pageW - margin * 2,
+  blockH
+);
 
-  doc.setTextColor(...GRAY_TEXT);
+doc.text(
+  lines,
+  margin + 3,
+  startY + 10,
+  {
+    align: isArabicText
+      ? "right"
+      : "left",
+    maxWidth: textWidth,
+  }
+);
 
-  const lines =
-    doc.splitTextToSize(
-      text,
-      pageW - margin * 2 - 4
-    );
-
-  const blockH =
-    Math.max(
-      10,
-      lines.length * 2.8 + 4
-    );
-
-  doc.setDrawColor(...GRAY_LINE);
-
-  doc.rect(
-    margin,
-    startY + 4,
-    pageW - margin * 2,
-    blockH
-  );
-
-  doc.text(
-    lines,
-    margin + 2,
-    startY + 8
-  );
-
-  return (
-    startY +
-    blockH +
-    5
-  );
+return (
+  startY +
+  blockH +
+  5
+);
 }
 
 function drawSignatures(
