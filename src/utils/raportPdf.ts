@@ -1119,15 +1119,11 @@ doc.setFont(
   "normal"
 );
 
-doc.setFontSize(
-  isArabicText ? 8 : 6.8
-);
+doc.setFontSize(6.8);
 
 doc.setCharSpace(0);
 
-doc.setLineHeightFactor(
-  isArabicText ? 1.9 : 1.5
-);
+doc.setLineHeightFactor(1.5);
 
 doc.setTextColor(...GRAY_TEXT);
 
@@ -1140,13 +1136,10 @@ const lines =
     textWidth
   );
 
-const lineHeight =
-  isArabicText ? 4.8 : 3.2;
-
 const blockH =
   Math.max(
-    12,
-    lines.length * lineHeight + 6
+    10,
+    lines.length * 2.8 + 6
   );
 
 doc.setDrawColor(...GRAY_LINE);
@@ -1158,24 +1151,37 @@ doc.rect(
   blockH
 );
 
-doc.text(
-  lines,
-  margin - 3,
-  startY + 10,
-  {
-    align: isArabicText
-      ? "right"
-      : "left",
-    maxWidth: textWidth,
-  }
-);
+if (isArabicText) {
+
+  doc.setR2L(true);
+
+  doc.text(
+    text,
+    pageW - margin - 3,
+    startY + 10,
+    {
+      align: "right",
+      maxWidth: textWidth,
+    }
+  );
+
+  doc.setR2L(false);
+
+} else {
+
+  doc.text(
+    lines,
+    margin + 3,
+    startY + 10
+  );
+
+}
 
 return (
   startY +
   blockH +
   5
 );
-}
 
 function drawSignatures(
   doc: jsPDF,
