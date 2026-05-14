@@ -647,10 +647,10 @@ function drawDetail(
     const head = [[
       "Surat",
       "Juz",
-      "LJ",
-      "LK",
-      "W",
-      "S",
+      "Lahn Jali",
+      "Lahn Khofi",
+      "Waqaf",
+      "Sambung ayat",
       "Lancar",
       "Nilai"
     ]];
@@ -1192,6 +1192,15 @@ return (
   5
 );
 }
+
+y = drawCatatan(
+  doc,
+  data.catatanGuru,
+  y,
+  pageW,
+  margin
+);
+
 function drawSignatures(
   doc: jsPDF,
   data: RaportData,
