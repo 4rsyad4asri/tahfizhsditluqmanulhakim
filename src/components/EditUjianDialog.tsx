@@ -96,7 +96,7 @@ export default function EditUjianDialog({ open, onClose, ujian, studentName, onS
 
   if (!ujian) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     let nilai_aspek: any;
     if (mode === 'Tahfizh') {
       nilai_aspek = { ...aspek, surahEntries: tahfizhEntries, rumus, catatanGuru, catatanMode, predikat: computed.predikat };
@@ -106,6 +106,14 @@ export default function EditUjianDialog({ open, onClose, ujian, studentName, onS
       nilai_aspek = { ...aspek, entries: lanjutanEntries, config: lanjutanConfig, penaltiWaqaf, waqafTest, rumus, catatanGuru, catatanMode, predikat: computed.predikat };
     }
     try {
+   // otomatis update status siswa
+await supabase
+  .from("students")
+  .update({
+    status_sertifikasi: computed.status
+  })
+  .eq("id", ujian.student_id);
+      
       onSave({ nilai_aspek, nilai_akhir: computed.nilai_akhir, status: computed.status, grade: computed.grade, tanggal });
     } catch (e) {
       toast.error(getSafeErrorMessage(e));
