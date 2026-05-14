@@ -1153,8 +1153,6 @@ doc.rect(
 
 if (isArabicText) {
 
-  doc.setR2L(true);
-
   doc.text(
     text,
     pageW - margin - 3,
@@ -1164,8 +1162,6 @@ if (isArabicText) {
       maxWidth: textWidth,
     }
   );
-
-  doc.setR2L(false);
 
 } else {
 
