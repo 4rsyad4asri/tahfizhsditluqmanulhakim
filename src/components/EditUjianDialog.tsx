@@ -59,7 +59,12 @@ export default function EditUjianDialog({ open, onClose, ujian, studentName, onS
       setTanggal(ujian?.tanggal || '');
       setRumus(aspek.rumus || 'baru');
       setCatatanGuru(aspek.catatanGuru || '');
-      setCatatanMode(aspek.catatanMode || 'auto');
+
+if (aspek.catatanGuru) {
+  setCatatanMode('manual');
+} else {
+  setCatatanMode('auto');
+}
       setTahfizhEntries(aspek.surahEntries || []);
       setDasarEntries(aspek.entries || []);
       setDasarConfig(aspek.config || { penalti_lahn_jali: 2, penalti_lahn_khofi: 1, bobot_kelancaran: 40 });
