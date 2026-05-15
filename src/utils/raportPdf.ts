@@ -1407,14 +1407,27 @@ let y = margin + 26 + 16;
     opts
   );
 
-  y = drawCatatan(
-    doc,
-    data.catatanGuru || "",
-    pageW,
-    margin,
-    y,
-    opts
-  );
+const catatanFinal =
+  data?.nilai_aspek?.catatanGuru?.trim()
+    ? data.nilai_aspek.catatanGuru
+    : generateCatatanSmart({
+        mode: data.mode,
+        nilaiAkhir: data.nilai_akhir,
+        studentName: data.student_name,
+        entries:
+          data?.nilai_aspek?.entries ||
+          data?.nilai_aspek?.surahEntries ||
+          [],
+      });
+
+y = drawCatatan(
+  doc,
+  catatanFinal,
+  pageW,
+  margin,
+  y,
+  opts
+);
 
   drawSignatures(
     doc,
