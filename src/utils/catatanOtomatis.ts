@@ -19,7 +19,7 @@ export function generateCatatanOtomatis(
 
   if (nilaiAkhir >= 90) {
     pembuka =
-      `${ananda} menunjukkan hasil yang sangat ممتاز dengan penguasaan materi yang sangat baik. `;
+      `${ananda} menunjukkan hasil yang sangat Mumtaz dengan penguasaan materi yang sangat baik. `;
   } else if (nilaiAkhir >= 85) {
     pembuka =
       `${ananda} menunjukkan hasil yang baik dan memiliki kemampuan yang sudah berkembang dengan sangat baik. `;
