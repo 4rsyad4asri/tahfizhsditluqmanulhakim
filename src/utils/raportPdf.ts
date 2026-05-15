@@ -1410,7 +1410,7 @@ let y = margin + 26 + 16;
 const catatanFinal =
   data?.nilai_aspek?.catatanGuru?.trim()
     ? data.nilai_aspek.catatanGuru
-    : generateCatatanSmart({
+    : generateCatatanOtomatis({
         mode: data.mode,
         nilaiAkhir: data.nilai_akhir,
         studentName: data.student_name,
