@@ -1,154 +1,287 @@
+```ts id="f4p4i2"
 export type RaportMode =
   | "Tahfizh"
   | "Tahsin Dasar"
   | "Tahsin Lanjutan";
 
-export default function generateCatatanOtomatis(
-  mode: RaportMode,
-  nilai: number,
-  namaSiswa?: string
-): string {
+type GenerateCatatanParams = {
+  mode: RaportMode;
 
-  const nilaiAkhir = parseFloat(String(nilai).replace(",", ".")) || 0;
+  nilaiAkhir: number;
+
+  namaSiswa?: string;
+
+  lahnJali?: number;
+  lahnKhofi?: number;
+
+  waqaf?: number;
+  sambung?: number;
+
+  kelancaran?: number;
+
+  makhraj?: number;
+  tajwid?: number;
+  mad?: number;
+  qalqalah?: number;
+};
+
+export default function generateCatatanOtomatis({
+  mode,
+  nilaiAkhir,
+  namaSiswa,
+
+  lahnJali = 0,
+  lahnKhofi = 0,
+
+  waqaf = 0,
+  sambung = 0,
+
+  kelancaran = 90,
+
+  makhraj = 0,
+  tajwid = 0,
+  mad = 0,
+  qalqalah = 0,
+}: GenerateCatatanParams): string {
+
+  const nilai = Number(nilaiAkhir) || 0;
+
   const ananda = namaSiswa || "Ananda";
+
+  // ========================================
+  // PEMBUKA BERDASARKAN NILAI
+  // ========================================
 
   let pembuka = "";
 
-  // =========================
-  // PEMBUKA
-  // =========================
-
-  if (nilaiAkhir >= 90) {
-    pembuka = `${ananda} menunjukkan hasil yang sangat Mumtaz dengan penguasaan materi yang sangat baik. `;
-  } else if (nilaiAkhir >= 85) {
-    pembuka = `${ananda} menunjukkan hasil yang baik dan memiliki kemampuan yang sudah berkembang dengan sangat baik. `;
-  } else if (nilaiAkhir >= 76) {
-    pembuka = `${ananda} memiliki kemampuan yang cukup baik, namun masih terdapat beberapa aspek yang perlu ditingkatkan. `;
-  } else if (nilaiAkhir >= 70) {
-    pembuka = `${ananda} telah berusaha dengan baik, namun masih memerlukan latihan dan pembinaan yang lebih intensif. `;
+  if (nilai >= 90) {
+    pembuka =
+      `${ananda} menunjukkan hasil yang sangat Mumtaz dengan penguasaan materi yang sangat baik. `;
+  } else if (nilai >= 85) {
+    pembuka =
+      `${ananda} menunjukkan hasil yang baik dan kemampuan yang berkembang dengan sangat baik. `;
+  } else if (nilai >= 76) {
+    pembuka =
+      `${ananda} memiliki kemampuan yang cukup baik, namun masih terdapat beberapa aspek yang perlu ditingkatkan. `;
+  } else if (nilai >= 70) {
+    pembuka =
+      `${ananda} telah berusaha dengan baik, namun masih memerlukan latihan dan pembinaan yang lebih intensif. `;
   } else {
-    pembuka = `${ananda} masih memerlukan bimbingan dan latihan yang lebih rutin agar kemampuan membaca dan hafalan Al-Qur'an dapat meningkat dengan baik. `;
+    pembuka =
+      `${ananda} masih memerlukan bimbingan dan latihan yang lebih rutin agar kemampuan membaca dan hafalan Al-Qur'an dapat meningkat dengan baik. `;
   }
 
-  // =========================
-  // TAHSIN DASAR
-  // =========================
+  // ========================================
+  // LIST CATATAN
+  // ========================================
 
-  if (mode === "Tahsin Dasar") {
+  const catatan: string[] = [];
 
-    if (nilaiAkhir >= 90) {
-      return (
-        pembuka +
-        "Kemampuan membaca dasar Al-Qur'an, pengenalan huruf hijaiyah, harakat, serta tajwid dasar sudah sangat baik. Semoga terus istiqamah dalam belajar Al-Qur'an. Barakallahu fiikum."
-      );
-    }
-
-    if (nilaiAkhir >= 85) {
-      return (
-        pembuka +
-        "Kemampuan membaca dasar Al-Qur'an sudah baik, namun tetap perlu meningkatkan ketelitian dalam penerapan harakat dan tajwid dasar. Barakallahu fiikum."
-      );
-    }
-
-    if (nilaiAkhir >= 76) {
-      return (
-        pembuka +
-        "Masih perlu meningkatkan kelancaran membaca dan ketepatan dalam mengenali harakat serta hukum bacaan dasar. Barakallahu fiikum."
-      );
-    }
-
-    if (nilaiAkhir >= 70) {
-      return (
-        pembuka +
-        "Perlu latihan yang lebih rutin dalam membaca Al-Qur'an agar kemampuan membaca dasar semakin berkembang dan lebih tartil. Barakallahu fiikum."
-      );
-    }
-
-    return (
-      pembuka +
-      "Diperlukan pendampingan dan pembiasaan membaca Al-Qur'an secara rutin agar kemampuan dasar membaca semakin baik. Barakallahu fiikum."
-    );
-  }
-
-  // =========================
-  // TAHSIN LANJUTAN
-  // =========================
-
-  if (mode === "Tahsin Lanjutan") {
-
-    if (nilaiAkhir >= 90) {
-      return (
-        pembuka +
-        "Penerapan tajwid, makhraj, waqaf ibtida’, dan kelancaran membaca sudah sangat baik. Semoga terus menjaga kualitas bacaan Al-Qur'an. Barakallahu fiikum."
-      );
-    }
-
-    if (nilaiAkhir >= 85) {
-      return (
-        pembuka +
-        "Kemampuan membaca Al-Qur'an sudah baik, namun masih perlu meningkatkan ketelitian pada beberapa hukum tajwid dan waqaf. Barakallahu fiikum."
-      );
-    }
-
-    if (nilaiAkhir >= 76) {
-      return (
-        pembuka +
-        "Masih perlu meningkatkan kualitas bacaan terutama pada aspek tajwid, makhraj, dan kelancaran membaca. Barakallahu fiikum."
-      );
-    }
-
-    if (nilaiAkhir >= 70) {
-      return (
-        pembuka +
-        "Perlu latihan yang lebih rutin agar kemampuan membaca Al-Qur'an semakin baik, lancar, dan sesuai kaidah tajwid. Barakallahu fiikum."
-      );
-    }
-
-    return (
-      pembuka +
-      "Diperlukan pembinaan yang lebih intensif dalam aspek tajwid, makhraj, dan kelancaran membaca Al-Qur'an. Barakallahu fiikum."
-    );
-  }
-
-  // =========================
+  // ========================================
   // TAHFIZH
-  // =========================
+  // ========================================
 
   if (mode === "Tahfizh") {
 
-    if (nilaiAkhir >= 90) {
-      return (
-        pembuka +
-        "Hafalan Al-Qur'an sangat baik dengan kelancaran, ketepatan tajwid, dan sambungan ayat yang sangat bagus. Semoga senantiasa menjaga hafalan Al-Qur'an dengan istiqamah. Barakallahu fiikum."
+    // LAHN JALI
+    if (lahnJali >= 5) {
+      catatan.push(
+        "Perlu meningkatkan ketepatan makhraj huruf dan mengurangi kesalahan bacaan yang dapat mengubah lafazh Al-Qur'an"
+      );
+    } else if (lahnJali >= 2) {
+      catatan.push(
+        "Masih terdapat beberapa kesalahan pada pengucapan huruf tertentu yang perlu diperbaiki"
       );
     }
 
-    if (nilaiAkhir >= 85) {
-      return (
-        pembuka +
-        "Hafalan Al-Qur'an sudah baik, namun masih perlu meningkatkan muroja’ah dan ketelitian pada beberapa bagian ayat. Barakallahu fiikum."
+    // LAHN KHOFI
+    if (lahnKhofi >= 8) {
+      catatan.push(
+        "Perlu meningkatkan ketelitian dalam penerapan tajwid terutama pada mad, ghunnah, dan panjang pendek bacaan"
+      );
+    } else if (lahnKhofi >= 4) {
+      catatan.push(
+        "Masih perlu meningkatkan ketelitian dalam penerapan hukum tajwid pada beberapa bagian bacaan"
       );
     }
 
-    if (nilaiAkhir >= 76) {
-      return (
-        pembuka +
-        "Masih perlu meningkatkan kekuatan hafalan, kelancaran muroja’ah, dan ketepatan sambungan ayat. Barakallahu fiikum."
+    // WAQAF
+    if (waqaf >= 3) {
+      catatan.push(
+        "Perlu meningkatkan pemahaman waqaf dan ibtida’ agar pemberhentian bacaan lebih tepat"
       );
     }
 
-    if (nilaiAkhir >= 70) {
-      return (
-        pembuka +
-        "Perlu meningkatkan intensitas muroja’ah agar hafalan lebih kuat, lancar, dan tidak mudah lupa. Barakallahu fiikum."
+    // SAMBUNG
+    if (sambung >= 3) {
+      catatan.push(
+        "Masih perlu meningkatkan kekuatan hafalan pada sambungan ayat dan kelancaran muroja’ah"
       );
     }
 
-    return (
-      pembuka +
-      "Diperlukan pembiasaan muroja’ah dan pendampingan yang lebih intensif agar kualitas hafalan semakin meningkat. Barakallahu fiikum."
+    // KELANCARAN
+    if (kelancaran <= 75) {
+      catatan.push(
+        "Perlu meningkatkan kelancaran hafalan dengan memperbanyak muroja’ah secara rutin"
+      );
+    } else if (kelancaran <= 85) {
+      catatan.push(
+        "Kelancaran hafalan sudah cukup baik namun masih perlu lebih ditingkatkan"
+      );
+    }
+
+    // JIKA SANGAT BAGUS
+    if (
+      nilai >= 90 &&
+      catatan.length === 0
+    ) {
+      catatan.push(
+        "Hafalan Al-Qur'an sangat baik dengan kelancaran, ketepatan tajwid, dan sambungan ayat yang sangat bagus"
+      );
+    }
+
+    catatan.push(
+      "Diharapkan terus menjaga hafalan dengan memperbanyak muroja’ah secara istiqamah"
     );
   }
 
-  return pembuka;
+  // ========================================
+  // TAHSIN DASAR
+  // ========================================
+
+  if (mode === "Tahsin Dasar") {
+
+    // MAKHRAJ
+    if (makhraj >= 5) {
+      catatan.push(
+        "Perlu meningkatkan ketepatan pengucapan makhraj huruf hijaiyah"
+      );
+    } else if (makhraj >= 2) {
+      catatan.push(
+        "Masih terdapat beberapa kesalahan kecil pada pengucapan huruf hijaiyah"
+      );
+    }
+
+    // TAJWID
+    if (tajwid >= 5) {
+      catatan.push(
+        "Perlu meningkatkan pemahaman tajwid dasar dan penerapan hukum bacaan"
+      );
+    } else if (tajwid >= 2) {
+      catatan.push(
+        "Masih perlu meningkatkan ketelitian dalam penerapan tajwid dasar"
+      );
+    }
+
+    // MAD
+    if (mad >= 4) {
+      catatan.push(
+        "Masih perlu meningkatkan ketepatan panjang pendek bacaan (mad)"
+      );
+    }
+
+    // QALQALAH
+    if (qalqalah >= 3) {
+      catatan.push(
+        "Perlu meningkatkan ketepatan bacaan qalqalah pada beberapa huruf tertentu"
+      );
+    }
+
+    // KELANCARAN
+    if (kelancaran <= 75) {
+      catatan.push(
+        "Perlu meningkatkan kelancaran membaca dengan latihan rutin dan pembiasaan membaca tartil"
+      );
+    } else if (kelancaran <= 85) {
+      catatan.push(
+        "Kelancaran membaca sudah cukup baik namun masih perlu lebih ditingkatkan"
+      );
+    }
+
+    // JIKA BAGUS
+    if (
+      nilai >= 90 &&
+      catatan.length === 0
+    ) {
+      catatan.push(
+        "Kemampuan membaca dasar Al-Qur'an sudah sangat baik dan sesuai kaidah dasar pembelajaran"
+      );
+    }
+
+    catatan.push(
+      "Semoga terus semangat dalam belajar dan memperbaiki kualitas bacaan Al-Qur'an"
+    );
+  }
+
+  // ========================================
+  // TAHSIN LANJUTAN
+  // ========================================
+
+  if (mode === "Tahsin Lanjutan") {
+
+    // LAHN JALI
+    if (lahnJali >= 5) {
+      catatan.push(
+        "Perlu meningkatkan ketepatan makhraj dan mengurangi kesalahan bacaan yang bersifat jelas"
+      );
+    } else if (lahnJali >= 2) {
+      catatan.push(
+        "Masih terdapat beberapa kesalahan kecil pada pengucapan huruf tertentu"
+      );
+    }
+
+    // LAHN KHOFI
+    if (lahnKhofi >= 8) {
+      catatan.push(
+        "Perlu meningkatkan penerapan hukum tajwid terutama pada mad, ghunnah, dan sifat huruf"
+      );
+    } else if (lahnKhofi >= 4) {
+      catatan.push(
+        "Masih perlu meningkatkan ketelitian dalam penerapan hukum tajwid"
+      );
+    }
+
+    // WAQAF
+    if (waqaf >= 3) {
+      catatan.push(
+        "Perlu meningkatkan pemahaman waqaf dan ibtida’ agar bacaan lebih sempurna"
+      );
+    }
+
+    // KELANCARAN
+    if (kelancaran <= 75) {
+      catatan.push(
+        "Perlu meningkatkan kelancaran membaca Al-Qur'an dengan latihan rutin"
+      );
+    } else if (kelancaran <= 85) {
+      catatan.push(
+        "Kelancaran membaca sudah cukup baik namun masih perlu lebih ditingkatkan"
+      );
+    }
+
+    // JIKA BAGUS
+    if (
+      nilai >= 90 &&
+      catatan.length === 0
+    ) {
+      catatan.push(
+        "Kemampuan membaca Al-Qur'an dengan penerapan tajwid dan waqaf sudah sangat baik"
+      );
+    }
+
+    catatan.push(
+      "Diharapkan terus meningkatkan kualitas bacaan agar semakin tartil dan sesuai kaidah tajwid"
+    );
+  }
+
+  // ========================================
+  // FINAL
+  // ========================================
+
+  return (
+    pembuka +
+    catatan.join(". ") +
+    ". Barakallahu fiikum."
+  );
 }
+```
