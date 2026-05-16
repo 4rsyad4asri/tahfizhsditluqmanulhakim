@@ -1,4 +1,3 @@
-```ts id="f4p4i2"
 export type RaportMode =
   | "Tahfizh"
   | "Tahsin Dasar"
@@ -6,19 +5,13 @@ export type RaportMode =
 
 type GenerateCatatanParams = {
   mode: RaportMode;
-
   nilaiAkhir: number;
-
   namaSiswa?: string;
-
   lahnJali?: number;
   lahnKhofi?: number;
-
   waqaf?: number;
   sambung?: number;
-
   kelancaran?: number;
-
   makhraj?: number;
   tajwid?: number;
   mad?: number;
@@ -281,7 +274,6 @@ export default function generateCatatanOtomatis({
   return (
     pembuka +
     catatan.join(". ") +
-    ". Barakallahu fiikum."
+    ". Barakallahu fiik."
   );
 }
-```
