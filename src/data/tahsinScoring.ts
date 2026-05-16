@@ -31,7 +31,7 @@ export interface TahsinDasarEntry {
   salah_harakat: number;
   salah_makhraj: number;
   kesalahan_mad: number;
-  kesalahan_ghunnah: number;
+  kesalahan_qalqalah: number;
   kesalahan_tajwid: number;
   kesalahan_waqaf: number;
   kelancaran: number; // 60-100
@@ -44,7 +44,7 @@ export interface TahsinLanjutanEntry {
   salah_harakat: number;
   salah_makhraj: number;
   kesalahan_mad: number;
-  kesalahan_ghunnah: number;
+  kesalahan_qalqalah: number;
   kesalahan_tajwid: number;
   waqaf_ibtida: number;
   kelancaran: number; // 60-100
