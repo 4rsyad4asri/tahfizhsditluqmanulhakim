@@ -304,7 +304,8 @@ export default function UjianTahsinLanjutanForm({ onSubmit, onCancel, isPending 
           ))}
         </div>
         {!waqafPassed && (
-        )}
+  <p className="text-xs text-destructive font-medium">⚠️ Minimal 3 simbol waqaf harus dijawab benar agar lulus ujian.</p>
+)}
       </div>
 
       {/* Catatan */}
