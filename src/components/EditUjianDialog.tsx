@@ -10,7 +10,7 @@ import {calculateNilaiTahsinDasar,
   type TahsinLanjutanEntry,
   type TahsinPenaltyConfig,
   type WaqafSymbolTest,
-  type RumusVersion}
+  type RumusVersion,}
   from "@/data/tahsinScoring";
 import { generateCatatanOtomatis } from "@/utils/catatanOtomatis";
 import { Loader2 } from "lucide-react";
