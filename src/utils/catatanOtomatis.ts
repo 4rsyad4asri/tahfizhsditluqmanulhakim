@@ -15,23 +15,17 @@ export function generateCatatanOtomatis(
 
   let pembuka = "";
 
-  if (nilaiAkhir >= 90) {
-    pembuka =
-      `${ananda} menunjukkan hasil yang sangat Mumtaz dengan penguasaan materi yang sangat baik. `;
+if (nilaiAkhir >= 90) {
+    pembuka = ${ananda} menunjukkan hasil yang sangat Mumtaz dengan penguasaan materi yang sangat baik.;
   } else if (nilaiAkhir >= 85) {
-    pembuka =
-      `${ananda} menunjukkan hasil yang baik dan memiliki kemampuan yang sudah berkembang dengan sangat baik. `;
+    pembuka = ${ananda} menunjukkan hasil yang baik dan memiliki kemampuan yang sudah berkembang dengan sangat baik.;
   } else if (nilaiAkhir >= 76) {
-    pembuka =
-      `${ananda} memiliki kemampuan yang cukup baik, namun masih terdapat beberapa aspek yang perlu ditingkatkan. `;
+    pembuka = ${ananda} memiliki kemampuan yang cukup baik, namun masih terdapat beberapa aspek yang perlu ditingkatkan.;
   } else if (nilaiAkhir >= 70) {
-    pembuka =
-      `${ananda} telah berusaha dengan baik, namun masih memerlukan latihan dan pembinaan yang lebih intensif. `;
+    pembuka = ${ananda} telah berusaha dengan baik, namun masih memerlukan latihan dan pembinaan yang lebih intensif.;
   } else {
-    pembuka =
-      `${ananda} masih memerlukan bimbingan dan latihan yang lebih rutin agar kemampuan membaca dan hafalan Al-Qur'an dapat meningkat dengan baik. `;
+    pembuka = ${ananda} masih memerlukan bimbingan dan latihan yang lebih rutin agar kemampuan membaca dan hafalan Al-Qur'an dapat meningkat dengan baik.;
   }
-
   // =========================
   // TAHSIN DASAR
   // =========================
