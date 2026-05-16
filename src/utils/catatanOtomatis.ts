@@ -9,7 +9,7 @@ export default function generateCatatanOtomatis(
   namaSiswa?: string
 ): string {
 
-  const nilaiAkhir = Number(nilai) || 0;
+  const nilaiAkhir = parseFloat(String(nilai).replace(",", ".")) || 0;
   const ananda = namaSiswa || "Ananda";
 
   let pembuka = "";
