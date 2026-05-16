@@ -56,11 +56,34 @@ export default function RaportPreviewDialog({ open, onClose, ujian, studentName,
   const previewSeqRef = useRef(0);
 
 const generatedCatatan = useMemo(() => {
-  return generateCatatanOtomatis(
-    ujian?.mode,
-    ujian?.nilai_akhir ?? 0,
-    studentName
+
+  const aspek = ujian?.nilai_aspek || {};
+  const entries =
+    aspek.surahEntries ||
+    aspek.entries ||
+    [];
+
+  const totalLahnJali = entries.reduce(
+    (a: number, b: any) =>
+      a + (b.lahn_jali || 0),
+    0
   );
+
+  const totalLahnKhofi = entries.reduce(
+    (a: number, b: any) =>
+      a + (b.lahn_khofi || 0),
+    0
+  );
+
+  return generateCatatanOtomatis({
+    mode: ujian?.mode,
+    nilaiAkhir: ujian?.nilai_akhir ?? 0,
+    namaSiswa: studentName,
+
+    lahnJali: totalLahnJali,
+    lahnKhofi: totalLahnKhofi,
+  });
+
 }, [ujian, studentName]);
 
 const [catatan, setCatatan] = useState("");

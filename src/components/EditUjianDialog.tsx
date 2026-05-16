@@ -99,16 +99,55 @@ if (aspek.catatanGuru) {
 
   // Auto-update catatan when in auto mode
 useEffect(() => {
-  if (catatanMode === 'auto') {
+  if (catatanMode === "auto") {
+
+    const totalLahnJali =
+      tahfizhEntries.reduce(
+        (a, b) => a + (b.lahn_jali || 0),
+        0
+      );
+
+    const totalLahnKhofi =
+      tahfizhEntries.reduce(
+        (a, b) => a + (b.lahn_khofi || 0),
+        0
+      );
+
+    const totalWaqaf =
+      tahfizhEntries.reduce(
+        (a, b) => a + (b.waqaf_ibtida || 0),
+        0
+      );
+
+    const totalSambung =
+      tahfizhEntries.reduce(
+        (a, b) => a + (b.salah_sambung_ayat || 0),
+        0
+      );
+
     setCatatanGuru(
-      generateCatatanOtomatis(
+      generateCatatanOtomatis({
         mode,
-        computed.nilai_akhir,
-        studentName
-      )
+        nilaiAkhir: computed.nilai_akhir,
+        namaSiswa: studentName,
+
+        lahnJali: totalLahnJali,
+        lahnKhofi: totalLahnKhofi,
+
+        waqaf: totalWaqaf,
+        sambung: totalSambung,
+
+        kelancaran: computed.nilai_akhir,
+      })
     );
   }
-}, [mode, computed.nilai_akhir, catatanMode, studentName]);
+}, [
+  computed.nilai_akhir,
+  catatanMode,
+  studentName,
+  mode,
+  tahfizhEntries,
+]);
 
   if (!ujian) return null;
 
@@ -300,7 +339,58 @@ await supabase
               </h5>
               <div className="flex gap-1">
                 {catatanMode === 'manual' && (
-                  <button onClick={() => { setCatatanMode('auto'); setCatatanGuru(generateCatatanOtomatis(computed.nilai_akhir, studentName)); }}
+                 ```tsx id="j3fkrm"
+<button
+  onClick={() => {
+
+    const totalLahnJali =
+      tahfizhEntries.reduce(
+        (a, b) => a + (b.lahn_jali || 0),
+        0
+      );
+
+    const totalLahnKhofi =
+      tahfizhEntries.reduce(
+        (a, b) => a + (b.lahn_khofi || 0),
+        0
+      );
+
+    const totalWaqaf =
+      tahfizhEntries.reduce(
+        (a, b) => a + (b.waqaf_ibtida || 0),
+        0
+      );
+
+    const totalSambung =
+      tahfizhEntries.reduce(
+        (a, b) => a + (b.salah_sambung_ayat || 0),
+        0
+      );
+
+    setCatatanMode("auto");
+
+    setCatatanGuru(
+      generateCatatanOtomatis({
+        mode,
+
+        nilaiAkhir: computed.nilai_akhir,
+
+        namaSiswa: studentName,
+
+        lahnJali: totalLahnJali,
+
+        lahnKhofi: totalLahnKhofi,
+
+        waqaf: totalWaqaf,
+
+        sambung: totalSambung,
+
+        kelancaran: computed.nilai_akhir,
+      })
+    );
+  }}
+>
+
                     className="flex items-center gap-1 text-[10px] text-primary hover:underline">
                 
                   </button>

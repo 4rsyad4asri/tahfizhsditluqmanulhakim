@@ -1408,17 +1408,55 @@ let y = margin + 26 + 16;
     opts
   );
 
+
+const entries =
+  data?.nilai_aspek?.entries ||
+  data?.nilai_aspek?.surahEntries ||
+  [];
+
+const totalLahnJali = entries.reduce(
+  (a: number, b: any) =>
+    a + (b.lahn_jali || 0),
+  0
+);
+
+const totalLahnKhofi = entries.reduce(
+  (a: number, b: any) =>
+    a + (b.lahn_khofi || 0),
+  0
+);
+
+const totalWaqaf = entries.reduce(
+  (a: number, b: any) =>
+    a + (b.waqaf_ibtida || 0),
+  0
+);
+
+const totalSambung = entries.reduce(
+  (a: number, b: any) =>
+    a + (b.salah_sambung_ayat || 0),
+  0
+);
+
 const catatanFinal =
   data?.nilai_aspek?.catatanGuru?.trim()
     ? data.nilai_aspek.catatanGuru
     : generateCatatanOtomatis({
-        mode: data.mode,
-        nilaiAkhir: data.nilai_akhir,
-        studentName: data.student_name,
-        entries:
-          data?.nilai_aspek?.entries ||
-          data?.nilai_aspek?.surahEntries ||
-          [],
+        mode: data.mode as any,
+
+        nilaiAkhir: Number(data.nilai_akhir || 0),
+
+        namaSiswa: data.nama || "Ananda",
+
+        lahnJali: totalLahnJali,
+
+        lahnKhofi: totalLahnKhofi,
+
+        waqaf: totalWaqaf,
+
+        sambung: totalSambung,
+
+        kelancaran: Number(data.nilai_akhir || 0),
       });
 
 y = drawCatatan(

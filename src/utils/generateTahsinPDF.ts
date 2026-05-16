@@ -473,13 +473,56 @@ y +=
   }
 
   // Catatan
-  const catatan =
+  
+const entries =
+  data?.nilai_aspek?.entries ||
+  data?.nilai_aspek?.surahEntries ||
+  [];
+
+const totalLahnJali = entries.reduce(
+  (a: number, b: any) =>
+    a + (b.lahn_jali || 0),
+  0
+);
+
+const totalLahnKhofi = entries.reduce(
+  (a: number, b: any) =>
+    a + (b.lahn_khofi || 0),
+  0
+);
+
+const totalWaqaf = entries.reduce(
+  (a: number, b: any) =>
+    a + (b.waqaf_ibtida || 0),
+  0
+);
+
+const totalSambung = entries.reduce(
+  (a: number, b: any) =>
+    a + (b.salah_sambung_ayat || 0),
+  0
+);
+
+const catatan =
   data.catatanGuru ||
-  generateCatatanOtomatis(
-    data.mode,
-    data.nilaiAkhir,
-    data.studentName
-  );
+  generateCatatanOtomatis({
+    mode: data.mode as any,
+
+    nilaiAkhir: Number(data.nilaiAkhir || 0),
+
+    namaSiswa: data.studentName || "Ananda",
+
+    lahnJali: totalLahnJali,
+
+    lahnKhofi: totalLahnKhofi,
+
+    waqaf: totalWaqaf,
+
+    sambung: totalSambung,
+
+    kelancaran: Number(data.nilaiAkhir || 0),
+  });
+
 if (catatan) {
 
   y += 5;
