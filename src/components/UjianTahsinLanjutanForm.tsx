@@ -278,7 +278,7 @@ export default function UjianTahsinLanjutanForm({ onSubmit, onCancel, isPending 
                   <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-violet-600 cursor-help transition-colors" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-[280px] whitespace-pre-line text-xs">
-                  Siswa harus mampu menjelaskan seluruh 6 simbol waqaf dengan benar dan lancar. Jika tidak lolos, ujian otomatis TIDAK LULUS.
+                  Centang simbol waqaf yang berhasil dijawab dengan benar oleh siswa.
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
