@@ -93,11 +93,17 @@ if (aspek.catatanGuru) {
   }, [mode, tahfizhEntries, dasarEntries, dasarConfig, lanjutanEntries, lanjutanConfig, penaltiWaqaf, waqafTest, rumus]);
 
   // Auto-update catatan when in auto mode
-  useEffect(() => {
-    if (catatanMode === 'auto') {
-      setCatatanGuru(generateCatatanOtomatis(computed.nilai_akhir, studentName));
-    }
-  }, [computed.nilai_akhir, catatanMode, studentName]);
+useEffect(() => {
+  if (catatanMode === 'auto') {
+    setCatatanGuru(
+      generateCatatanOtomatis(
+        mode,
+        computed.nilai_akhir,
+        studentName
+      )
+    );
+  }
+}, [mode, computed.nilai_akhir, catatanMode, studentName]);
 
   if (!ujian) return null;
 
