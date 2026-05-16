@@ -3,9 +3,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { calculateNilaiSurahWithRumus, calculateNilaiTahfizh, type TahfizhSurahEntry, type TahfizhRumus } from "@/data/mockData";
 import {
-  calculateNilaiTahsinDasar, calculateNilaiTahsinLanjutan,
-  calculateTahsinDasarResult, calculateTahsinLanjutanResult,
-  type TahsinDasarEntry, type TahsinLanjutanEntry, type TahsinPenaltyConfig, type WaqafSymbolTest, type RumusVersion,
+  calculateNilaiTahsinDasar,
+  calculateNilaiTahsinLanjutan,
+  calculateTahsinDasarResult,
+  calculateTahsinLanjutanResult,
+  type TahsinDasarEntry,
+  type TahsinLanjutanEntry,
+  type TahsinPenaltyConfig,
+  type WaqafSymbolTest,
+  type RumusVersion,
 } from "@/data/tahsinScoring";
 import { generateCatatanOtomatis } from "@/utils/catatanOtomatis";
 import { Loader2 } from "lucide-react";
