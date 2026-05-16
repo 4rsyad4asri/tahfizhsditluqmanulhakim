@@ -12,7 +12,7 @@ import {calculateNilaiTahsinDasar,
   type WaqafSymbolTest,
   type RumusVersion,}
   from "@/data/tahsinScoring";
-import { generateCatatanOtomatis } from "@/utils/catatanOtomatis";
+import generateCatatanOtomatis from "@/utils/catatanOtomatis";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/utils/errorMessages";
