@@ -3,73 +3,69 @@ export type RaportMode =
   | "Tahsin Dasar"
   | "Tahsin Lanjutan";
 
-type GenerateCatatanParams = {
-  mode: RaportMode;
-
+type BaseParams = {
   nilaiAkhir: number;
   namaSiswa?: string;
+  kelancaran?: number;
+};
 
-  // Tahsin Lanjutan
+type TahfizhParams = BaseParams & {
+  mode: "Tahfizh";
   lahnJali?: number;
   lahnKhofi?: number;
   waqaf?: number;
+  salahSambungAyat?: number;
+};
 
-  // Tahsin Dasar
+type TahsinDasarParams = BaseParams & {
+  mode: "Tahsin Dasar";
   harakat?: number;
   tajwid?: number;
   mad?: number;
   qalqalah?: number;
-
-  // Umum
-  kelancaran?: number;
 };
 
-export default function generateCatatanOtomatis({
-  mode,
-  nilaiAkhir,
-  namaSiswa,
+type TahsinLanjutanParams = BaseParams & {
+  mode: "Tahsin Lanjutan";
+  lahnJali?: number;
+  lahnKhofi?: number;
+  waqaf?: number;
+};
 
-  lahnJali = 0,
-  lahnKhofi = 0,
-  waqaf = 0,
+type GenerateCatatanParams =
+  | TahfizhParams
+  | TahsinDasarParams
+  | TahsinLanjutanParams;
 
-  harakat = 0,
-  tajwid = 0,
-  mad = 0,
-  qalqalah = 0,
-
-  kelancaran = 90,
-}: GenerateCatatanParams): string {
-
-  const nilai = Number(nilaiAkhir) || 0;
-  const ananda = namaSiswa || "Ananda";
+export default function generateCatatanOtomatis(
+  params: GenerateCatatanParams
+): string {
+  const nilai = Number(params.nilaiAkhir) || 0;
+  const ananda = params.namaSiswa || "Ananda";
+  const kelancaran = params.kelancaran ?? 90;
 
   let pembuka = "";
   const catatan: string[] = [];
 
-  // ========================================
-  // PEMBUKA BERDASARKAN NILAI
-  // ========================================
-
   if (nilai >= 90) {
-    pembuka =
-      `${ananda} menunjukkan hasil yang sangat baik dalam pembelajaran Al-Qur'an.` ;
+    pembuka = `${ananda} menunjukkan hasil yang sangat baik dalam pembelajaran Al-Qur'an.`;
   } else if (nilai >= 80) {
-    pembuka =
-      `${ananda} memiliki kemampuan membaca Al-Qur'an yang baik dan terus berkembang.` ;
+    pembuka = `${ananda} memiliki kemampuan membaca Al-Qur'an yang baik dan terus berkembang.`;
   } else if (nilai >= 70) {
-    pembuka =
-      `${ananda} telah berusaha dengan baik dalam pembelajaran Al-Qur'an.` ;
+    pembuka = `${ananda} telah berusaha dengan baik dalam pembelajaran Al-Qur'an.`;
   } else {
-    pembuka =
-      `${ananda} masih memerlukan latihan dan pendampingan yang lebih rutin dalam membaca Al-Qur'an.` ;
+    pembuka = `${ananda} masih memerlukan latihan dan pendampingan yang lebih rutin dalam membaca Al-Qur'an.`;
   }
 
   // ========================================
   // TAHSIN DASAR
   // ========================================
 
-  if (mode === "Tahsin Dasar") {
+  if (params.mode === "Tahsin Dasar") {
+    const harakat = params.harakat ?? 0;
+    const tajwid = params.tajwid ?? 0;
+    const mad = params.mad ?? 0;
+    const qalqalah = params.qalqalah ?? 0;
 
     const evaluasi: {
       aspek: string;
@@ -77,7 +73,6 @@ export default function generateCatatanOtomatis({
       pesan: string;
     }[] = [];
 
-    // HARAKAT
     if (harakat >= 2) {
       evaluasi.push({
         aspek: "harakat",
@@ -89,7 +84,6 @@ export default function generateCatatanOtomatis({
       });
     }
 
-    // TAJWID
     if (tajwid >= 2) {
       evaluasi.push({
         aspek: "tajwid",
@@ -101,27 +95,22 @@ export default function generateCatatanOtomatis({
       });
     }
 
-    // MAD
     if (mad >= 2) {
       evaluasi.push({
         aspek: "mad",
         skor: mad,
-        pesan:
-          "ketepatan panjang pendek bacaan (mad) masih perlu diperhatikan",
+        pesan: "ketepatan panjang pendek bacaan (mad) masih perlu diperhatikan",
       });
     }
 
-    // QALQALAH
     if (qalqalah >= 2) {
       evaluasi.push({
         aspek: "qalqalah",
         skor: qalqalah,
-        pesan:
-          "ketepatan bacaan qalqalah pada beberapa huruf masih perlu diperbaiki",
+        pesan: "ketepatan bacaan qalqalah pada beberapa huruf masih perlu diperbaiki",
       });
     }
 
-    // KELANCARAN
     if (kelancaran <= 85) {
       evaluasi.push({
         aspek: "kelancaran",
@@ -133,27 +122,19 @@ export default function generateCatatanOtomatis({
       });
     }
 
-    // SORT DOMINAN
     evaluasi.sort((a, b) => b.skor - a.skor);
-
-    // AMBIL 3 TERATAS
     const utama = evaluasi.slice(0, 3);
 
-    // GABUNGKAN
     if (utama.length > 0) {
-      catatan.push(
-        utama.map((e) => e.pesan).join(", ")
-      );
+      catatan.push(utama.map((e) => e.pesan).join(", "));
     }
 
-    // JIKA SANGAT BAGUS
     if (nilai >= 90 && utama.length === 0) {
       catatan.push(
         "Kemampuan membaca dasar Al-Qur'an sudah sangat baik dan sesuai kaidah pembelajaran"
       );
     }
 
-    // PENUTUP
     catatan.push(
       "Semoga terus semangat dalam belajar dan memperbaiki kualitas bacaan Al-Qur'an"
     );
@@ -163,14 +144,17 @@ export default function generateCatatanOtomatis({
   // TAHSIN LANJUTAN
   // ========================================
 
-  if (mode === "Tahsin Lanjutan") {
+  if (params.mode === "Tahsin Lanjutan") {
+    const lahnJali = params.lahnJali ?? 0;
+    const lahnKhofi = params.lahnKhofi ?? 0;
+    const waqaf = params.waqaf ?? 0;
 
     const evaluasi: {
       aspek: string;
       skor: number;
       pesan: string;
     }[] = [];
-    // LAHN JALI
+
     if (lahnJali >= 2) {
       evaluasi.push({
         aspek: "makhraj",
@@ -182,7 +166,6 @@ export default function generateCatatanOtomatis({
       });
     }
 
-    // LAHN KHOFI
     if (lahnKhofi >= 4) {
       evaluasi.push({
         aspek: "tajwid",
@@ -194,17 +177,14 @@ export default function generateCatatanOtomatis({
       });
     }
 
-    // WAQAF
     if (waqaf >= 3) {
       evaluasi.push({
         aspek: "waqaf",
         skor: waqaf,
-        pesan:
-          "pemahaman waqaf dan ibtida' masih perlu diperhatikan",
+        pesan: "pemahaman waqaf dan ibtida' masih perlu diperhatikan",
       });
     }
 
-    // KELANCARAN
     if (kelancaran <= 85) {
       evaluasi.push({
         aspek: "kelancaran",
@@ -216,27 +196,19 @@ export default function generateCatatanOtomatis({
       });
     }
 
-    // SORT DOMINAN
     evaluasi.sort((a, b) => b.skor - a.skor);
-
-    // AMBIL 3 TERATAS
     const utama = evaluasi.slice(0, 3);
 
-    // GABUNGKAN
     if (utama.length > 0) {
-      catatan.push(
-        utama.map((e) => e.pesan).join(", ")
-      );
+      catatan.push(utama.map((e) => e.pesan).join(", "));
     }
 
-    // JIKA SANGAT BAGUS
     if (nilai >= 90 && utama.length === 0) {
       catatan.push(
         "Kemampuan membaca Al-Qur'an dengan penerapan tajwid dan waqaf sudah sangat baik"
       );
     }
 
-    // PENUTUP
     catatan.push(
       "Diharapkan terus meningkatkan kualitas bacaan agar semakin tartil dan sesuai kaidah tajwid"
     );
@@ -246,9 +218,16 @@ export default function generateCatatanOtomatis({
   // TAHFIZH
   // ========================================
 
-  if (mode === "Tahfizh") {
+  if (params.mode === "Tahfizh") {
+    const lahnJali = params.lahnJali ?? 0;
+    const lahnKhofi = params.lahnKhofi ?? 0;
+    const waqaf = params.waqaf ?? 0;
+    const salahSambungAyat = params.salahSambungAyat ?? 0;
 
-    if (nilai >= 90) {
+    const totalKesalahan =
+      lahnJali + lahnKhofi + waqaf + salahSambungAyat;
+
+    if (nilai >= 90 && totalKesalahan <= 2) {
       catatan.push(
         "Hafalan Al-Qur'an sudah sangat baik dengan kelancaran dan ketepatan yang sangat memuaskan"
       );
@@ -266,18 +245,16 @@ export default function generateCatatanOtomatis({
       );
     }
 
+    if (salahSambungAyat >= 2) {
+      catatan.push(
+        "Ketelitian dalam menyambung ayat masih perlu diperhatikan"
+      );
+    }
+
     catatan.push(
       "Semoga Allah memudahkan dalam menjaga hafalan Al-Qur'an"
     );
   }
 
-  // ========================================
-  // FINAL
-  // ========================================
-
-  return (
-    pembuka +
-    catatan.join(". ") +
-    ". Barakallahu fiik."
-  );
+  return `${pembuka} ${catatan.join(". ")}. Barakallahu fiik.`;
 }
