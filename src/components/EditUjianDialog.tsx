@@ -117,24 +117,32 @@ export default function EditUjianDialog({
     aspek.waqafTest || DEFAULT_WAQAF_TEST
   );
 
-  useEffect(() => {
-    if (!open) return;
+useEffect(() => {
+  if (!open) return;
 
-    const currentAspek = ujian?.nilai_aspek || {};
+  const currentAspek = ujian?.nilai_aspek || {};
 
-    setTanggal(ujian?.tanggal || "");
-    setRumus(currentAspek.rumus || "baru");
-    setCatatanGuru(currentAspek.catatanGuru || "");
-    setCatatanMode(currentAspek.catatanGuru ? "manual" : "auto");
+  setTanggal(ujian?.tanggal || "");
+  setRumus(currentAspek.rumus || "baru");
 
-    setTahfizhEntries(currentAspek.surahEntries || []);
-    setDasarEntries(currentAspek.entries || []);
-    setDasarConfig(currentAspek.config || DEFAULT_TAHSIN_CONFIG);
-    setLanjutanEntries(currentAspek.entries || []);
-    setLanjutanConfig(currentAspek.config || DEFAULT_TAHSIN_CONFIG);
-    setPenaltiWaqaf(currentAspek.penaltiWaqaf || 2);
-    setWaqafTest(currentAspek.waqafTest || DEFAULT_WAQAF_TEST);
-  }, [open, ujian]);
+  const savedCatatanMode = currentAspek.catatanMode || "auto";
+
+  setCatatanMode(savedCatatanMode);
+
+  setCatatanGuru(
+    savedCatatanMode === "manual"
+      ? currentAspek.catatanGuru || ""
+      : ""
+  );
+
+  setTahfizhEntries(currentAspek.surahEntries || []);
+  setDasarEntries(currentAspek.entries || []);
+  setDasarConfig(currentAspek.config || DEFAULT_TAHSIN_CONFIG);
+  setLanjutanEntries(currentAspek.entries || []);
+  setLanjutanConfig(currentAspek.config || DEFAULT_TAHSIN_CONFIG);
+  setPenaltiWaqaf(currentAspek.penaltiWaqaf || 2);
+  setWaqafTest(currentAspek.waqafTest || DEFAULT_WAQAF_TEST);
+}, [open, ujian]);
 
   const computed = useMemo(() => {
     if (mode === "Tahfizh") {

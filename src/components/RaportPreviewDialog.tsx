@@ -211,14 +211,18 @@ const [tanggal, setTanggal] = useState<string>(
 
 useEffect(() => {
   if (open) {
+    const savedCatatanMode =
+      ujian?.nilai_aspek?.catatanMode || "auto";
 
     setCatatan(
-      ujian?.nilai_aspek?.catatanGuru ?? ""
+      savedCatatanMode === "manual"
+        ? ujian?.nilai_aspek?.catatanGuru ?? ""
+        : ""
     );
 
     setTanggal(
       ujian?.tanggal ||
-      new Date().toISOString().split("T")[0]
+        new Date().toISOString().split("T")[0]
     );
   }
 }, [open, ujian]);
