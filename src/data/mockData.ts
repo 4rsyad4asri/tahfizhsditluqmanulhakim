@@ -201,7 +201,7 @@ export function calculateNilaiTahfizh(entries: TahfizhSurahEntry[], rumus: Tahfi
   let grade = 'D';
   let predikat = 'Perlu Perbaikan';
   if (nilaiAkhir >= 90) { grade = 'A'; predikat = 'Mumtaz'; }
-  else if (nilaiAkhir >= 80) { grade = 'B'; predikat = 'Jiddan Jayyid'; }
+  else if (nilaiAkhir >= 80) { grade = 'B'; predikat = 'Jayyid Jiddan'; }
   else if (nilaiAkhir >= 70) { grade = 'C'; predikat = 'Jayyid'; }
   return { nilaiAkhir, status, grade, predikat };
 }

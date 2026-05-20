@@ -769,7 +769,7 @@ const StudentDetail = () => {
                   </div>
                   <div className="flex flex-wrap gap-2 text-[10px]">
                     <span className="px-2 py-1 rounded-full bg-green-100 text-green-800 font-medium">Mumtaz: 90–100</span>
-                    <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">Jiddan Jayyid: 80–89</span>
+                    <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">Jayyid Jiddan: 80–89</span>
                     <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 font-medium">Jayyid: 70–79</span>
                     <span className="px-2 py-1 rounded-full bg-red-100 text-red-800 font-medium">Perlu Perbaikan: &lt;70</span>
                     <span className="px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-medium">✅ Lulus: ≥ 85</span>

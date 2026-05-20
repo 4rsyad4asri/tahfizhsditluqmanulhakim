@@ -91,7 +91,7 @@ const RekapSertifikat = () => {
           classGrade: cls?.grade || 0,
           juz: juzList.length > 0 ? juzList.join(", ") : "-",
           nilaiAkhir: u.nilai_akhir,
-          predikat: aspek?.predikat || (u.nilai_akhir >= 90 ? "Mumtaz" : u.nilai_akhir >= 80 ? "Jiddan Jayyid" : u.nilai_akhir >= 70 ? "Jayyid" : "Perlu Perbaikan"),
+          predikat: aspek?.predikat || (u.nilai_akhir >= 90 ? "Mumtaz" : u.nilai_akhir >= 80 ? "Jayyid Jiddan" : u.nilai_akhir >= 70 ? "Jayyid" : "Perlu Perbaikan"),
           tanggal: u.tanggal,
           nomorSertifikat: isLulus ? generateNomorSertifikat(u.tanggal, lulusIndex++) : "-",
           status: u.status,
@@ -293,8 +293,8 @@ const RekapSertifikat = () => {
                 <p className="text-xs text-muted-foreground">Mumtaz</p>
               </div>
               <div className="bg-card rounded-lg border border-border p-4 shadow-card text-center">
-                <p className="text-2xl font-bold text-accent">{lulusItems.filter((i) => i.predikat === "Jiddan Jayyid").length}</p>
-                <p className="text-xs text-muted-foreground">Jiddan Jayyid</p>
+                <p className="text-2xl font-bold text-accent">{lulusItems.filter((i) => i.predikat === "Jayyid Jiddan").length}</p>
+                <p className="text-xs text-muted-foreground">Jayyid Jiddan</p>
               </div>
               <div className="bg-card rounded-lg border border-border p-4 shadow-card text-center">
                 <p className="text-2xl font-bold text-secondary">{lulusItems.filter((i) => i.predikat === "Jayyid").length}</p>
@@ -335,7 +335,7 @@ const RekapSertifikat = () => {
                         <td className="px-4 py-3 text-center">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             item.predikat === "Mumtaz" ? "bg-success/10 text-success" :
-                            item.predikat === "Jiddan Jayyid" ? "bg-primary/10 text-primary" :
+                            item.predikat === "Jayyid Jiddan" ? "bg-primary/10 text-primary" :
                             item.predikat === "Jayyid" ? "bg-accent/10 text-accent" :
                             "bg-destructive/10 text-destructive"
                           }`}>

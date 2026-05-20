@@ -282,7 +282,7 @@ export default function RaportPreviewDialog({
       (ujian?.nilai_akhir >= 90
         ? "Mumtaz"
         : ujian?.nilai_akhir >= 80
-          ? "Jiddan Jayyid"
+          ? "Jayyid Jiddan"
           : ujian?.nilai_akhir >= 70
             ? "Jayyid"
             : "Perlu Perbaikan");
