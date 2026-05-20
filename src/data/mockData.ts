@@ -211,8 +211,8 @@ export function calculateNilaiUjian(nilaiAspek: Record<string, number>): { nilai
   const nilaiAkhir = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
   const status = nilaiAkhir >= 70 ? 'Lulus' : 'Tidak Lulus';
   let grade = 'D';
-  if (nilaiAkhir >= 90) grade = 'A';
-  else if (nilaiAkhir >= 80) grade = 'B';
-  else if (nilaiAkhir >= 70) grade = 'C';
-  return { nilaiAkhir, status, grade };
+  if (nilaiAkhir >= 90) grade = 'A'; predikat = 'Mumtaz';
+  else if (nilaiAkhir >= 80) grade = 'B'; predikat = 'Jayyid Jiddan';
+  else if (nilaiAkhir >= 70) grade = 'C'; predikat = 'Jayyid';
+  return { nilaiAkhir, status, grade, predikat };
 }
