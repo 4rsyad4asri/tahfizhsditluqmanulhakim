@@ -3,7 +3,7 @@ import Header from "@/components/Header";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { Loader2, Download, Filter, CheckCircle2, XCircle, Edit2, FileText } from "lucide-react";
+import { Loader2, Download, Filter, CheckCircle2, XCircle, Edit2, FileText, X } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useToast } from "@/hooks/use-toast";
 import { exportJsonToExcel } from "@/utils/excel";
@@ -23,6 +23,14 @@ interface RekapItem {
   status: string;
 }
 
+interface EditModalState {
+  isOpen: boolean;
+  ujianId: string | null;
+  studentName: string;
+  currentNomorSertifikat: string;
+  newNomorSertifikat: string;
+}
+
 const BULAN_ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
 
 const generateNomorSertifikat = (tanggal: string, index: number): string => {
@@ -39,6 +47,13 @@ const RekapSertifikat = () => {
   const [filterJuz, setFilterJuz] = useState<string>("all");
   const [showAll, setShowAll] = useState(false);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [editModal, setEditModal] = useState<EditModalState>({
+    isOpen: false,
+    ujianId: null,
+    studentName: "",
+    currentNomorSertifikat: "",
+    newNomorSertifikat: "",
+  });
   const { role } = useAuthContext();
   const isAdmin = role === "admin";
   const queryClient = useQueryClient();
@@ -89,6 +104,12 @@ const RekapSertifikat = () => {
 
         const sequenceNumber = isLulus ? lulusIndex++ : -1;
 
+        // Gunakan nomor sertifikat dari database jika sudah ada, jika tidak generate otomatis
+        const nomorSertifikatFromDb = u.nomor_sertifikat;
+        const nomorSertifikat = isLulus 
+          ? (nomorSertifikatFromDb || generateNomorSertifikat(u.tanggal, sequenceNumber))
+          : "-";
+
         const item: RekapItem = {
           id: u.id,
           studentId: u.student_id,
@@ -99,7 +120,7 @@ const RekapSertifikat = () => {
           nilaiAkhir: u.nilai_akhir,
           predikat: aspek?.predikat || (u.nilai_akhir >= 90 ? "Mumtaz" : u.nilai_akhir >= 80 ? "Jayyid Jiddan" : u.nilai_akhir >= 70 ? "Jayyid" : "Perlu Perbaikan"),
           tanggal: u.tanggal,
-          nomorSertifikat: isLulus ? generateNomorSertifikat(u.tanggal, sequenceNumber) : "-",
+          nomorSertifikat,
           status: u.status,
         };
         return item;
@@ -140,6 +161,90 @@ const RekapSertifikat = () => {
       toast({ title: "Gagal", description: "Gagal mengubah status", variant: "destructive" });
     },
   });
+
+  const editNomorSertifikatMutation = useMutation({
+    mutationFn: async ({ ujianId, nomorSertifikat }: { ujianId: string; nomorSertifikat: string }) => {
+      const { error } = await supabase
+        .from("ujian")
+        .update({ nomor_sertifikat: nomorSertifikat })
+        .eq("id", ujianId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rekap-sertifikat"] });
+      toast({
+        title: "Berhasil",
+        description: "Nomor sertifikat berhasil diperbarui",
+      });
+      setEditModal({
+        isOpen: false,
+        ujianId: null,
+        studentName: "",
+        currentNomorSertifikat: "",
+        newNomorSertifikat: "",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Gagal",
+        description: "Gagal mengubah nomor sertifikat",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const openEditModal = (ujianId: string, studentName: string, currentNomorSertifikat: string) => {
+    setEditModal({
+      isOpen: true,
+      ujianId,
+      studentName,
+      currentNomorSertifikat,
+      newNomorSertifikat: currentNomorSertifikat,
+    });
+  };
+
+  const closeEditModal = () => {
+    setEditModal({
+      isOpen: false,
+      ujianId: null,
+      studentName: "",
+      currentNomorSertifikat: "",
+      newNomorSertifikat: "",
+    });
+  };
+
+  const handleSaveNomorSertifikat = () => {
+    if (!editModal.ujianId || !editModal.newNomorSertifikat.trim()) {
+      toast({
+        title: "Gagal",
+        description: "Nomor sertifikat tidak boleh kosong",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (
+      editModal.newNomorSertifikat === editModal.currentNomorSertifikat
+    ) {
+      toast({
+        title: "Tidak ada perubahan",
+        description: "Nomor sertifikat sama dengan sebelumnya",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (
+      confirm(
+        `Ubah nomor sertifikat ${editModal.studentName} dari:\n"${editModal.currentNomorSertifikat}"\n\nmenjadi:\n"${editModal.newNomorSertifikat}"?`
+      )
+    ) {
+      editNomorSertifikatMutation.mutate({
+        ujianId: editModal.ujianId,
+        nomorSertifikat: editModal.newNomorSertifikat,
+      });
+    }
+  };
 
   const items = data?.items || [];
   const classOptions = data?.classes || [];
@@ -365,39 +470,55 @@ const RekapSertifikat = () => {
                           <td className="px-4 py-3 text-center">
                             <div className="flex items-center justify-center gap-1">
                               {item.status === "Lulus" && (
-                                <button
-  onClick={async () => {
-    try {
-      setGeneratingId(item.id);
+                                <>
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        setGeneratingId(item.id);
 
-      await generateCertificatePDF(item);
+                                        await generateCertificatePDF(item);
 
-      toast({
-        title: "Berhasil",
-        description: "Preview PDF berhasil dibuka",
-      });
-    } catch (error) {
-      console.error(error);
+                                        toast({
+                                          title: "Berhasil",
+                                          description: "Preview PDF berhasil dibuka",
+                                        });
+                                      } catch (error) {
+                                        console.error(error);
 
-      toast({
-        title: "Gagal",
-        description: "Gagal membuat PDF",
-        variant: "destructive",
-      });
-    } finally {
-      setGeneratingId(null);
-    }
-  }}
-  disabled={generatingId === item.id}
-  className="inline-flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
-  title="Cetak Sertifikat"
->
-  {generatingId === item.id ? (
-    <Loader2 className="w-3 h-3 animate-spin" />
-  ) : (
-    <FileText className="w-3 h-3" />
-  )}
-</button>
+                                        toast({
+                                          title: "Gagal",
+                                          description: "Gagal membuat PDF",
+                                          variant: "destructive",
+                                        });
+                                      } finally {
+                                        setGeneratingId(null);
+                                      }
+                                    }}
+                                    disabled={generatingId === item.id}
+                                    className="inline-flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+                                    title="Cetak Sertifikat"
+                                  >
+                                    {generatingId === item.id ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <FileText className="w-3 h-3" />
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      openEditModal(
+                                        item.id,
+                                        item.studentName,
+                                        item.nomorSertifikat
+                                      )
+                                    }
+                                    disabled={editNomorSertifikatMutation.isPending}
+                                    className="inline-flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors disabled:opacity-50"
+                                    title="Edit Nomor Sertifikat"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </button>
+                                </>
                               )}
                               <button
                                 onClick={() => {
@@ -439,6 +560,84 @@ const RekapSertifikat = () => {
           </>
         )}
       </main>
+
+      {/* Modal Edit Nomor Sertifikat */}
+      {editModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg border border-border shadow-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Edit Nomor Sertifikat</h3>
+              <button
+                onClick={closeEditModal}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Nama Siswa
+                </label>
+                <p className="text-foreground font-medium">{editModal.studentName}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Nomor Sertifikat Saat Ini
+                </label>
+                <div className="p-3 bg-muted rounded-md border border-border">
+                  <p className="font-mono text-sm text-foreground">
+                    {editModal.currentNomorSertifikat}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Nomor Sertifikat Baru
+                </label>
+                <input
+                  type="text"
+                  value={editModal.newNomorSertifikat}
+                  onChange={(e) =>
+                    setEditModal({
+                      ...editModal,
+                      newNomorSertifikat: e.target.value,
+                    })
+                  }
+                  placeholder="Masukkan nomor sertifikat baru"
+                  className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <button
+                  onClick={closeEditModal}
+                  className="flex-1 px-4 py-2 rounded-md border border-input bg-background text-foreground hover:bg-muted transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleSaveNomorSertifikat}
+                  disabled={editNomorSertifikatMutation.isPending}
+                  className="flex-1 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {editNomorSertifikatMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Menyimpan...
+                    </>
+                  ) : (
+                    "Simpan"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
