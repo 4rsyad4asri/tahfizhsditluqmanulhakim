@@ -18,7 +18,6 @@ import { calculateNilaiTahsinDasar, calculateNilaiTahsinLanjutan } from "@/data/
 import type { TahsinDasarEntry, TahsinLanjutanEntry, TahsinPenaltyConfig, WaqafSymbolTest } from "@/data/tahsinScoring";
 import { generateTahsinPDF } from "@/utils/generateTahsinPDF";
 import EditUjianDialog from "@/components/EditUjianDialog";
-import EditTahfizhDialog from "@/components/EditTahfizhDialog";
 import RaportPreviewDialog from "@/components/RaportPreviewDialog";
 import { handleSmartFormKey } from "@/utils/smartFormNav";
 
@@ -158,6 +157,7 @@ const StudentDetail = () => {
         setUjianMode(null);
         setTahfizhEntries([{ surah: getSurahsForJuz(30)[0]?.name || "An-Naba", juz: 30, lahn_jali: 0, lahn_khofi: 0, kelancaran: 90, waqaf_ibtida: 0, salah_sambung_ayat: 0 }]);
         setCatatanGuru("");
+        setTahfizhTanggal(new Date().toISOString().split('T')[0]);
       },
       onError: (err) => toast.error(getSafeErrorMessage(err)),
     });
@@ -208,10 +208,10 @@ const StudentDetail = () => {
 
         <Tabs defaultValue="ujian" className="space-y-4">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="ujian">Ujian</TabsTrigger>
-            <TabsTrigger value="setoran">Setoran</TabsTrigger>
-            <TabsTrigger value="catatan">Catatan</TabsTrigger>
-            <TabsTrigger value="raport">Raport</TabsTrigger>
+            <TabsTrigger value="ujian">📋 Ujian</TabsTrigger>
+            <TabsTrigger value="setoran">📖 Setoran</TabsTrigger>
+            <TabsTrigger value="catatan">💬 Catatan</TabsTrigger>
+            <TabsTrigger value="raport">📄 Raport</TabsTrigger>
           </TabsList>
 
           {/* UJIAN TAB */}
@@ -223,21 +223,93 @@ const StudentDetail = () => {
                 </h3>
 
                 <div className="flex flex-wrap gap-2">
-                  {["Tahfizh", "Tahsin Dasar", "Tahsin Lanjutan"].map(mode => (
+                  {[
+                    { mode: "Tahsin Dasar" as const, icon: "🎓" },
+                    { mode: "Tahsin Lanjutan" as const, icon: "🎓" },
+                    { mode: "Tahfizh" as const, icon: "📖" },
+                  ].map(({ mode, icon }) => (
                     <button
                       key={mode}
-                      onClick={() => { setUjianMode(mode as any); setShowUjianForm(true); }}
+                      onClick={() => { setUjianMode(mode); setShowUjianForm(true); }}
                       className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
                       disabled={showUjianForm}
                     >
-                      {mode === "Tahfizh" ? "📖" : "🎓"} {mode}
+                      {icon} {mode}
                     </button>
                   ))}
                 </div>
 
+                {showUjianForm && ujianMode === "Tahsin Dasar" && (
+                  <UjianTahsinDasarForm
+                    entries={tahsinDasarEntries}
+                    setEntries={setTahsinDasarEntries}
+                    tanggal={tahsinDasarTanggal}
+                    setTanggal={setTahsinDasarTanggal}
+                    catatan={tahsinDasarCatatan}
+                    setCatatan={setTahsinDasarCatatan}
+                    config={tahsinDasarConfig}
+                    setConfig={setTahsinDasarConfig}
+                    onCancel={() => { setShowUjianForm(false); setUjianMode(null); }}
+                    onSubmit={() => {
+                      if (!studentId) return;
+                      const result = calculateNilaiTahsinDasar(tahsinDasarEntries[0], tahsinDasarConfig);
+                      addTahsinUjian.mutate({
+                        student_id: studentId,
+                        mode: "Tahsin Dasar",
+                        entries: tahsinDasarEntries,
+                        catatan_guru: tahsinDasarCatatan,
+                        assessed_by: user?.id,
+                        tanggal: tahsinDasarTanggal,
+                        nilai_akhir: result,
+                        status: result >= 70 ? "Lulus" : "Tidak Lulus",
+                        grade: result >= 90 ? "A" : result >= 80 ? "B" : result >= 70 ? "C" : "D",
+                      }, {
+                        onSuccess: () => { toast.success("Hasil Ujian Tahsin Dasar berhasil disimpan!"); setShowUjianForm(false); setUjianMode(null); },
+                        onError: (err) => toast.error(getSafeErrorMessage(err)),
+                      });
+                    }}
+                    isLoading={addTahsinUjian.isPending}
+                  />
+                )}
+
+                {showUjianForm && ujianMode === "Tahsin Lanjutan" && (
+                  <UjianTahsinLanjutanForm
+                    entries={tahsinLanjutanEntries}
+                    setEntries={setTahsinLanjutanEntries}
+                    tanggal={tahsinLanjutanTanggal}
+                    setTanggal={setTahsinLanjutanTanggal}
+                    catatan={tahsinLanjutanCatatan}
+                    setCatatan={setTahsinLanjutanCatatan}
+                    config={tahsinLanjutanConfig}
+                    setConfig={setTahsinLanjutanConfig}
+                    waqafTest={waqafTest}
+                    setWaqafTest={setWaqafTest}
+                    onCancel={() => { setShowUjianForm(false); setUjianMode(null); }}
+                    onSubmit={() => {
+                      if (!studentId) return;
+                      const result = calculateNilaiTahsinLanjutan(tahsinLanjutanEntries[0], tahsinLanjutanConfig);
+                      addTahsinUjian.mutate({
+                        student_id: studentId,
+                        mode: "Tahsin Lanjutan",
+                        entries: tahsinLanjutanEntries,
+                        catatan_guru: tahsinLanjutanCatatan,
+                        assessed_by: user?.id,
+                        tanggal: tahsinLanjutanTanggal,
+                        nilai_akhir: result,
+                        status: result >= 70 ? "Lulus" : "Tidak Lulus",
+                        grade: result >= 90 ? "A" : result >= 80 ? "B" : result >= 70 ? "C" : "D",
+                      }, {
+                        onSuccess: () => { toast.success("Hasil Ujian Tahsin Lanjutan berhasil disimpan!"); setShowUjianForm(false); setUjianMode(null); },
+                        onError: (err) => toast.error(getSafeErrorMessage(err)),
+                      });
+                    }}
+                    isLoading={addTahsinUjian.isPending}
+                  />
+                )}
+
                 {showUjianForm && ujianMode === "Tahfizh" && (
                   <div className="space-y-4 p-4 rounded-lg border border-border bg-muted/30">
-                    <h4 className="font-semibold text-foreground">Form Ujian Tahfizh</h4>
+                    <h4 className="font-semibold text-foreground">📖 Form Ujian Tahfizh</h4>
 
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-1">Tanggal</label>
@@ -343,74 +415,6 @@ const StudentDetail = () => {
                       </button>
                     </div>
                   </div>
-                )}
-
-                {showUjianForm && ujianMode === "Tahsin Dasar" && (
-                  <UjianTahsinDasarForm
-                    entries={tahsinDasarEntries}
-                    setEntries={setTahsinDasarEntries}
-                    tanggal={tahsinDasarTanggal}
-                    setTanggal={setTahsinDasarTanggal}
-                    catatan={tahsinDasarCatatan}
-                    setCatatan={setTahsinDasarCatatan}
-                    config={tahsinDasarConfig}
-                    setConfig={setTahsinDasarConfig}
-                    onCancel={() => { setShowUjianForm(false); setUjianMode(null); }}
-                    onSubmit={() => {
-                      if (!studentId) return;
-                      const result = calculateNilaiTahsinDasar(tahsinDasarEntries[0], tahsinDasarConfig);
-                      addTahsinUjian.mutate({
-                        student_id: studentId,
-                        mode: "Tahsin Dasar",
-                        entries: tahsinDasarEntries,
-                        catatan_guru: tahsinDasarCatatan,
-                        assessed_by: user?.id,
-                        tanggal: tahsinDasarTanggal,
-                        nilai_akhir: result,
-                        status: result >= 70 ? "Lulus" : "Tidak Lulus",
-                        grade: result >= 90 ? "A" : result >= 80 ? "B" : result >= 70 ? "C" : "D",
-                      }, {
-                        onSuccess: () => { toast.success("Hasil Ujian Tahsin Dasar berhasil disimpan!"); setShowUjianForm(false); setUjianMode(null); },
-                        onError: (err) => toast.error(getSafeErrorMessage(err)),
-                      });
-                    }}
-                    isLoading={addTahsinUjian.isPending}
-                  />
-                )}
-
-                {showUjianForm && ujianMode === "Tahsin Lanjutan" && (
-                  <UjianTahsinLanjutanForm
-                    entries={tahsinLanjutanEntries}
-                    setEntries={setTahsinLanjutanEntries}
-                    tanggal={tahsinLanjutanTanggal}
-                    setTanggal={setTahsinLanjutanTanggal}
-                    catatan={tahsinLanjutanCatatan}
-                    setCatatan={setTahsinLanjutanCatatan}
-                    config={tahsinLanjutanConfig}
-                    setConfig={setTahsinLanjutanConfig}
-                    waqafTest={waqafTest}
-                    setWaqafTest={setWaqafTest}
-                    onCancel={() => { setShowUjianForm(false); setUjianMode(null); }}
-                    onSubmit={() => {
-                      if (!studentId) return;
-                      const result = calculateNilaiTahsinLanjutan(tahsinLanjutanEntries[0], tahsinLanjutanConfig);
-                      addTahsinUjian.mutate({
-                        student_id: studentId,
-                        mode: "Tahsin Lanjutan",
-                        entries: tahsinLanjutanEntries,
-                        catatan_guru: tahsinLanjutanCatatan,
-                        assessed_by: user?.id,
-                        tanggal: tahsinLanjutanTanggal,
-                        nilai_akhir: result,
-                        status: result >= 70 ? "Lulus" : "Tidak Lulus",
-                        grade: result >= 90 ? "A" : result >= 80 ? "B" : result >= 70 ? "C" : "D",
-                      }, {
-                        onSuccess: () => { toast.success("Hasil Ujian Tahsin Lanjutan berhasil disimpan!"); setShowUjianForm(false); setUjianMode(null); },
-                        onError: (err) => toast.error(getSafeErrorMessage(err)),
-                      });
-                    }}
-                    isLoading={addTahsinUjian.isPending}
-                  />
                 )}
               </div>
             )}
@@ -608,33 +612,7 @@ const StudentDetail = () => {
         </Tabs>
       </main>
 
-      {/* Edit Dialog - Tahfizh */}
-      {editingUjian && editingUjian.mode === "Tahfizh" && (
-        <EditTahfizhDialog
-          open={!!editingUjian}
-          onClose={() => setEditingUjian(null)}
-          tahfizhData={editingUjian}
-          studentName={student.name}
-          isSaving={updateUjian.isPending}
-          onSave={(updated) => {
-            updateUjian.mutate({
-              ujian_id: editingUjian.id,
-              student_id: studentId!,
-              nilai_aspek: updated.nilai_aspek,
-              nilai_akhir: updated.nilai_akhir,
-              status: updated.status,
-              grade: updated.grade,
-              tanggal: updated.tanggal,
-            }, {
-              onSuccess: () => { toast.success("Hasil ujian diperbarui"); setEditingUjian(null); },
-              onError: (err) => toast.error(getSafeErrorMessage(err)),
-            });
-          }}
-        />
-      )}
-
-      {/* Edit Dialog - Tahsin Dasar/Lanjutan */}
-      {editingUjian && (editingUjian.mode === "Tahsin Dasar" || editingUjian.mode === "Tahsin Lanjutan") && (
+      {editingUjian && (
         <EditUjianDialog
           open={!!editingUjian}
           onClose={() => setEditingUjian(null)}
@@ -657,7 +635,6 @@ const StudentDetail = () => {
           }}
         />
       )}
-
       {raportUjian && (
         <RaportPreviewDialog
           open={!!raportUjian}
