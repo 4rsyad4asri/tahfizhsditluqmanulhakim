@@ -434,7 +434,22 @@ const StudentDetail = () => {
                       return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-700">⏳ Proses</span>;
                   }
                 };
-
+const ujianStatus = u.status || u.status_sertifikasi || "Proses";
+const nilaiAspek =
+  u.nilai_aspek && typeof u.nilai_aspek === "object" && !Array.isArray(u.nilai_aspek)
+    ? u.nilai_aspek
+    : {};
+const tahfizhEntries = Array.isArray(nilaiAspek.surahEntries)
+  ? nilaiAspek.surahEntries
+  : [];
+const tahsinEntries = Array.isArray(nilaiAspek.entries)
+  ? nilaiAspek.entries
+  : [];
+const detailEntries = Object.entries(nilaiAspek as Record<string, unknown>)
+  .filter(([key, val]) =>
+    !["entries", "surahEntries", "config", "waqafTest", "catatanGuru", "catatanMode", "rumus", "predikat"].includes(key) &&
+    (typeof val === "string" || typeof val === "number" || typeof val === "boolean")
+  );
                 return (
                   <div key={idx} className="p-4 rounded-lg border border-border bg-card space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -446,7 +461,7 @@ const StudentDetail = () => {
                         </p>
                       </div>
                       <div className="flex gap-1">
-                        {statusBadge(u.status_sertifikasi)}
+                        {statusBadge(ujianStatus)}
                       </div>
                     </div>
 
@@ -461,11 +476,11 @@ const StudentDetail = () => {
                       </div>
                       <div className="text-center p-2 rounded-md bg-muted">
                         <p className="text-xs text-muted-foreground">Status</p>
-                        <p className="text-sm font-bold text-foreground">{u.status_sertifikasi}</p>
+                        <p className="text-sm font-bold text-foreground">{ujianStatus}</p>
                       </div>
                       <div className="text-center p-2 rounded-md bg-muted">
                         <p className="text-xs text-muted-foreground">Predikat</p>
-                        <p className="text-sm font-bold text-primary">{u.nilai_aspek?.predikat || "-"}</p>
+                        <p className="text-sm font-bold text-primary">{nilaiAspek.predikat || "-"}</p>
                       </div>
                     </div>
 
@@ -513,26 +528,26 @@ const StudentDetail = () => {
                       )}
                     </div>
 
-                    {u.mode === "Tahfizh" && u.nilai_aspek?.surahEntries ? (
+                    {u.mode === "Tahfizh" && tahfizhEntries.length > 0 ? (
                       <div className="mt-3 p-3 rounded-md bg-muted/40 space-y-2">
                         <p className="text-xs font-semibold text-foreground">Surat yang Diujikan:</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
-                          {u.nilai_aspek.surahEntries.map((entry: any, i: number) => (
+                          {tahfizhEntries.map((entry: any, i: number) => (
                             <p key={i} className="text-xs text-muted-foreground">
                               {i + 1}. {entry.surah} (Juz {entry.juz}) - Nilai: {calculateNilaiSurah(entry)}
                             </p>
                           ))}
                         </div>
-                        {u.nilai_aspek.catatanGuru && (
-                          <p className="text-xs italic text-muted-foreground mt-2">💬 {u.nilai_aspek.catatanGuru}</p>
+                        {nilaiAspek.catatanGuru && (
+                          <p className="text-xs italic text-muted-foreground mt-2">💬 {nilaiAspek.catatanGuru}</p>
                         )}
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                        {Object.entries(u.nilai_aspek as Record<string, number>).map(([key, val]) => (
+                        {detailEntries.map(([key, val]) => (
                           <div key={key} className="text-center p-2 rounded-md bg-muted">
                             <p className="text-xs text-muted-foreground">{key}</p>
-                            <p className="font-bold text-foreground">{val as number}</p>
+                            <p className="font-bold text-foreground">{String(val)}</p>
                           </div>
                         ))}
                       </div>
