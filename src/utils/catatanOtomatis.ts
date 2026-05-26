@@ -1,3 +1,5 @@
+import { aggregateTahfizhAssessmentsForDisplay } from "@/data/tahfizhSystem";
+
 export type RaportMode =
   | "Tahfizh"
   | "Tahsin Dasar"
@@ -37,29 +39,89 @@ type GenerateCatatanParams =
   | TahsinDasarParams
   | TahsinLanjutanParams;
 
+function toNumber(value: unknown) {
+  return Number(value || 0) || 0;
+}
+
+function getRataKelancaran(entries: { kelancaran?: number }[]) {
+  if (!entries.length) return 90;
+  return Math.round(entries.reduce((sum, entry) => sum + toNumber(entry.kelancaran), 0) / entries.length);
+}
+
+type EvaluasiCatatan = {
+  aspek: string;
+  skor: number;
+  pesanRingkas: string;
+};
+
+function getPembuka(mode: RaportMode, nilai: number, nama: string) {
+  const bidang =
+    mode === "Tahsin Dasar"
+      ? "pembelajaran Iqra"
+      : mode === "Tahsin Lanjutan"
+        ? "bacaan Al-Qur'an"
+        : "hafalan Al-Qur'an";
+
+  if (nilai >= 90) {
+    return `${nama} sudah menunjukkan hasil yang sangat baik dalam ${bidang}.`;
+  }
+
+  if (nilai >= 80) {
+    return `${nama} sudah berada pada capaian yang baik dalam ${bidang}, dan terlihat ada dasar yang cukup kuat untuk terus ditingkatkan.`;
+  }
+
+  if (nilai >= 70) {
+    return `${nama} sudah berusaha mengikuti ujian dengan baik, namun masih perlu latihan yang lebih terarah dalam ${bidang}.`;
+  }
+
+  return `${nama} masih membutuhkan pendampingan yang lebih rutin dan bertahap dalam ${bidang}.`;
+}
+
+function getPenutup(mode: RaportMode, nilai: number) {
+  if (mode === "Tahsin Dasar") {
+    return nilai >= 85
+      ? "Pertahankan latihan Iqra secara rutin agar ketelitian dan kelancaran membaca semakin matang."
+      : "Latihan Iqra sebaiknya dilakukan sedikit demi sedikit tetapi konsisten, terutama dengan pendampingan saat membaca.";
+  }
+
+  if (mode === "Tahsin Lanjutan") {
+    return nilai >= 85
+      ? "Teruskan kebiasaan membaca Al-Qur'an dengan tartil agar kualitas bacaan semakin stabil."
+      : "Perbanyak membaca Al-Qur'an secara pelan dan tartil agar makhraj, tajwid, dan waqaf semakin rapi.";
+  }
+
+  return nilai >= 85
+    ? "Jaga hafalan dengan muroja'ah yang teratur agar kelancaran dan ketepatannya tetap kuat."
+    : "Muroja'ah perlu dibuat lebih rutin, pendek, dan berulang agar hafalan semakin kuat dan tidak mudah tertukar.";
+}
+
+function getKalimatFokus(evaluasi: EvaluasiCatatan[]) {
+  const utama = evaluasi
+    .filter((item) => item.skor > 0)
+    .sort((a, b) => b.skor - a.skor)
+    .slice(0, 3);
+
+  if (utama.length === 0) {
+    return "Kesalahan yang muncul sangat sedikit, sehingga latihan dapat diarahkan untuk menjaga kestabilan bacaan.";
+  }
+
+  if (utama.length === 1) {
+    return `Hal yang paling perlu diperhatikan adalah ${utama[0].pesanRingkas}.`;
+  }
+
+  const daftar = utama.map((item) => item.pesanRingkas);
+  const terakhir = daftar.pop();
+  return `Fokus latihan berikutnya adalah ${daftar.join(", ")}, dan ${terakhir}.`;
+}
+
 export default function generateCatatanOtomatis(
   params: GenerateCatatanParams
 ): string {
   const nilai = Number(params.nilaiAkhir) || 0;
-  const ananda = params.namaSiswa || "Ananda";
+  const ananda = params.namaSiswa || "Siswa";
   const kelancaran = params.kelancaran ?? 90;
-
-  let pembuka = "";
-  const catatan: string[] = [];
-
-  if (nilai >= 90) {
-    pembuka = `${ananda} menunjukkan hasil yang sangat baik dalam pembelajaran Al-Qur'an.`;
-  } else if (nilai >= 80) {
-    pembuka = `${ananda} memiliki kemampuan membaca Al-Qur'an yang baik dan terus berkembang.`;
-  } else if (nilai >= 70) {
-    pembuka = `${ananda} telah berusaha dengan baik dalam pembelajaran Al-Qur'an.`;
-  } else {
-    pembuka = `${ananda} masih memerlukan latihan dan pendampingan yang lebih rutin dalam membaca Al-Qur'an.`;
-  }
-
-  // ========================================
-  // TAHSIN DASAR
-  // ========================================
+  const pembuka = getPembuka(params.mode, nilai, ananda);
+  const catatan: string[] = [pembuka];
 
   if (params.mode === "Tahsin Dasar") {
     const harakat = params.harakat ?? 0;
@@ -67,47 +129,43 @@ export default function generateCatatanOtomatis(
     const mad = params.mad ?? 0;
     const qalqalah = params.qalqalah ?? 0;
 
-    const evaluasi: {
-      aspek: string;
-      skor: number;
-      pesan: string;
-    }[] = [];
+    const evaluasi: EvaluasiCatatan[] = [];
 
-    if (harakat >= 2) {
+    if (harakat >= 1) {
       evaluasi.push({
         aspek: "harakat",
         skor: harakat,
-        pesan:
+        pesanRingkas:
           harakat >= 5
-            ? "ketelitian dalam penerapan harakat masih perlu ditingkatkan"
-            : "masih terdapat beberapa kekeliruan kecil dalam penerapan harakat",
+            ? "membiasakan membaca harakat dengan lebih teliti"
+            : "merapikan beberapa harakat yang masih tertukar",
       });
     }
 
-    if (tajwid >= 2) {
+    if (tajwid >= 1) {
       evaluasi.push({
         aspek: "tajwid",
         skor: tajwid,
-        pesan:
+        pesanRingkas:
           tajwid >= 6
-            ? "pemahaman tajwid dasar dan penerapan hukum bacaan masih perlu diperbaiki"
-            : "ketelitian dalam penerapan tajwid dasar masih perlu ditingkatkan",
+            ? "menguatkan kembali tajwid dasar pada bacaan Iqra"
+            : "lebih teliti saat menerapkan tajwid dasar",
       });
     }
 
-    if (mad >= 2) {
+    if (mad >= 1) {
       evaluasi.push({
         aspek: "mad",
         skor: mad,
-        pesan: "ketepatan panjang pendek bacaan (mad) masih perlu diperhatikan",
+        pesanRingkas: "menjaga panjang pendek bacaan agar tidak terburu-buru",
       });
     }
 
-    if (qalqalah >= 2) {
+    if (qalqalah >= 1) {
       evaluasi.push({
         aspek: "qalqalah",
         skor: qalqalah,
-        pesan: "ketepatan bacaan qalqalah pada beberapa huruf masih perlu diperbaiki",
+        pesanRingkas: "melatih pantulan qalqalah supaya terdengar lebih jelas",
       });
     }
 
@@ -115,73 +173,50 @@ export default function generateCatatanOtomatis(
       evaluasi.push({
         aspek: "kelancaran",
         skor: 100 - kelancaran,
-        pesan:
+        pesanRingkas:
           kelancaran <= 75
-            ? "kelancaran membaca masih perlu banyak latihan dan pembiasaan membaca tartil"
-            : "kelancaran membaca sudah cukup baik namun masih perlu ditingkatkan",
+            ? "membaca Iqra lebih pelan dan tidak terburu-buru"
+            : "menjaga kelancaran agar bacaan lebih stabil",
       });
     }
 
-    evaluasi.sort((a, b) => b.skor - a.skor);
-    const utama = evaluasi.slice(0, 3);
-
-    if (utama.length > 0) {
-      catatan.push(utama.map((e) => e.pesan).join(", "));
-    }
-
-    if (nilai >= 90 && utama.length === 0) {
-      catatan.push(
-        "Kemampuan membaca dasar Al-Qur'an sudah sangat baik dan sesuai kaidah pembelajaran"
-      );
-    }
-
-    catatan.push(
-      "Semoga terus semangat dalam belajar dan memperbaiki kualitas bacaan Al-Qur'an"
-    );
+    catatan.push(getKalimatFokus(evaluasi));
   }
-
-  // ========================================
-  // TAHSIN LANJUTAN
-  // ========================================
 
   if (params.mode === "Tahsin Lanjutan") {
     const lahnJali = params.lahnJali ?? 0;
     const lahnKhofi = params.lahnKhofi ?? 0;
     const waqaf = params.waqaf ?? 0;
 
-    const evaluasi: {
-      aspek: string;
-      skor: number;
-      pesan: string;
-    }[] = [];
+    const evaluasi: EvaluasiCatatan[] = [];
 
-    if (lahnJali >= 2) {
+    if (lahnJali >= 1) {
       evaluasi.push({
         aspek: "makhraj",
         skor: lahnJali,
-        pesan:
+        pesanRingkas:
           lahnJali >= 5
-            ? "ketepatan makhraj dan pengucapan huruf masih perlu diperbaiki"
-            : "masih terdapat beberapa kesalahan kecil pada pengucapan huruf tertentu",
+            ? "memperbaiki makhraj dan pengucapan huruf yang masih cukup sering keliru"
+            : "lebih teliti pada makhraj beberapa huruf",
       });
     }
 
-    if (lahnKhofi >= 4) {
+    if (lahnKhofi >= 1) {
       evaluasi.push({
         aspek: "tajwid",
         skor: lahnKhofi,
-        pesan:
+        pesanRingkas:
           lahnKhofi >= 8
-            ? "penerapan hukum tajwid terutama mad dan sifat huruf masih perlu ditingkatkan"
-            : "ketelitian dalam penerapan hukum tajwid masih perlu ditingkatkan",
+            ? "mengulang kembali penerapan tajwid ketika membaca Al-Qur'an"
+            : "merapikan tajwid yang masih terlewat saat membaca",
       });
     }
 
-    if (waqaf >= 3) {
+    if (waqaf >= 1) {
       evaluasi.push({
         aspek: "waqaf",
         skor: waqaf,
-        pesan: "pemahaman waqaf dan ibtida' masih perlu diperhatikan",
+        pesanRingkas: "memperhatikan tempat berhenti dan memulai bacaan",
       });
     }
 
@@ -189,34 +224,15 @@ export default function generateCatatanOtomatis(
       evaluasi.push({
         aspek: "kelancaran",
         skor: 100 - kelancaran,
-        pesan:
+        pesanRingkas:
           kelancaran <= 75
-            ? "kelancaran membaca masih perlu banyak latihan dan pembiasaan membaca tartil"
-            : "kelancaran membaca sudah cukup baik namun masih perlu ditingkatkan",
+            ? "membaca lebih tartil agar bacaan tidak terputus-putus"
+            : "menjaga tempo bacaan agar lebih tenang dan stabil",
       });
     }
 
-    evaluasi.sort((a, b) => b.skor - a.skor);
-    const utama = evaluasi.slice(0, 3);
-
-    if (utama.length > 0) {
-      catatan.push(utama.map((e) => e.pesan).join(", "));
-    }
-
-    if (nilai >= 90 && utama.length === 0) {
-      catatan.push(
-        "Kemampuan membaca Al-Qur'an dengan penerapan tajwid dan waqaf sudah sangat baik"
-      );
-    }
-
-    catatan.push(
-      "Diharapkan terus meningkatkan kualitas bacaan agar semakin tartil dan sesuai kaidah tajwid"
-    );
+    catatan.push(getKalimatFokus(evaluasi));
   }
-
-  // ========================================
-  // TAHFIZH
-  // ========================================
 
   if (params.mode === "Tahfizh") {
     const lahnJali = params.lahnJali ?? 0;
@@ -224,37 +240,146 @@ export default function generateCatatanOtomatis(
     const waqaf = params.waqaf ?? 0;
     const salahSambungAyat = params.salahSambungAyat ?? 0;
 
-    const totalKesalahan =
-      lahnJali + lahnKhofi + waqaf + salahSambungAyat;
+    const evaluasi: EvaluasiCatatan[] = [];
 
-    if (nilai >= 90 && totalKesalahan <= 2) {
-      catatan.push(
-        "Hafalan Al-Qur'an sudah sangat baik dengan kelancaran dan ketepatan yang sangat memuaskan"
-      );
-    } else if (nilai >= 80) {
-      catatan.push(
-        "Hafalan sudah baik namun masih perlu meningkatkan kelancaran dan muroja'ah secara rutin"
-      );
-    } else if (nilai >= 70) {
-      catatan.push(
-        "Perlu meningkatkan kelancaran hafalan dan memperbanyak muroja'ah agar hafalan lebih kuat"
-      );
-    } else {
-      catatan.push(
-        "Perlu pendampingan dan latihan muroja'ah yang lebih rutin agar hafalan semakin baik"
-      );
+    if (lahnJali >= 1) {
+      evaluasi.push({
+        aspek: "lahn jali",
+        skor: lahnJali,
+        pesanRingkas:
+          lahnJali >= 5
+            ? "menguatkan hafalan pada bagian yang masih menyebabkan kesalahan besar"
+            : "lebih berhati-hati pada kesalahan besar yang muncul",
+      });
     }
 
-    if (salahSambungAyat >= 2) {
-      catatan.push(
-        "Ketelitian dalam menyambung ayat masih perlu diperhatikan"
-      );
+    if (lahnKhofi >= 1) {
+      evaluasi.push({
+        aspek: "lahn khofi",
+        skor: lahnKhofi,
+        pesanRingkas:
+          lahnKhofi >= 6
+            ? "merapikan kesalahan kecil yang cukup sering muncul saat setoran hafalan"
+            : "merapikan beberapa kesalahan kecil dalam bacaan",
+      });
     }
 
-    catatan.push(
-      "Semoga Allah memudahkan dalam menjaga hafalan Al-Qur'an"
-    );
+    if (waqaf >= 1) {
+      evaluasi.push({
+        aspek: "waqaf",
+        skor: waqaf,
+        pesanRingkas:
+          waqaf >= 5
+            ? "melatih waqaf dan ibtida' agar hafalan terdengar lebih utuh"
+            : "memperhatikan tempat berhenti dan memulai hafalan",
+      });
+    }
+
+    if (salahSambungAyat >= 1) {
+      evaluasi.push({
+        aspek: "sambung ayat",
+        skor: salahSambungAyat,
+        pesanRingkas:
+          salahSambungAyat >= 3
+            ? "mengulang sambungan antar ayat agar tidak mudah tertukar"
+            : "lebih teliti saat menyambung ayat",
+      });
+    }
+
+    if (kelancaran <= 85) {
+      evaluasi.push({
+        aspek: "kelancaran",
+        skor: 100 - kelancaran,
+        pesanRingkas:
+          kelancaran <= 75
+            ? "menambah muroja'ah agar hafalan lebih lancar"
+            : "menjaga kelancaran hafalan agar lebih stabil",
+      });
+    }
+
+    catatan.push(getKalimatFokus(evaluasi));
   }
 
-  return `${pembuka} ${catatan.join(". ")}. Barakallahu fiik.`;
+  catatan.push(getPenutup(params.mode, nilai));
+  return `${catatan.join(" ")} Barakallah fiik.`;
+}
+
+export function generateCatatanOtomatisFromUjian(
+  ujian: any,
+  studentName?: string
+) {
+  const aspek = ujian?.nilai_aspek || {};
+  const mode = ujian?.mode;
+  const nilaiAkhir = ujian?.nilai_akhir ?? 0;
+
+  if (mode === "Tahfizh") {
+    const entries = Array.isArray(aspek.surahEntries)
+      ? aggregateTahfizhAssessmentsForDisplay(aspek.surahEntries)
+      : [];
+
+    return generateCatatanOtomatis({
+      mode: "Tahfizh",
+      nilaiAkhir,
+      namaSiswa: studentName,
+      lahnJali: entries.reduce((sum: number, entry: any) => sum + toNumber(entry.lahn_jali ?? entry.lahnJali), 0),
+      lahnKhofi: entries.reduce((sum: number, entry: any) => sum + toNumber(entry.lahn_khofi ?? entry.lahnKhofi), 0),
+      waqaf: entries.reduce((sum: number, entry: any) => sum + toNumber(entry.waqaf_ibtida ?? entry.waqaf), 0),
+      salahSambungAyat: entries.reduce((sum: number, entry: any) => sum + toNumber(entry.salah_sambung_ayat ?? entry.salahSambung), 0),
+      kelancaran: getRataKelancaran(entries),
+    });
+  }
+
+  if (mode === "Tahsin Dasar") {
+    const entries = Array.isArray(aspek.entries) ? aspek.entries : [];
+
+    return generateCatatanOtomatis({
+      mode: "Tahsin Dasar",
+      nilaiAkhir,
+      namaSiswa: studentName,
+      harakat: entries.reduce((sum: number, entry: any) => sum + toNumber(entry.salah_harakat), 0),
+      tajwid: entries.reduce((sum: number, entry: any) => sum + toNumber(entry.kesalahan_tajwid), 0),
+      mad: entries.reduce((sum: number, entry: any) => sum + toNumber(entry.kesalahan_mad), 0),
+      qalqalah: entries.reduce((sum: number, entry: any) => sum + toNumber(entry.kesalahan_qalqalah ?? entry.kesalahan_ghunnah), 0),
+      kelancaran: getRataKelancaran(entries),
+    });
+  }
+
+  if (mode === "Tahsin Lanjutan") {
+    const entries = Array.isArray(aspek.entries) ? aspek.entries : [];
+
+    return generateCatatanOtomatis({
+      mode: "Tahsin Lanjutan",
+      nilaiAkhir,
+      namaSiswa: studentName,
+      lahnJali: entries.reduce(
+        (sum: number, entry: any) =>
+          sum + toNumber(entry.salah_huruf) + toNumber(entry.salah_harakat) + toNumber(entry.salah_tasydid ?? entry.salah_makhraj),
+        0
+      ),
+      lahnKhofi: entries.reduce(
+        (sum: number, entry: any) =>
+          sum + toNumber(entry.kesalahan_tajwid) + toNumber(entry.kesalahan_mad) + toNumber(entry.kesalahan_qalqalah ?? entry.kesalahan_ghunnah),
+        0
+      ),
+      waqaf: entries.reduce((sum: number, entry: any) => sum + toNumber(entry.waqaf_ibtida ?? entry.kesalahan_waqaf), 0),
+      kelancaran: getRataKelancaran(entries),
+    });
+  }
+
+  return "";
+}
+
+export function getEffectiveCatatanGuru(
+  ujian: any,
+  studentName?: string
+) {
+  const aspek = ujian?.nilai_aspek || {};
+  const savedCatatanMode = aspek.catatanMode || "auto";
+  const savedCatatan = String(aspek.catatanGuru || aspek.catatan_guru || "").trim();
+
+  if (savedCatatanMode === "manual" && savedCatatan) {
+    return savedCatatan;
+  }
+
+  return generateCatatanOtomatisFromUjian(ujian, studentName);
 }

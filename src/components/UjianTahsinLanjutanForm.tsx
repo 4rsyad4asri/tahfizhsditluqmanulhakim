@@ -114,17 +114,16 @@ export default function UjianTahsinLanjutanForm({
 
   return (
     <div className="bg-card rounded-lg border border-border p-5 shadow-card animate-scale-in space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <h4 className="font-semibold text-foreground">Ujian Tahsin Lanjutan</h4>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="inline-flex h-8 items-center gap-2 rounded-md border border-input bg-background px-3 text-xs font-medium text-foreground hover:bg-muted"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Kembali
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={onCancel}
+        className="inline-flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Kembali
+      </button>
+
+      <h4 className="font-semibold text-foreground">Ujian Tahsin Lanjutan</h4>
 
       <div className="grid grid-cols-2 gap-3">
         <div>

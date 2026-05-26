@@ -11,10 +11,16 @@ import {
   type TahsinPenaltyConfig,
   type WaqafSymbolTest,
 } from "@/data/tahsinScoring";
+import type { TahfizhSurahEntry } from "@/data/mockData";
 import {
-  calculateNilaiSurahWithRumus,
-  type TahfizhSurahEntry,
-} from "@/data/mockData";
+  DEFAULT_TAHFIZH_PENALTY,
+  aggregateTahfizhAssessmentsForDisplay,
+  calculateTahfizhSummary,
+  calculateTahfizhSurahScore,
+  normalizeTahfizhAssessment,
+  type TahfizhExamMode,
+  type TahfizhPenaltyConfig,
+} from "@/data/tahfizhSystem";
 
 export type Orientation = "portrait" | "landscape";
 
@@ -57,7 +63,9 @@ export interface RaportData {
   grade: string;
   predikat: string;
   catatanGuru?: string;
+  tahfizhMode?: TahfizhExamMode;
   tahfizhReportType?: "summary" | "detail";
+  tahfizhConfig?: TahfizhPenaltyConfig;
 
   tahfizhEntries?: TahfizhSurahEntry[];
 
@@ -96,6 +104,71 @@ function getRataKelancaran(entries: { kelancaran?: number }[]) {
   );
 
   return Math.round(total / entries.length);
+}
+
+function getTahfizhPenaltyConfig(config: any): TahfizhPenaltyConfig {
+  return {
+    lahnJali: Number(config?.lahnJali ?? config?.penalti_lahn_jali ?? DEFAULT_TAHFIZH_PENALTY.lahnJali),
+    lahnKhofi: Number(config?.lahnKhofi ?? config?.penalti_lahn_khofi ?? DEFAULT_TAHFIZH_PENALTY.lahnKhofi),
+    waqaf: Number(config?.waqaf ?? config?.penalti_waqaf ?? DEFAULT_TAHFIZH_PENALTY.waqaf),
+    salahSambung: Number(config?.salahSambung ?? config?.penalti_salah_sambung ?? DEFAULT_TAHFIZH_PENALTY.salahSambung),
+  };
+}
+
+function getTahfizhAyatLabel(entry: any) {
+  const normalized = normalizeTahfizhAssessment(entry);
+  if (normalized.ayatRange) return normalized.ayatRange;
+  if (normalized.ayatAwal && normalized.ayatAkhir) return `${normalized.ayatAwal} - ${normalized.ayatAkhir}`;
+  if (normalized.ayatAwal) return String(normalized.ayatAwal);
+  if (normalized.ayatAkhir) return String(normalized.ayatAkhir);
+  return "-";
+}
+
+function getTahfizhSummaryRows(data: RaportData) {
+  const entries = aggregateTahfizhAssessmentsForDisplay(data.tahfizhEntries || []);
+  const summaries = calculateTahfizhSummary(entries, getTahfizhPenaltyConfig(data.tahfizhConfig));
+  const ayatByJuz = new Map<number, string>();
+
+  entries.forEach((entry) => {
+    const ayat = getTahfizhAyatLabel(entry);
+    if (ayat === "-") return;
+    const current = ayatByJuz.get(entry.juz);
+    ayatByJuz.set(entry.juz, current ? `${current}; ${ayat}` : ayat);
+  });
+
+  const isCertificate = data.tahfizhMode === "Sertifikat";
+  const head = isCertificate
+    ? [["No", "Juz Diujikan", "Kelancaran Rata-rata", "Total Lahn Jali", "Total Lahn Khofi", "Total Waqaf", "Total Salah Sambung", "Nilai Juz"]]
+    : [["No", "Juz Diujikan", "Ayat", "Kelancaran Rata-rata", "Total Lahn Jali", "Total Lahn Khofi", "Total Waqaf", "Total Salah Sambung", "Nilai Juz"]];
+
+  const body: RowInput[] = summaries.map((summary, index) => {
+    const base = [
+      String(index + 1),
+      `Juz ${summary.juz}`,
+      String(summary.rataKelancaran),
+      String(summary.totalLahnJali),
+      String(summary.totalLahnKhofi),
+      String(summary.totalWaqaf),
+      String(summary.totalSalahSambung),
+      String(summary.nilaiJuz),
+    ];
+
+    if (isCertificate) return base;
+
+    return [
+      String(index + 1),
+      `Juz ${summary.juz}`,
+      ayatByJuz.get(summary.juz) || "-",
+      String(summary.rataKelancaran),
+      String(summary.totalLahnJali),
+      String(summary.totalLahnKhofi),
+      String(summary.totalWaqaf),
+      String(summary.totalSalahSambung),
+      String(summary.nilaiJuz),
+    ];
+  });
+
+  return { head, body };
 }
 
 function fmtTanggal(iso: string): string {
@@ -448,40 +521,33 @@ function drawDetail(
     if (data.tahfizhReportType === "summary") {
       y = sectionTitle(doc, "RINGKASAN UJIAN TAHFIZH PER JUZ", margin, y) || y;
 
-      const entries = data.tahfizhEntries;
-      const totalLahnJali = entries.reduce((a, b) => a + Number(b.lahn_jali || 0), 0);
-      const totalLahnKhofi = entries.reduce((a, b) => a + Number(b.lahn_khofi || 0), 0);
-      const totalWaqaf = entries.reduce((a, b) => a + Number(b.waqaf_ibtida || 0), 0);
-      const totalSambung = entries.reduce((a, b) => a + Number(b.salah_sambung_ayat || 0), 0);
-      const rataKelancaran = getRataKelancaran(entries);
+      const { head, body } = getTahfizhSummaryRows(data);
 
       autoTable(doc, {
         startY: y,
         margin: { left: margin, right: margin },
-        head: [["Aspek", "Hasil"]],
-        body: [
-          ["Total Lahn Jali", String(totalLahnJali)],
-          ["Total Lahn Khofi", String(totalLahnKhofi)],
-          ["Total Waqaf Ibtida", String(totalWaqaf)],
-          ["Total Salah Sambung Ayat", String(totalSambung)],
-          ["Rata-rata Kelancaran", String(rataKelancaran)],
-        ],
+        head,
+        body,
         theme: "grid",
         styles: {
           font: "helvetica",
-          fontSize: 7,
-          cellPadding: 1.2,
+          fontSize: 6.2,
+          cellPadding: 0.9,
           lineColor: GRAY_LINE,
           lineWidth: 0.12,
+          halign: "center",
         },
         headStyles: {
           fillColor: EMERALD,
           textColor: 255,
           fontStyle: "bold",
         },
+        alternateRowStyles: {
+          fillColor: [247, 254, 250],
+        },
         columnStyles: {
-          0: { fontStyle: "bold" },
-          1: { halign: "center", textColor: EMERALD as any, fontStyle: "bold" },
+          1: { fontStyle: "bold" },
+          [data.tahfizhMode === "Sertifikat" ? 7 : 8]: { fontStyle: "bold", textColor: EMERALD as any },
         },
       });
 
@@ -494,6 +560,7 @@ function drawDetail(
       [
         "Surat",
         "Juz",
+        "Ayat",
         "Lahn Jali",
         "Lahn Khofi",
         "Waqaf",
@@ -503,16 +570,20 @@ function drawDetail(
       ],
     ];
 
-    const body: RowInput[] = data.tahfizhEntries.map((e) => [
-      e.surah,
-      String(e.juz),
-      String(e.lahn_jali),
-      String(e.lahn_khofi),
-      String(e.waqaf_ibtida ?? 0),
-      String(e.salah_sambung_ayat ?? 0),
-      String(e.kelancaran),
-      String(calculateNilaiSurahWithRumus(e, "baru")),
-    ]);
+    const body: RowInput[] = data.tahfizhEntries.map((entry) => {
+      const e = normalizeTahfizhAssessment(entry);
+      return [
+        e.surah,
+        String(e.juz),
+        getTahfizhAyatLabel(e),
+        String(e.lahnJali),
+        String(e.lahnKhofi),
+        String(e.waqaf ?? 0),
+        String(e.salahSambung ?? 0),
+        String(e.kelancaran),
+        String(calculateTahfizhSurahScore(e, getTahfizhPenaltyConfig(data.tahfizhConfig))),
+      ];
+    });
 
     autoTable(doc, {
       startY: y,
@@ -544,7 +615,7 @@ function drawDetail(
           halign: "left",
           fontStyle: "bold",
         },
-        7: {
+        8: {
           fontStyle: "bold",
           textColor: EMERALD as any,
         },

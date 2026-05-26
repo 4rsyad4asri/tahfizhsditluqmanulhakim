@@ -1,4 +1,5 @@
 // Tahsin Dasar & Lanjutan scoring logic
+import { getStandardExamGrading } from "@/data/grading";
 
 export type RumusVersion = "baru" | "lama";
 
@@ -269,7 +270,7 @@ export function calculateTahsinDasarResult(
       nilaiAkhir: 0,
       status: "Tidak Lulus",
       grade: "D",
-      predikat: "Perlu Perbaikan",
+      predikat: "Rosib",
     };
   }
 
@@ -301,7 +302,7 @@ export function calculateTahsinLanjutanResult(
       nilaiAkhir: 0,
       status: "Tidak Lulus",
       grade: "D",
-      predikat: "Perlu Perbaikan",
+      predikat: "Rosib",
     };
   }
 
@@ -326,26 +327,5 @@ function getGrading(nilaiAkhir: number): {
   grade: string;
   predikat: string;
 } {
-  const status = nilaiAkhir >= 70 ? "Lulus" : "Tidak Lulus";
-
-  let grade = "D";
-  let predikat = "Perlu Perbaikan";
-
-  if (nilaiAkhir >= 90) {
-    grade = "A";
-    predikat = "Mumtaz";
-  } else if (nilaiAkhir >= 80) {
-    grade = "B";
-    predikat = "Jayyid Jiddan";
-  } else if (nilaiAkhir >= 70) {
-    grade = "C";
-    predikat = "Jayyid";
-  }
-
-  return {
-    nilaiAkhir,
-    status,
-    grade,
-    predikat,
-  };
+  return getStandardExamGrading(nilaiAkhir);
 }

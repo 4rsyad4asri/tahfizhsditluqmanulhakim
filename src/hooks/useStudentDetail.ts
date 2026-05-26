@@ -4,9 +4,11 @@ import { calculateNilaiSetoran, calculateNilaiUjian, calculateNilaiTahfizh } fro
 import type { TahfizhSurahEntry } from "@/data/mockData";
 import type { TahsinDasarEntry, TahsinLanjutanEntry, TahsinPenaltyConfig, WaqafSymbolTest } from "@/data/tahsinScoring";
 import {
+  aggregateTahfizhAssessmentsForDisplay,
   toLegacyTahfizhEntry,
   type TahfizhDocumentStatus,
   type TahfizhExamMode,
+  type TahfizhAutoFailConfig,
   type TahfizhPenaltyConfig,
   type TahfizhSurahAssessment,
 } from "@/data/tahfizhSystem";
@@ -175,10 +177,11 @@ export function useAddTahfizhUjian() {
       document_status?: TahfizhDocumentStatus;
       manual_stop_reason?: string;
       auto_fail_log?: string;
+      auto_fail_config?: TahfizhAutoFailConfig;
     }) => {
       const tahfizhMode = data.tahfizh_mode || "Sertifikat";
-      const normalizedEntries = (data.entries as any[]).map((entry) =>
-        "lahnJali" in entry ? toLegacyTahfizhEntry(entry as TahfizhSurahAssessment) : entry
+      const normalizedEntries = aggregateTahfizhAssessmentsForDisplay(data.entries as any[]).map((entry) =>
+        toLegacyTahfizhEntry(entry as TahfizhSurahAssessment)
       );
       const verificationToken =
         typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -191,11 +194,13 @@ export function useAddTahfizhUjian() {
         reportType: tahfizhMode === "Sertifikat" ? "summary" : "detail",
         config: data.config,
         catatanGuru: data.catatan_guru,
+        catatanMode: data.catatan_guru?.trim() ? "manual" : "auto",
         predikat: data.predikat,
         statusLabel: data.status_label || data.status,
         documentStatus: data.document_status || "Draft",
         manualStopReason: data.manual_stop_reason,
         autoFailLog: data.auto_fail_log,
+        autoFailConfig: data.auto_fail_config,
         verificationToken,
       } as unknown as Record<string, unknown>;
 

@@ -8,12 +8,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
-  calculateNilaiSurahWithRumus,
-  calculateNilaiTahfizh,
-  type TahfizhSurahEntry,
-  type TahfizhRumus,
-} from "@/data/mockData";
-import {
   calculateNilaiTahsinDasar,
   calculateNilaiTahsinLanjutan,
   calculateTahsinDasarResult,
@@ -25,16 +19,25 @@ import {
   type RumusVersion,
 } from "@/data/tahsinScoring";
 import generateCatatanOtomatis from "@/utils/catatanOtomatis";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { getSafeErrorMessage } from "@/utils/errorMessages";
+import {
+  DEFAULT_TAHFIZH_PENALTY,
+  aggregateTahfizhAssessmentsForDisplay,
+  calculateTahfizhExamResult,
+  calculateTahfizhSummary,
+  calculateTahfizhSurahScore,
+  toLegacyTahfizhEntry,
+  type TahfizhExamMode,
+  type TahfizhPenaltyConfig,
+  type TahfizhSurahAssessment,
+} from "@/data/tahfizhSystem";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   ujian: any;
   studentName?: string;
+  classInfo?: any;
   onSave: (updated: {
     nilai_aspek: any;
     nilai_akhir: number;
@@ -87,11 +90,34 @@ function normalizeTahsinEntry<T extends Record<string, any>>(entry: T): T {
   };
 }
 
+function getTahfizhPenaltyConfig(config: any): TahfizhPenaltyConfig {
+  return {
+    lahnJali: Number(config?.lahnJali ?? config?.penalti_lahn_jali ?? DEFAULT_TAHFIZH_PENALTY.lahnJali),
+    lahnKhofi: Number(config?.lahnKhofi ?? config?.penalti_lahn_khofi ?? DEFAULT_TAHFIZH_PENALTY.lahnKhofi),
+    waqaf: Number(config?.waqaf ?? config?.penalti_waqaf ?? DEFAULT_TAHFIZH_PENALTY.waqaf),
+    salahSambung: Number(config?.salahSambung ?? config?.penalti_salah_sambung ?? DEFAULT_TAHFIZH_PENALTY.salahSambung),
+  };
+}
+
+function getEntryAyatLabel(entry: TahfizhSurahAssessment) {
+  if (entry.ayatRange) return entry.ayatRange;
+  if (entry.ayatAwal && entry.ayatAkhir) return `${entry.ayatAwal} - ${entry.ayatAkhir}`;
+  if (entry.ayatAwal) return String(entry.ayatAwal);
+  if (entry.ayatAkhir) return String(entry.ayatAkhir);
+  return "-";
+}
+
+function isLegacyClassSixExam(classInfo: any, ujian: any) {
+  const grade = Number(classInfo?.grade ?? String(classInfo?.name || "").match(/\d+/)?.[0]);
+  return grade === 6 && !!ujian?.id;
+}
+
 export default function EditUjianDialog({
   open,
   onClose,
   ujian,
   studentName,
+  classInfo,
   onSave,
   isSaving,
 }: Props) {
@@ -99,7 +125,7 @@ export default function EditUjianDialog({
   const aspek = ujian?.nilai_aspek || {};
 
   const [tanggal, setTanggal] = useState<string>(ujian?.tanggal || "");
-  const [rumus, setRumus] = useState<RumusVersion | TahfizhRumus>(
+  const [rumus, setRumus] = useState<RumusVersion | "baru" | "lama">(
     aspek.rumus || "baru"
   );
   const [catatanGuru, setCatatanGuru] = useState<string>(
@@ -109,8 +135,19 @@ export default function EditUjianDialog({
     aspek.catatanMode || "auto"
   );
 
-  const [tahfizhEntries, setTahfizhEntries] = useState<TahfizhSurahEntry[]>(
-    aspek.surahEntries || []
+  const [tahfizhEntries, setTahfizhEntries] = useState<TahfizhSurahAssessment[]>(
+    Array.isArray(aspek.surahEntries)
+      ? aggregateTahfizhAssessmentsForDisplay(aspek.surahEntries)
+      : []
+  );
+  const [tahfizhConfig, setTahfizhConfig] = useState<TahfizhPenaltyConfig>(
+    getTahfizhPenaltyConfig(aspek.config)
+  );
+  const [tahfizhMode, setTahfizhMode] = useState<TahfizhExamMode>(
+    aspek.tahfizhMode || "Reguler"
+  );
+  const [manualStopReason, setManualStopReason] = useState<string>(
+    aspek.manualStopReason || ""
   );
 
   const [dasarEntries, setDasarEntries] = useState<TahsinDasarEntry[]>(
@@ -154,7 +191,14 @@ export default function EditUjianDialog({
         : ""
     );
 
-    setTahfizhEntries(currentAspek.surahEntries || []);
+    setTahfizhEntries(
+      Array.isArray(currentAspek.surahEntries)
+        ? aggregateTahfizhAssessmentsForDisplay(currentAspek.surahEntries)
+        : []
+    );
+    setTahfizhConfig(getTahfizhPenaltyConfig(currentAspek.config));
+    setTahfizhMode(currentAspek.tahfizhMode || "Reguler");
+    setManualStopReason(currentAspek.manualStopReason || "");
     setDasarEntries(normalizedEntries);
     setDasarConfig(currentAspek.config || DEFAULT_TAHSIN_CONFIG);
     setLanjutanEntries(normalizedEntries);
@@ -165,14 +209,22 @@ export default function EditUjianDialog({
 
   const computed = useMemo(() => {
     if (mode === "Tahfizh") {
-      const r = calculateNilaiTahfizh(tahfizhEntries, rumus as TahfizhRumus);
+      const r = calculateTahfizhExamResult(
+        tahfizhEntries,
+        tahfizhMode,
+        tahfizhConfig,
+        manualStopReason,
+        isLegacyClassSixExam(classInfo, ujian),
+        aspek.autoFailConfig
+      );
 
       return {
         nilai_akhir: r.nilaiAkhir,
         status: r.status,
         grade: r.grade,
         predikat: r.predikat,
-        threshold: 85,
+        threshold: 70,
+        tahfizhResult: r,
       };
     }
 
@@ -210,6 +262,11 @@ export default function EditUjianDialog({
   }, [
     mode,
     tahfizhEntries,
+    tahfizhConfig,
+    tahfizhMode,
+    manualStopReason,
+    classInfo,
+    ujian,
     dasarEntries,
     dasarConfig,
     lanjutanEntries,
@@ -221,23 +278,24 @@ export default function EditUjianDialog({
 
   const buatCatatanOtomatis = useCallback(() => {
     if (mode === "Tahfizh") {
-      const totalLahnJali = tahfizhEntries.reduce(
-        (a, b) => a + Number(b.lahn_jali || 0),
+      const displayEntries = aggregateTahfizhAssessmentsForDisplay(tahfizhEntries);
+      const totalLahnJali = displayEntries.reduce(
+        (a, b) => a + Number(b.lahnJali || 0),
         0
       );
 
-      const totalLahnKhofi = tahfizhEntries.reduce(
-        (a, b) => a + Number(b.lahn_khofi || 0),
+      const totalLahnKhofi = displayEntries.reduce(
+        (a, b) => a + Number(b.lahnKhofi || 0),
         0
       );
 
-      const totalWaqaf = tahfizhEntries.reduce(
-        (a, b) => a + Number(b.waqaf_ibtida || 0),
+      const totalWaqaf = displayEntries.reduce(
+        (a, b) => a + Number(b.waqaf || 0),
         0
       );
 
-      const totalSambung = tahfizhEntries.reduce(
-        (a, b) => a + Number(b.salah_sambung_ayat || 0),
+      const totalSambung = displayEntries.reduce(
+        (a, b) => a + Number(b.salahSambung || 0),
         0
       );
 
@@ -249,7 +307,7 @@ export default function EditUjianDialog({
         lahnKhofi: totalLahnKhofi,
         waqaf: totalWaqaf,
         salahSambungAyat: totalSambung,
-        kelancaran: getRataKelancaran(tahfizhEntries),
+        kelancaran: getRataKelancaran(displayEntries),
       });
     }
 
@@ -339,13 +397,25 @@ export default function EditUjianDialog({
 
   if (!ujian) return null;
 
+  const tahfizhSummaries =
+    mode === "Tahfizh" ? calculateTahfizhSummary(tahfizhEntries, tahfizhConfig) : [];
+  const tahfizhResult = (computed as any).tahfizhResult;
+
   const handleSave = async () => {
     let nilai_aspek: any;
 
     if (mode === "Tahfizh") {
       nilai_aspek = {
         ...aspek,
-        surahEntries: tahfizhEntries,
+        surahEntries: aggregateTahfizhAssessmentsForDisplay(tahfizhEntries).map(toLegacyTahfizhEntry),
+        config: tahfizhConfig,
+        tahfizhMode,
+        manualStopReason,
+        autoFailConfig: aspek.autoFailConfig,
+        summaries: tahfizhResult?.summaries || [],
+        nilaiPerJuz: tahfizhResult?.nilaiPerJuz || [],
+        autoFailLog: tahfizhResult?.autoFail?.log || aspek.autoFailLog || "",
+        statusLabel: tahfizhResult?.statusLabel || computed.status,
         rumus,
         catatanGuru,
         catatanMode,
@@ -375,24 +445,13 @@ export default function EditUjianDialog({
       };
     }
 
-    try {
-      await supabase
-        .from("ujian")
-        .update({
-          status_sertifikasi: computed.status,
-        })
-        .eq("id", ujian.student_id);
-
-      onSave({
-        nilai_aspek,
-        nilai_akhir: computed.nilai_akhir,
-        status: computed.status,
-        grade: computed.grade,
-        tanggal,
-      });
-    } catch (e) {
-      toast.error(getSafeErrorMessage(e));
-    }
+    onSave({
+      nilai_aspek,
+      nilai_akhir: computed.nilai_akhir,
+      status: computed.status,
+      grade: computed.grade,
+      tanggal,
+    });
   };
 
   return (
@@ -430,28 +489,120 @@ export default function EditUjianDialog({
                 <option value="baru">
                   Rumus Baru: Nilai = Kelancaran - Penalti
                 </option>
-                <option value="lama">Rumus Lama (Bobot 60/40)</option>
+                {mode !== "Tahfizh" && <option value="lama">Rumus Lama (Bobot 60/40)</option>}
               </select>
             </div>
           </div>
 
           {mode === "Tahfizh" && (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
+                <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Ringkasan Tahfizh per Juz</p>
+                    <p className="text-xs text-muted-foreground">
+                      Sama seperti Detail Ujian Tahfizh. Nilai akhir diambil dari rata-rata nilai semua juz.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-emerald-200 bg-background px-3 py-2 text-xs text-emerald-900">
+                    <span className="font-medium">Nilai akhir: </span>
+                    <span>{computed.nilai_akhir}</span>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto rounded-lg border border-emerald-200 bg-background">
+                  <table className="w-full text-xs">
+                    <thead className="bg-emerald-100/70 text-emerald-950">
+                      <tr>
+                        {["No", "Juz", "Kelancaran", "Lahn Jali", "Lahn Khofi", "Waqaf", "Salah Sambung", "Nilai"].map((head) => (
+                          <th key={head} className="px-3 py-2 text-left font-semibold">{head}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tahfizhSummaries.map((summary, index) => (
+                        <tr key={summary.juz} className="border-t border-emerald-100">
+                          <td className="px-3 py-2">{index + 1}</td>
+                          <td className="px-3 py-2">Juz {summary.juz}</td>
+                          <td className="px-3 py-2">{summary.rataKelancaran}</td>
+                          <td className="px-3 py-2">{summary.totalLahnJali}</td>
+                          <td className="px-3 py-2">{summary.totalLahnKhofi}</td>
+                          <td className="px-3 py-2">{summary.totalWaqaf}</td>
+                          <td className="px-3 py-2">{summary.totalSalahSambung}</td>
+                          <td className="px-3 py-2 font-bold text-primary">{summary.nilaiJuz}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
               {tahfizhEntries.map((e, i) => (
                 <div
                   key={i}
-                  className="p-3 rounded-md border border-border bg-muted/30"
+                  className="rounded-xl border border-border bg-card p-3 shadow-sm"
                 >
-                  <p className="text-sm font-semibold text-foreground mb-2">
-                    Surat #{i + 1}: {e.surah} (Juz {e.juz})
-                  </p>
+                  <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Detail #{i + 1}: {e.surah}</p>
+                      <p className="text-xs text-muted-foreground">Juz {e.juz} - Ayat {getEntryAyatLabel(e)}</p>
+                    </div>
+                    <div className="rounded-lg bg-primary/10 px-3 py-1 text-sm font-bold text-primary">
+                      Nilai {calculateTahfizhSurahScore(e, tahfizhConfig)}
+                    </div>
+                  </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Surat / Grup</label>
+                      <input
+                        type="text"
+                        value={e.surah}
+                        onChange={(ev) => {
+                          const updated = [...tahfizhEntries];
+                          updated[i] = { ...updated[i], surah: ev.target.value };
+                          setTahfizhEntries(updated);
+                        }}
+                        className="w-full px-2 py-1.5 rounded-md border border-input bg-background text-foreground text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Juz</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={30}
+                        value={e.juz}
+                        onChange={(ev) => {
+                          const updated = [...tahfizhEntries];
+                          updated[i] = { ...updated[i], juz: parseInt(ev.target.value) || 30 };
+                          setTahfizhEntries(updated);
+                        }}
+                        className="w-full px-2 py-1.5 rounded-md border border-input bg-background text-foreground text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-muted-foreground mb-0.5">Ayat</label>
+                      <input
+                        type="text"
+                        value={e.ayatRange || ""}
+                        onChange={(ev) => {
+                          const updated = [...tahfizhEntries];
+                          updated[i] = { ...updated[i], ayatRange: ev.target.value };
+                          setTahfizhEntries(updated);
+                        }}
+                        placeholder="-"
+                        className="w-full px-2 py-1.5 rounded-md border border-input bg-background text-foreground text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-2 grid grid-cols-2 md:grid-cols-5 gap-2">
                     {[
-                      { k: "lahn_jali", l: "Lahn Jali" },
-                      { k: "lahn_khofi", l: "Lahn Khofi" },
-                      { k: "waqaf_ibtida", l: "Waqaf" },
-                      { k: "salah_sambung_ayat", l: "Sambung Ayat" },
+                      { k: "lahnJali", l: "Lahn Jali" },
+                      { k: "lahnKhofi", l: "Lahn Khofi" },
+                      { k: "waqaf", l: "Waqaf" },
+                      { k: "salahSambung", l: "Salah Sambung" },
                       { k: "kelancaran", l: "Kelancaran (60-100)" },
                     ].map((f) => (
                       <div key={f.k}>
@@ -465,8 +616,10 @@ export default function EditUjianDialog({
                           value={(e as any)[f.k] ?? 0}
                           onChange={(ev) => {
                             const updated = [...tahfizhEntries];
-                            (updated[i] as any)[f.k] =
-                              parseInt(ev.target.value) || 0;
+                            updated[i] = {
+                              ...updated[i],
+                              [f.k]: parseInt(ev.target.value) || 0,
+                            };
                             setTahfizhEntries(updated);
                           }}
                           className="w-full px-2 py-1.5 rounded-md border border-input bg-background text-foreground text-sm"
@@ -474,11 +627,6 @@ export default function EditUjianDialog({
                       </div>
                     ))}
                   </div>
-
-                  <p className="text-xs text-right mt-2 text-primary font-bold">
-                    Nilai:{" "}
-                    {calculateNilaiSurahWithRumus(e, rumus as TahfizhRumus)}
-                  </p>
                 </div>
               ))}
             </div>

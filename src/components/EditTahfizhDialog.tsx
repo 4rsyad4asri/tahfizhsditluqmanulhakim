@@ -29,8 +29,8 @@ interface EditTahfizhDialogProps {
 
 const DEFAULT_PENALTY = { lj: 2, lk: 1, waqaf: 1, sambung: 2 };
 const KELANCARAN_OPTIONS = [
-  { value: 100, label: "Sangat Lancar (100)" },
   { value: 90, label: "Lancar (90)" },
+  { value: 100, label: "Sangat Lancar (100)" },
   { value: 80, label: "Cukup Lancar (80)" },
   { value: 70, label: "Kurang Lancar (70)" },
   { value: 60, label: "Tidak Lancar (60)" },
@@ -271,7 +271,7 @@ export default function EditTahfizhDialog({
                 <div>
                   <p className="text-xs text-muted-foreground">Status</p>
                   <p className="text-lg font-bold text-emerald-600">
-                    {Math.round(entries.reduce((a, b) => a + calculateNilaiSurah(b), 0) / entries.length) >= 85 ? 'Lulus' : 'Tidak Lulus'}
+                    {Math.round(entries.reduce((a, b) => a + calculateNilaiSurah(b), 0) / entries.length) >= 70 ? 'Lulus' : 'Tidak Lulus'}
                   </p>
                 </div>
               </div>

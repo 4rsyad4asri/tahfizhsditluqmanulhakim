@@ -2,11 +2,15 @@ import { useParams } from "react-router-dom";
 import { CheckCircle2, FileText, Loader2, ShieldCheck } from "lucide-react";
 import { useTahfizhVerification } from "@/hooks/useStudentDetail";
 import {
+  aggregateTahfizhAssessmentsForDisplay,
+  calculateTahfizhExamResult,
   calculateTahfizhSummary,
   normalizeTahfizhAssessment,
   type TahfizhSurahAssessment,
 } from "@/data/tahfizhSystem";
 import { calculateNilaiSurahWithRumus } from "@/data/mockData";
+import { getEffectiveCatatanGuru } from "@/utils/catatanOtomatis";
+import { getStandardExamGrading } from "@/data/grading";
 
 function formatDate(date: string) {
   try {
@@ -18,6 +22,10 @@ function formatDate(date: string) {
   } catch {
     return date;
   }
+}
+
+function getLegacyClassSixTahfizhState(nilai: number) {
+  return getStandardExamGrading(nilai);
 }
 
 export default function TahfizhVerification() {
@@ -48,12 +56,29 @@ export default function TahfizhVerification() {
 
   const aspek = (data.nilai_aspek || {}) as any;
   const entries: TahfizhSurahAssessment[] = Array.isArray(aspek.surahEntries)
-    ? aspek.surahEntries.map(normalizeTahfizhAssessment)
+    ? aggregateTahfizhAssessmentsForDisplay(aspek.surahEntries).map(normalizeTahfizhAssessment)
     : [];
   const reportType = aspek.reportType || (aspek.tahfizhMode === "Sertifikat" ? "summary" : "detail");
   const summaries = calculateTahfizhSummary(entries, aspek.config);
   const student = (data as any).students;
   const classInfo = student?.classes;
+  const isLegacyClassSixExam = Number(classInfo?.grade ?? String(classInfo?.name || "").match(/\d+/)?.[0]) === 6;
+  const syncedResult = calculateTahfizhExamResult(
+    entries,
+    aspek.tahfizhMode || "Reguler",
+    aspek.config,
+    aspek.manualStopReason || "",
+    isLegacyClassSixExam,
+    aspek.autoFailConfig
+  );
+  const displayState = isLegacyClassSixExam
+    ? getLegacyClassSixTahfizhState(syncedResult.nilaiAkhir || syncedResult.rataRataAkhir)
+    : {
+        predikat: aspek.predikat || syncedResult.predikat,
+        grade: data.grade || syncedResult.grade,
+        status: aspek.statusLabel || data.status || syncedResult.status,
+      };
+  const effectiveCatatanGuru = getEffectiveCatatanGuru(data, student?.name || "Siswa");
 
   return (
     <main className="min-h-screen bg-background">
@@ -82,9 +107,9 @@ export default function TahfizhVerification() {
         </div>
 
         <div className="grid gap-3 md:grid-cols-4">
-          <InfoCard label="Nilai Akhir" value={String(data.nilai_akhir ?? 0)} strong />
-          <InfoCard label="Grade" value={data.grade || "-"} strong />
-          <InfoCard label="Status" value={aspek.statusLabel || data.status || "-"} strong />
+          <InfoCard label="Nilai Akhir" value={String(syncedResult.nilaiAkhir || data.nilai_akhir || 0)} strong />
+          <InfoCard label="Grade" value={displayState.grade || "-"} strong />
+          <InfoCard label="Status" value={displayState.status || "-"} strong />
           <InfoCard label="Dokumen" value={data.document_status || "Published"} strong />
         </div>
 
@@ -170,13 +195,13 @@ export default function TahfizhVerification() {
           </div>
         )}
 
-        {(aspek.autoFailLog || aspek.manualStopReason || aspek.catatanGuru) && (
+        {(aspek.autoFailLog || aspek.manualStopReason || effectiveCatatanGuru) && (
           <div className="rounded-lg border border-border bg-card p-4">
             <h2 className="mb-2 text-base font-semibold text-foreground">Catatan</h2>
             <div className="space-y-1 text-sm text-muted-foreground">
               {aspek.autoFailLog && <p>{aspek.autoFailLog}</p>}
               {aspek.manualStopReason && <p>Alasan dihentikan: {aspek.manualStopReason}</p>}
-              {aspek.catatanGuru && <p>{aspek.catatanGuru}</p>}
+              {effectiveCatatanGuru && <p>{effectiveCatatanGuru}</p>}
             </div>
           </div>
         )}

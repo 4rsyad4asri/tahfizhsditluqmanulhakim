@@ -21,7 +21,9 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
-import generateCatatanOtomatis from "@/utils/catatanOtomatis";
+import { generateCatatanOtomatisFromUjian } from "@/utils/catatanOtomatis";
+import { aggregateTahfizhAssessmentsForDisplay } from "@/data/tahfizhSystem";
+import { getStandardExamGrading } from "@/data/grading";
 import {
   generateRaportPDF,
   downloadRaportPDF,
@@ -115,120 +117,10 @@ export default function RaportPreviewDialog({
   const [loadingPreview, setLoadingPreview] = useState(false);
   const previewSeqRef = useRef(0);
 
-  const generatedCatatan = useMemo(() => {
-    const aspek = ujian?.nilai_aspek || {};
-    const mode = ujian?.mode;
-    const nilaiAkhir = ujian?.nilai_akhir ?? 0;
-
-    if (mode === "Tahfizh") {
-      const entries = aspek.surahEntries || [];
-
-      const totalLahnJali = entries.reduce(
-        (a: number, b: any) => a + Number(b.lahn_jali || 0),
-        0
-      );
-
-      const totalLahnKhofi = entries.reduce(
-        (a: number, b: any) => a + Number(b.lahn_khofi || 0),
-        0
-      );
-
-      const totalWaqaf = entries.reduce(
-        (a: number, b: any) => a + Number(b.waqaf_ibtida || 0),
-        0
-      );
-
-      const totalSambung = entries.reduce(
-        (a: number, b: any) => a + Number(b.salah_sambung_ayat || 0),
-        0
-      );
-
-      return generateCatatanOtomatis({
-        mode: "Tahfizh",
-        nilaiAkhir,
-        namaSiswa: studentName,
-        lahnJali: totalLahnJali,
-        lahnKhofi: totalLahnKhofi,
-        waqaf: totalWaqaf,
-        salahSambungAyat: totalSambung,
-        kelancaran: getRataKelancaran(entries),
-      });
-    }
-
-    if (mode === "Tahsin Dasar") {
-      const entries = (aspek.entries || []).map(normalizeTahsinEntry);
-
-      const totalHarakat = entries.reduce(
-        (a: number, b: any) => a + Number(b.salah_harakat || 0),
-        0
-      );
-
-      const totalTajwid = entries.reduce(
-        (a: number, b: any) => a + Number(b.kesalahan_tajwid || 0),
-        0
-      );
-
-      const totalMad = entries.reduce(
-        (a: number, b: any) => a + Number(b.kesalahan_mad || 0),
-        0
-      );
-
-      const totalQalqalah = entries.reduce(
-        (a: number, b: any) => a + getKesalahanQalqalah(b),
-        0
-      );
-
-      return generateCatatanOtomatis({
-        mode: "Tahsin Dasar",
-        nilaiAkhir,
-        namaSiswa: studentName,
-        harakat: totalHarakat,
-        tajwid: totalTajwid,
-        mad: totalMad,
-        qalqalah: totalQalqalah,
-        kelancaran: getRataKelancaran(entries),
-      });
-    }
-
-    if (mode === "Tahsin Lanjutan") {
-      const entries = (aspek.entries || []).map(normalizeTahsinEntry);
-
-      const totalLahnJali = entries.reduce(
-        (a: number, b: any) =>
-          a +
-          Number(b.salah_huruf || 0) +
-          Number(b.salah_harakat || 0) +
-          getSalahTasydid(b),
-        0
-      );
-
-      const totalLahnKhofi = entries.reduce(
-        (a: number, b: any) =>
-          a +
-          Number(b.kesalahan_tajwid || 0) +
-          Number(b.kesalahan_mad || 0) +
-          getKesalahanQalqalah(b),
-        0
-      );
-
-      const totalWaqaf = entries.reduce(
-        (a: number, b: any) => a + Number(b.waqaf_ibtida || 0),
-        0
-      );
-
-      return generateCatatanOtomatis({
-        mode: "Tahsin Lanjutan",
-        nilaiAkhir,
-        namaSiswa: studentName,
-        lahnJali: totalLahnJali,
-        lahnKhofi: totalLahnKhofi,
-        waqaf: totalWaqaf,
-        kelancaran: getRataKelancaran(entries),
-      });
-    }
-
-    return "";
-  }, [ujian, studentName]);
+  const generatedCatatan = useMemo(
+    () => generateCatatanOtomatisFromUjian(ujian, studentName),
+    [ujian, studentName]
+  );
 
   const [catatan, setCatatan] = useState("");
 
@@ -276,16 +168,18 @@ export default function RaportPreviewDialog({
   const data: RaportData = useMemo(() => {
     const aspek = ujian?.nilai_aspek || {};
     const normalizedEntries = (aspek.entries || []).map(normalizeTahsinEntry);
+    const rawTahfizhEntries = Array.isArray(aspek.surahEntries) ? aspek.surahEntries : [];
+    const tahfizhMode = aspek.tahfizhMode || "Reguler";
+    const rawTahfizhJuzList = [...new Set(rawTahfizhEntries.map((entry: any) => Number(entry.juz || 30)))];
+    const useRegularFiveQuestionDetail =
+      ujian?.mode === "Tahfizh" &&
+      tahfizhMode === "Reguler" &&
+      rawTahfizhJuzList.length === 1 &&
+      rawTahfizhEntries.length <= 5;
+    const tahfizhReportType = useRegularFiveQuestionDetail ? "detail" : "summary";
 
-    const predikat =
-      aspek.predikat ||
-      (ujian?.nilai_akhir >= 90
-        ? "Mumtaz"
-        : ujian?.nilai_akhir >= 80
-          ? "Jayyid Jiddan"
-          : ujian?.nilai_akhir >= 70
-            ? "Jayyid"
-            : "Perlu Perbaikan");
+    const grading = getStandardExamGrading(ujian?.nilai_akhir ?? 0);
+    const predikat = aspek.predikat || grading.predikat;
 
     return {
       mode: ujian?.mode,
@@ -295,11 +189,17 @@ export default function RaportPreviewDialog({
       tanggal,
       nilaiAkhir: ujian?.nilai_akhir ?? 0,
       status: ujian?.status ?? "-",
-      grade: ujian?.grade ?? "-",
+      grade: ujian?.grade ?? grading.grade,
       predikat,
       catatanGuru: finalCatatan,
-      tahfizhReportType: aspek.reportType || (aspek.tahfizhMode === "Sertifikat" ? "summary" : "detail"),
-      tahfizhEntries: aspek.surahEntries as TahfizhSurahEntry[] | undefined,
+      tahfizhMode,
+      tahfizhReportType,
+      tahfizhConfig: aspek.config,
+      tahfizhEntries: rawTahfizhEntries.length > 0
+        ? ((tahfizhReportType === "summary"
+            ? aggregateTahfizhAssessmentsForDisplay(rawTahfizhEntries)
+            : rawTahfizhEntries) as unknown as TahfizhSurahEntry[])
+        : undefined,
       dasarEntries: normalizedEntries as TahsinDasarEntry[] | undefined,
       dasarConfig: aspek.config as TahsinPenaltyConfig | undefined,
       lanjutanEntries: normalizedEntries as TahsinLanjutanEntry[] | undefined,

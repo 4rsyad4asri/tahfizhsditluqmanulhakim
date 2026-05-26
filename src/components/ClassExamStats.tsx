@@ -10,16 +10,14 @@ export default function ClassExamStats({ classId }: Props) {
   const { data, isLoading } = useQuery({
     queryKey: ["class-exam-stats", classId],
     queryFn: async () => {
-      const { data: students, error: studentsError } = await supabase
+      // Get students in class
+      const { data: students } = await supabase
         .from("students")
         .select("id")
         .eq("class_id", classId);
-
-      if (studentsError) throw studentsError;
       if (!students || students.length === 0) return null;
 
-      const studentIds = students.map((s) => s.id);
-
+      const studentIds = students.map(s => s.id);
       const { data: ujianData, error: ujianError } = await supabase
         .from("ujian")
         .select("mode, status, nilai_akhir, student_id")
@@ -28,36 +26,23 @@ export default function ClassExamStats({ classId }: Props) {
       if (ujianError) throw ujianError;
       if (!ujianData) return null;
 
-      const modes = ["Tahsin Dasar", "Tahsin Lanjutan", "Tahfizh"] as const;
-
-      const stats = modes.map((mode) => {
-        const exams = ujianData.filter((u) => u.mode === mode);
-        const lulus = exams.filter((u) => u.status === "Lulus").length;
-        const tidakLulus = exams.filter((u) => u.status === "Tidak Lulus").length;
-
+      const modes = ['Tahsin Dasar', 'Tahsin Lanjutan', 'Tahfizh'] as const;
+      const stats = modes.map(mode => {
+        const exams = ujianData.filter(u => u.mode === mode);
+        const lulus = exams.filter(u => u.status === 'Lulus').length;
+        const tidakLulus = exams.filter(u => u.status === 'Tidak Lulus').length;
         const validScores = exams
-          .map((u) => Number(u.nilai_akhir))
+          .map(u => Number(u.nilai_akhir))
           .filter((score) => Number.isFinite(score));
-
-        const avgNilai =
-          validScores.length > 0
-            ? Math.round(validScores.reduce((sum, score) => sum + score, 0) / validScores.length)
-            : 0;
-
-        const uniqueStudents = new Set(exams.map((e) => e.student_id)).size;
-
-        return {
-          mode,
-          total: exams.length,
-          lulus,
-          tidakLulus,
-          avgNilai,
-          uniqueStudents,
-        };
+        const avgNilai = exams.length > 0
+          ? Math.round(validScores.reduce((s, score) => s + score, 0) / Math.max(validScores.length, 1))
+          : 0;
+        const uniqueStudents = new Set(exams.map(e => e.student_id)).size;
+        return { mode, total: exams.length, lulus, tidakLulus, avgNilai, uniqueStudents };
       });
 
       const totalStudents = students.length;
-      const testedStudents = new Set(ujianData.map((u) => u.student_id)).size;
+      const testedStudents = new Set(ujianData.map(u => u.student_id)).size;
 
       return { stats, totalStudents, testedStudents };
     },
@@ -68,12 +53,10 @@ export default function ClassExamStats({ classId }: Props) {
 
   const COLORS = ["hsl(var(--primary))", "hsl(var(--success))", "hsl(var(--warning))"];
 
-  const chartData = data.stats
-    .filter((s) => s.total > 0)
-    .map((s) => ({
-      name: s.mode.replace("Tahsin ", "T."),
-      "Rata-rata": Number.isFinite(s.avgNilai) ? s.avgNilai : 0,
-    }));
+  const chartData = data.stats.filter(s => s.total > 0).map(s => ({
+    name: s.mode.replace('Tahsin ', 'T.'),
+    'Rata-rata': Number.isFinite(s.avgNilai) ? s.avgNilai : 0,
+  }));
 
   return (
     <div className="bg-card rounded-lg border border-border p-5 shadow-card space-y-4">
@@ -86,49 +69,43 @@ export default function ClassExamStats({ classId }: Props) {
           <p className="text-2xl font-bold text-foreground">{data.totalStudents}</p>
           <p className="text-xs text-muted-foreground">Total Siswa</p>
         </div>
-
         <div className="p-3 rounded-md bg-muted/50">
           <p className="text-2xl font-bold text-primary">{data.testedStudents}</p>
           <p className="text-xs text-muted-foreground">Sudah Ujian</p>
         </div>
       </div>
 
+      {/* Per-mode stats */}
       <div className="space-y-3">
-        {data.stats.map((stat) => (
+        {data.stats.map((stat, i) => (
           <div key={stat.mode} className="p-3 rounded-md border border-border bg-muted/20">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-semibold text-foreground">{stat.mode}</p>
-              <span className="text-xs text-muted-foreground">
-                {stat.total} ujian · {stat.uniqueStudents} siswa
-              </span>
+              <span className="text-xs text-muted-foreground">{stat.total} ujian · {stat.uniqueStudents} siswa</span>
             </div>
-
             {stat.total > 0 ? (
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
                 <div className="p-2 rounded bg-success/10">
                   <p className="font-bold text-success">{stat.lulus}</p>
                   <p className="text-muted-foreground">Lulus</p>
                 </div>
-
                 <div className="p-2 rounded bg-destructive/10">
                   <p className="font-bold text-destructive">{stat.tidakLulus}</p>
                   <p className="text-muted-foreground">Tidak Lulus</p>
                 </div>
-
                 <div className="p-2 rounded bg-primary/10">
                   <p className="font-bold text-primary">{stat.avgNilai}</p>
                   <p className="text-muted-foreground">Rata-rata</p>
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground text-center py-1">
-                Belum ada data ujian
-              </p>
+              <p className="text-xs text-muted-foreground text-center py-1">Belum ada data ujian</p>
             )}
           </div>
         ))}
       </div>
 
+      {/* Bar chart */}
       {chartData.length > 0 && (
         <div style={{ height: 160 }}>
           <ResponsiveContainer width="100%" height="100%">
@@ -136,12 +113,7 @@ export default function ClassExamStats({ classId }: Props) {
               <XAxis dataKey="name" tick={{ fontSize: 11 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  fontSize: 12,
-                }}
+                contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }}
                 formatter={(value: number) => [`${value}`, "Rata-rata Nilai"]}
               />
               <Bar dataKey="Rata-rata" radius={[4, 4, 0, 0]}>

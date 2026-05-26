@@ -1,11 +1,18 @@
-import { BookOpen, Star, Moon, Settings, Shield, LogOut, Award, Search, KeyRound, UserCircle, BarChart3 } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Award, BarChart3, BookOpen, KeyRound, LogOut, Moon, Search, Settings, Shield, Star, UserCircle } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/AuthContext";
+
+const navButtonClass = (active: boolean) =>
+  `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+    active
+      ? "bg-primary-foreground/20 backdrop-blur-sm"
+      : "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"
+  }`;
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, role, profile, signOut, isAdmin } = useAuthContext();
+  const { user, profile, signOut, isAdmin } = useAuthContext();
 
   const handleLogout = async () => {
     await signOut();
@@ -14,127 +21,94 @@ const Header = () => {
 
   return (
     <header className="gradient-islamic islamic-pattern text-primary-foreground">
-      <div className="container mx-auto py-6 px-4">
-        <div className="flex items-center justify-between">
-          <div
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={() => navigate("/")}>
-
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20">
-              <BookOpen className="w-6 h-6 bg-[sidebar-primary-foreground] bg-background text-slate-950" />
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 cursor-pointer items-center gap-3" onClick={() => navigate("/")}>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary-foreground/20 bg-primary-foreground/10 backdrop-blur-sm">
+              <BookOpen className="h-6 w-6 bg-background text-slate-950" />
             </div>
-            <div>
-              <h1 className="md:text-2xl font-bold tracking-tight text-slate-950 text-sm">
-                  ​Sistem Laporan Ujian Tahfizh SDIT Luqmanul Hakim              
+            <div className="min-w-0">
+              <h1 className="break-words text-sm font-bold tracking-tight text-slate-950 md:text-2xl">
+                Sistem Laporan Ujian Tahfizh SDIT Luqmanul Hakim
               </h1>
-              <p className="opacity-80 text-gray-800 text-xs">
-                 Web Developer : Miftahul Arsyad Asri, S.H    
-              </p>
+              <p className="text-xs text-gray-800 opacity-80">Web Developer : Miftahul Arsyad Asri, S.H</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate("/cari-siswa")}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-              location.pathname === "/cari-siswa" ?
-              "bg-primary-foreground/20 backdrop-blur-sm" :
-              "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"}`
-              }>
-              <Search className="w-4 h-4 text-slate-950" />
-              <span className="hidden sm:inline text-gray-950 text-xs text-center">Cari Siswa</span>
+
+          <div className="flex min-w-0 flex-wrap items-center gap-2 lg:justify-end">
+            <button onClick={() => navigate("/cari-siswa")} className={navButtonClass(location.pathname === "/cari-siswa")}>
+              <Search className="h-4 w-4 text-slate-950" />
+              <span className="hidden text-center text-xs text-gray-950 sm:inline">Cari Siswa</span>
             </button>
-            <button
-              onClick={() => navigate("/rekap-sertifikat")}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-              location.pathname === "/rekap-sertifikat" ?
-              "bg-primary-foreground/20 backdrop-blur-sm" :
-              "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"}`
-              }>
-              <Award className="w-4 h-4 text-slate-950" />
-              <span className="hidden sm:inline text-gray-950 text-xs text-center">Rekap Sertifikat</span>
+            <button onClick={() => navigate("/rekap-sertifikat")} className={navButtonClass(location.pathname === "/rekap-sertifikat")}>
+              <Award className="h-4 w-4 text-slate-950" />
+              <span className="hidden text-center text-xs text-gray-950 sm:inline">Rekap Sertifikat</span>
             </button>
-            <button
-              onClick={() => navigate("/rekap-global")}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-              location.pathname === "/rekap-global" ?
-              "bg-primary-foreground/20 backdrop-blur-sm" :
-              "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"}`
-              }>
-              <BarChart3 className="w-4 h-4 text-slate-950" />
-              <span className="hidden sm:inline text-gray-950 text-xs text-center">Rekap Global</span>
+            <button onClick={() => navigate("/rekap-global")} className={navButtonClass(location.pathname === "/rekap-global")}>
+              <BarChart3 className="h-4 w-4 text-slate-950" />
+              <span className="hidden text-center text-xs text-gray-950 sm:inline">Rekap Global</span>
             </button>
 
             {user && (
-            <button
-              onClick={() => navigate("/kelola-siswa")}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-              location.pathname === "/kelola-siswa" ?
-              "bg-primary-foreground/20 backdrop-blur-sm" :
-              "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"}`
-              }>
-
-              <Settings className="w-4 h-4 bg-zinc-50 text-slate-950" />
-              <span className="hidden sm:inline text-gray-950 bg-[#f0f5fa] text-xs text-center">Kelola Siswa</span>
-            </button>
+              <button onClick={() => navigate("/kelola-siswa")} className={navButtonClass(location.pathname === "/kelola-siswa")}>
+                <Settings className="h-4 w-4 bg-zinc-50 text-slate-950" />
+                <span className="hidden bg-[#f0f5fa] text-center text-xs text-gray-950 sm:inline">Kelola Siswa</span>
+              </button>
             )}
 
-            {isAdmin &&
-            <button
-              onClick={() => navigate("/kelola-user")}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-              location.pathname === "/kelola-user" ?
-              "bg-primary-foreground/20 backdrop-blur-sm" :
-              "bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm"}`
-              }>
-
-                <Shield className="w-4 h-4 text-slate-800" />
-                <span className="hidden sm:inline text-black text-xs text-center">Kelola User</span>
+            {isAdmin && (
+              <button onClick={() => navigate("/kelola-user")} className={navButtonClass(location.pathname === "/kelola-user")}>
+                <Shield className="h-4 w-4 text-slate-800" />
+                <span className="hidden text-center text-xs text-black sm:inline">Kelola User</span>
               </button>
-            }
+            )}
 
             {user ? (
-            <div className="flex items-center gap-2">
-                <span className="hidden md:inline text-xs opacity-70">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="hidden max-w-[160px] truncate text-xs opacity-70 md:inline">
                   {profile?.full_name || user.email}
                 </span>
                 <button
-                onClick={() => navigate("/profil")}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm transition-all"
-                title="Profil Saya">
-                  <UserCircle className="w-4 h-4 text-slate-950" />
+                  onClick={() => navigate("/profil")}
+                  className="flex items-center gap-1.5 rounded-lg bg-primary-foreground/10 px-3 py-2 text-sm font-medium backdrop-blur-sm transition-all hover:bg-primary-foreground/20"
+                  title="Profil Saya"
+                >
+                  <UserCircle className="h-4 w-4 text-slate-950" />
                 </button>
                 <button
-                onClick={() => navigate("/ganti-password")}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm transition-all"
-                title="Ganti Password">
-                  <KeyRound className="w-4 h-4 text-slate-950" />
+                  onClick={() => navigate("/ganti-password")}
+                  className="flex items-center gap-1.5 rounded-lg bg-primary-foreground/10 px-3 py-2 text-sm font-medium backdrop-blur-sm transition-all hover:bg-primary-foreground/20"
+                  title="Ganti Password"
+                >
+                  <KeyRound className="h-4 w-4 text-slate-950" />
                 </button>
                 <button
-                onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm transition-all"
-                title="Logout">
-                  <LogOut className="w-4 h-4 text-red-500" />
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 rounded-lg bg-primary-foreground/10 px-3 py-2 text-sm font-medium backdrop-blur-sm transition-all hover:bg-primary-foreground/20"
+                  title="Logout"
+                >
+                  <LogOut className="h-4 w-4 text-red-500" />
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => navigate("/login")}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-primary-foreground/10 hover:bg-primary-foreground/20 backdrop-blur-sm transition-all text-slate-950 text-xs"
+                className="flex items-center gap-1.5 rounded-lg bg-primary-foreground/10 px-3 py-2 text-xs font-medium text-slate-950 backdrop-blur-sm transition-all hover:bg-primary-foreground/20"
               >
                 Login
               </button>
             )}
 
-            <div className="hidden md:flex items-center gap-2 opacity-60">
-              <Star className="w-4 h-4 text-neutral-950" />
-              <Moon className="w-4 h-4 text-slate-900" />
-              <Star className="w-4 h-4" />
+            <div className="hidden items-center gap-2 opacity-60 md:flex">
+              <Star className="h-4 w-4 text-neutral-950" />
+              <Moon className="h-4 w-4 text-slate-900" />
+              <Star className="h-4 w-4" />
             </div>
           </div>
         </div>
       </div>
-    </header>);
-
+    </header>
+  );
 };
 
 export default Header;

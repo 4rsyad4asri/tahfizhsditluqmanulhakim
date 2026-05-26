@@ -2,6 +2,14 @@ import { useState, useMemo } from "react";
 import Header from "@/components/Header";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getStandardExamGrading } from "@/data/grading";
+import {
+  aggregateTahfizhAssessmentsForDisplay,
+  calculateTahfizhExamResult,
+  type TahfizhExamMode,
+  type TahfizhPenaltyConfig,
+  type TahfizhSurahAssessment,
+} from "@/data/tahfizhSystem";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { Loader2, Download, Filter, CheckCircle2, XCircle, Edit2, FileText, X } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
@@ -42,6 +50,65 @@ const generateNomorSertifikat = (tanggal: string, index: number): string => {
   return `${nomorUrut}/SDITLH/STQ/2526/${bulanRoman}/2026`;
 };
 
+const isLegacyClassSixCertificate = (classGrade: number, ujianId?: string | null) => {
+  return Number(classGrade) === 6 && !!ujianId;
+};
+
+const getSyncedTahfizhCertificateResult = (
+  ujian: any,
+  classGrade: number,
+): {
+  entries: TahfizhSurahAssessment[];
+  nilaiAkhir: number;
+  predikat: string;
+  grade: string;
+  status: "Lulus" | "Tidak Lulus";
+} => {
+  const aspek = ujian.nilai_aspek as any;
+  const rawEntries = Array.isArray(aspek?.surahEntries) ? aspek.surahEntries : [];
+  const entries = aggregateTahfizhAssessmentsForDisplay(rawEntries) as TahfizhSurahAssessment[];
+
+  if (entries.length === 0) {
+    const grading = getStandardExamGrading(ujian.nilai_akhir);
+    return {
+      entries,
+      nilaiAkhir: grading.nilaiAkhir,
+      predikat: aspek?.predikat || grading.predikat,
+      grade: grading.grade,
+      status: (ujian.status as "Lulus" | "Tidak Lulus") || grading.status,
+    };
+  }
+
+  const ignoreAutoFail = isLegacyClassSixCertificate(classGrade, ujian.id);
+  const result = calculateTahfizhExamResult(
+    entries,
+    (aspek?.tahfizhMode || "Reguler") as TahfizhExamMode,
+    aspek?.config as TahfizhPenaltyConfig | undefined,
+    aspek?.manualStopReason || "",
+    ignoreAutoFail,
+    aspek?.autoFailConfig,
+  );
+
+  if (ignoreAutoFail) {
+    const grading = getStandardExamGrading(result.nilaiAkhir || result.rataRataAkhir);
+    return {
+      entries,
+      nilaiAkhir: grading.nilaiAkhir,
+      predikat: grading.predikat,
+      grade: grading.grade,
+      status: grading.status,
+    };
+  }
+
+  return {
+    entries,
+    nilaiAkhir: result.nilaiAkhir,
+    predikat: result.predikat,
+    grade: result.grade,
+    status: result.status,
+  };
+};
+
 const RekapSertifikat = () => {
   const [filterKelas, setFilterKelas] = useState<string>("all");
   const [filterJuz, setFilterJuz] = useState<string>("all");
@@ -68,10 +135,6 @@ const RekapSertifikat = () => {
         .eq("mode", "Tahfizh")
         .order("tanggal", { ascending: true }); // Ascending untuk mendapatkan urutan input awal
 
-      if (!showAll) {
-        query = query.eq("status", "Lulus");
-      }
-
       const { data: ujianData, error: ujianError } = await query;
       if (ujianError) throw ujianError;
 
@@ -97,10 +160,11 @@ const RekapSertifikat = () => {
       const itemsWithSequence: Array<any> = (ujianData || []).map((u) => {
         const student = studentMap.get(u.student_id);
         const cls = student ? classMap.get(student.class_id) : null;
-        const aspek = u.nilai_aspek as any;
-        const entries = aspek?.surahEntries || [];
+        const classGrade = cls?.grade || 0;
+        const syncedResult = getSyncedTahfizhCertificateResult(u, classGrade);
+        const entries = syncedResult.entries;
         const juzList = [...new Set(entries.map((e: any) => e.juz))].sort((a: number, b: number) => a - b);
-        const isLulus = u.status === "Lulus";
+        const isLulus = syncedResult.status === "Lulus";
 
         const sequenceNumber = isLulus ? lulusIndex++ : -1;
 
@@ -115,19 +179,20 @@ const RekapSertifikat = () => {
           studentId: u.student_id,
           studentName: student?.name || "Unknown",
           className: cls?.name || "Unknown",
-          classGrade: cls?.grade || 0,
+          classGrade,
           juz: juzList.length > 0 ? juzList.join(", ") : "-",
-          nilaiAkhir: u.nilai_akhir,
-          predikat: aspek?.predikat || (u.nilai_akhir >= 90 ? "Mumtaz" : u.nilai_akhir >= 80 ? "Jayyid Jiddan" : u.nilai_akhir >= 70 ? "Jayyid" : "Perlu Perbaikan"),
+          nilaiAkhir: syncedResult.nilaiAkhir,
+          predikat: syncedResult.predikat,
           tanggal: u.tanggal,
           nomorSertifikat,
-          status: u.status,
+          status: syncedResult.status,
         };
         return item;
       });
 
       // Reverse untuk menampilkan yang terakhir diinput di atas
-      const items = itemsWithSequence.reverse();
+      const allItems = itemsWithSequence.reverse();
+      const items = showAll ? allItems : allItems.filter((item) => item.status === "Lulus");
 
       const uniqueClasses = [...new Set(items.map((i) => i.className))].sort();
       return { items, classes: uniqueClasses };
@@ -397,22 +462,34 @@ const RekapSertifikat = () => {
             )}
 
             {/* Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
               <div className="bg-card rounded-lg border border-border p-4 shadow-card text-center">
                 <p className="text-2xl font-bold text-primary">{lulusItems.length}</p>
                 <p className="text-xs text-muted-foreground">Total Lulus</p>
               </div>
               <div className="bg-card rounded-lg border border-border p-4 shadow-card text-center">
+                <p className="text-2xl font-bold text-success">{lulusItems.filter((i) => i.predikat === "Mumtaz Murtafi").length}</p>
+                <p className="text-xs text-muted-foreground">A+ Mumtaz Murtafi</p>
+              </div>
+              <div className="bg-card rounded-lg border border-border p-4 shadow-card text-center">
                 <p className="text-2xl font-bold text-success">{lulusItems.filter((i) => i.predikat === "Mumtaz").length}</p>
-                <p className="text-xs text-muted-foreground">Mumtaz</p>
+                <p className="text-xs text-muted-foreground">A Mumtaz</p>
               </div>
               <div className="bg-card rounded-lg border border-border p-4 shadow-card text-center">
-                <p className="text-2xl font-bold text-accent">{lulusItems.filter((i) => i.predikat === "Jayyid Jiddan").length}</p>
-                <p className="text-xs text-muted-foreground">Jayyid Jiddan</p>
+                <p className="text-2xl font-bold text-[#0f2a55] dark:text-blue-200">{lulusItems.filter((i) => i.predikat === "Jayyid Jiddan").length}</p>
+                <p className="text-xs text-muted-foreground">B+ Jayyid Jiddan</p>
               </div>
               <div className="bg-card rounded-lg border border-border p-4 shadow-card text-center">
-                <p className="text-2xl font-bold text-secondary">{lulusItems.filter((i) => i.predikat === "Jayyid").length}</p>
-                <p className="text-xs text-muted-foreground">Jayyid</p>
+                <p className="text-2xl font-bold text-foreground">{lulusItems.filter((i) => i.predikat === "Jayyid").length}</p>
+                <p className="text-xs text-muted-foreground">B Jayyid</p>
+              </div>
+              <div className="bg-card rounded-lg border border-border p-4 shadow-card text-center">
+                <p className="text-2xl font-bold text-primary">{lulusItems.filter((i) => i.predikat === "Maqbul").length}</p>
+                <p className="text-xs text-muted-foreground">C Maqbul</p>
+              </div>
+              <div className="bg-card rounded-lg border border-border p-4 shadow-card text-center">
+                <p className="text-2xl font-bold text-destructive">{filtered.filter((i) => i.predikat === "Rosib").length}</p>
+                <p className="text-xs text-muted-foreground">D Rosib</p>
               </div>
             </div>
 
@@ -442,15 +519,24 @@ const RekapSertifikat = () => {
                         <td className="px-4 py-3 text-muted-foreground">{item.className}</td>
                         <td className="px-4 py-3 text-muted-foreground">Juz {item.juz}</td>
                         <td className="px-4 py-3 text-center">
-                          <span className={`font-bold ${item.nilaiAkhir >= 90 ? "text-success" : item.nilaiAkhir >= 80 ? "text-primary" : item.nilaiAkhir >= 70 ? "text-accent" : "text-destructive"}`}>
+                          <span className={`inline-flex min-w-12 items-center justify-center rounded-full border px-2.5 py-1 text-sm font-bold ${
+                            item.nilaiAkhir >= 96 ? "border-success/30 bg-success/10 text-success" :
+                            item.nilaiAkhir >= 90 ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" :
+                            item.nilaiAkhir >= 86 ? "border-blue-950/30 bg-blue-950/10 text-[#0f2a55] dark:border-blue-200/30 dark:bg-blue-200/10 dark:text-blue-200" :
+                            item.nilaiAkhir >= 80 ? "border-foreground/30 bg-foreground/10 text-foreground" :
+                            item.nilaiAkhir >= 70 ? "border-yellow-500/30 bg-yellow-500/10 text-yellow-700 dark:text-yellow-300" :
+                            "border-destructive/30 bg-destructive/10 text-destructive"
+                          }`}>
                             {item.nilaiAkhir}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            item.predikat === "Mumtaz" ? "bg-success/10 text-success" :
-                            item.predikat === "Jayyid Jiddan" ? "bg-primary/10 text-primary" :
-                            item.predikat === "Jayyid" ? "bg-accent/10 text-accent" :
+                            item.predikat === "Mumtaz Murtafi" ? "bg-success/10 text-success" :
+                            item.predikat === "Mumtaz" ? "bg-emerald-500/10 text-emerald-700" :
+                            item.predikat === "Jayyid Jiddan" ? "bg-blue-950/10 text-[#0f2a55] border border-blue-950/30 dark:bg-blue-200/10 dark:text-blue-200 dark:border-blue-200/30" :
+                            item.predikat === "Jayyid" ? "bg-foreground/10 text-foreground border border-foreground/30" :
+                            item.predikat === "Maqbul" ? "bg-yellow-500/10 text-yellow-700" :
                             "bg-destructive/10 text-destructive"
                           }`}>
                             {item.predikat}

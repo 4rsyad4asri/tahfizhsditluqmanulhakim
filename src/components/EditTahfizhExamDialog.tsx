@@ -262,8 +262,8 @@ export default function EditTahfizhExamDialog({
                           }
                           className="w-16 px-2 py-1 rounded-md border border-input bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring"
                         >
-                          <option value={100}>100</option>
                           <option value={90}>90</option>
+                          <option value={100}>100</option>
                           <option value={80}>80</option>
                           <option value={70}>70</option>
                           <option value={60}>60</option>

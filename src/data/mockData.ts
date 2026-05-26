@@ -1,3 +1,5 @@
+import { getStandardExamGrading } from "@/data/grading";
+
 export interface Student {
   id: string;
   name: string;
@@ -172,9 +174,7 @@ export interface TahfizhSurahEntry {
 }
 
 export function calculateNilaiSurah(entry: TahfizhSurahEntry): number {
-  const nilaiKoreksi = Math.max(0, 100 - (entry.lahn_jali * 4) - (entry.lahn_khofi * 2) - (entry.waqaf_ibtida * 2) - ((entry.salah_sambung_ayat || 0) * 2));
-  const nilaiAkhir = (nilaiKoreksi * 0.6) + (entry.kelancaran * 0.4);
-  return Math.round(Math.max(0, Math.min(100, nilaiAkhir)));
+  return calculateNilaiSurahNew(entry);
 }
 
 // Rumus baru Tahfizh: Nilai = Kelancaran − (LJ×2) − (LK×1) − (Waqaf×2) − (Sambung×2)
@@ -194,22 +194,16 @@ export function calculateNilaiSurahWithRumus(entry: TahfizhSurahEntry, rumus: Ta
 }
 
 export function calculateNilaiTahfizh(entries: TahfizhSurahEntry[], rumus: TahfizhRumus = 'baru'): { nilaiAkhir: number; status: 'Lulus' | 'Tidak Lulus'; grade: string; predikat: string } {
-  if (entries.length === 0) return { nilaiAkhir: 0, status: 'Tidak Lulus', grade: 'D', predikat: 'Perlu Perbaikan' };
+  if (entries.length === 0) return { nilaiAkhir: 0, status: 'Tidak Lulus', grade: 'D', predikat: 'Rosib' };
   const nilaiPerSurah = entries.map(e => calculateNilaiSurahWithRumus(e, rumus));
   const nilaiAkhir = Math.round(nilaiPerSurah.reduce((a, b) => a + b, 0) / nilaiPerSurah.length);
-  const status = nilaiAkhir >= 85 ? 'Lulus' : 'Tidak Lulus';
-  let grade = 'D';
-  let predikat = 'Perlu Perbaikan';
-  if (nilaiAkhir >= 90) { grade = 'A'; predikat = 'Mumtaz'; }
-  else if (nilaiAkhir >= 80) { grade = 'B'; predikat = 'Jayyid Jiddan'; }
-  else if (nilaiAkhir >= 70) { grade = 'C'; predikat = 'Jayyid'; }
-  return { nilaiAkhir, status, grade, predikat };
+  return getStandardExamGrading(nilaiAkhir);
 }
 
 type HasilUjian = {
   nilaiAkhir: number;
   status: "Lulus" | "Tidak Lulus";
-  grade: "A" | "B" | "C" | "D";
+  grade: string;
   predikat: string;
 };
 
@@ -224,7 +218,7 @@ export function calculateNilaiUjian(
       nilaiAkhir: 0,
       status: "Tidak Lulus",
       grade: "D",
-      predikat: "Belum Ada Nilai",
+      predikat: "Rosib",
     };
   }
 
@@ -238,32 +232,5 @@ export function calculateNilaiUjian(
     totalNilai / values.length
   );
 
-  // Default
-  let grade: HasilUjian["grade"] = "D";
-  let predikat = "Kurang";
-
-  // Penentuan grade & predikat
-  if (nilaiAkhir >= 90) {
-    grade = "A";
-    predikat = "Mumtaz";
-  } else if (nilaiAkhir >= 80) {
-    grade = "B";
-    predikat = "Jayyid Jiddan";
-  } else if (nilaiAkhir >= 70) {
-    grade = "C";
-    predikat = "Jayyid";
-  }
-
-  // Status kelulusan
-  const status: HasilUjian["status"] =
-    nilaiAkhir >= 70
-      ? "Lulus"
-      : "Tidak Lulus";
-
-  return {
-    nilaiAkhir,
-    status,
-    grade,
-    predikat,
-  };
+  return getStandardExamGrading(nilaiAkhir);
 }
