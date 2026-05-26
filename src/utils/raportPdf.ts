@@ -892,11 +892,12 @@ function drawCatatan(
 
   const textWidth = pageW - margin * 2 - 6;
   const lines = doc.splitTextToSize(text, textWidth);
-  const lineHeight = isArabicText ? 4.8 : 3.6;
-  const paddingTop = isArabicText ? 4.5 : 4;
-  const paddingBottom = isArabicText ? 5.5 : 4.5;
+  const lineHeight =
+    doc.getLineHeight() / (doc.internal as any).scaleFactor;
+  const paddingTop = isArabicText ? 3.4 : 2.6;
+  const paddingBottom = isArabicText ? 3.8 : 3;
   const blockH = Math.max(
-    12,
+    8.5,
     paddingTop + lines.length * lineHeight + paddingBottom
   );
 
@@ -904,14 +905,14 @@ function drawCatatan(
   doc.rect(margin, startY + 4, pageW - margin * 2, blockH);
 
   const centerX = margin + (pageW - margin * 2) / 2;
+  const textY = startY + 4 + paddingTop + lineHeight * 0.72;
 
   if (isArabicText) {
-    doc.text(text, centerX, startY + 10, {
+    doc.text(lines, centerX, textY, {
       align: "center",
-      maxWidth: textWidth,
     });
   } else {
-    doc.text(lines, margin + 3, startY + 4 + paddingTop + 2);
+    doc.text(lines, margin + 3, textY);
   }
 
   return startY + 4 + blockH + 5;
