@@ -890,15 +890,14 @@ function drawCatatan(
   doc.setLineHeightFactor(1.3);
   doc.setTextColor(...GRAY_TEXT);
 
-  const textWidth = pageW - margin * 2 - 6;
-  const lines = doc.splitTextToSize(text, textWidth);
-  const lineHeight = isArabicText ? 4.8 : 3.6;
-  const paddingTop = isArabicText ? 4.5 : 4;
-  const paddingBottom = isArabicText ? 5.5 : 4.5;
-  const blockH = Math.max(
-    12,
-    paddingTop + lines.length * lineHeight + paddingBottom
-  );
+const textWidth = pageW - margin * 2 - 6;
+const lines = doc.splitTextToSize(text, textWidth);
+const lineHeight = isArabicText ? 4.8 : 3;
+const extraPadding = isArabicText ? 6 : 3;
+const blockH = Math.max(
+  10,
+  lines.length * lineHeight + extraPadding
+);
 
   doc.setDrawColor(...GRAY_LINE);
   doc.rect(margin, startY + 4, pageW - margin * 2, blockH);
