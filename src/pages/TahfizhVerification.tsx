@@ -1,5 +1,19 @@
+import { useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { CheckCircle2, FileText, Loader2, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  Award,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardCheck,
+  FileText,
+  GraduationCap,
+  Loader2,
+  ShieldCheck,
+  UserCheck,
+  type LucideIcon,
+} from "lucide-react";
 import { useTahfizhVerification } from "@/hooks/useStudentDetail";
 import {
   aggregateTahfizhAssessmentsForDisplay,
@@ -12,7 +26,9 @@ import { calculateNilaiSurahWithRumus } from "@/data/mockData";
 import { getEffectiveCatatanGuru } from "@/utils/catatanOtomatis";
 import { getStandardExamGrading } from "@/data/grading";
 
-function formatDate(date: string) {
+function formatDate(date?: string | null) {
+  if (!date) return "-";
+
   try {
     return new Date(date).toLocaleDateString("id-ID", {
       day: "numeric",
@@ -24,30 +40,76 @@ function formatDate(date: string) {
   }
 }
 
+function formatDateTime(date?: string | null) {
+  if (!date) return "-";
+
+  try {
+    return new Date(date).toLocaleString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return date;
+  }
+}
+
+function maskToken(token?: string) {
+  if (!token) return "-";
+  if (token.length <= 10) return token;
+  return `${token.slice(0, 4)}****${token.slice(-4)}`;
+}
+
+function getDocumentNumber(mode?: string, id?: string, publishedAt?: string | null, tanggal?: string | null) {
+  const sourceDate = publishedAt || tanggal || new Date().toISOString();
+  const date = new Date(sourceDate);
+  const year = Number.isNaN(date.getTime()) ? new Date().getFullYear() : date.getFullYear();
+  const month = Number.isNaN(date.getTime()) ? new Date().getMonth() + 1 : date.getMonth() + 1;
+  const ym = `${year}${String(month).padStart(2, "0")}`;
+  const code = (mode || "Tahfizh").replace(/\s+/g, "").toUpperCase();
+  const shortId = (id || "VERIFY").slice(0, 6).toUpperCase();
+
+  return `RPT/${code}/${ym}/${shortId}`;
+}
+
 function getLegacyClassSixTahfizhState(nilai: number) {
   return getStandardExamGrading(nilai);
+}
+
+function getFallback(value: unknown) {
+  if (value === null || value === undefined || value === "") return "-";
+  return String(value);
 }
 
 export default function TahfizhVerification() {
   const { token } = useParams<{ token: string }>();
   const { data, isLoading, error } = useTahfizhVerification(token);
+  const verifiedAt = useMemo(() => formatDateTime(new Date().toISOString()), []);
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-5 py-4 shadow-sm">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <span className="text-sm font-medium text-muted-foreground">Memeriksa dokumen...</span>
+        </div>
       </main>
     );
   }
 
   if (error || !data) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="max-w-md rounded-lg border border-destructive/30 bg-card p-6 text-center shadow-sm">
-          <FileText className="mx-auto mb-3 h-8 w-8 text-destructive" />
-          <h1 className="text-xl font-bold text-foreground">Dokumen Tidak Ditemukan</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Token verifikasi tidak valid atau dokumen belum dipublish.
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+        <div className="w-full max-w-lg rounded-lg border border-amber-300 bg-card p-6 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
+          <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Verifikasi Gagal</p>
+          <h1 className="mt-2 text-2xl font-bold text-foreground">Dokumen Tidak Ditemukan</h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Dokumen tidak ditemukan atau belum dipublish. Token unik hanya berlaku untuk dokumen yang sudah berstatus Published.
           </p>
         </div>
       </main>
@@ -55,16 +117,19 @@ export default function TahfizhVerification() {
   }
 
   const aspek = (data.nilai_aspek || {}) as any;
-  const entries: TahfizhSurahAssessment[] = Array.isArray(aspek.surahEntries)
-    ? aggregateTahfizhAssessmentsForDisplay(aspek.surahEntries).map(normalizeTahfizhAssessment)
+  const rawEntries: TahfizhSurahAssessment[] = Array.isArray(aspek.surahEntries)
+    ? aspek.surahEntries.map(normalizeTahfizhAssessment)
     : [];
+  const surahEntriesSource = Array.isArray(aspek.surahEntries) ? aspek.surahEntries : [];
+  const scoringEntries = aggregateTahfizhAssessmentsForDisplay(surahEntriesSource).map(normalizeTahfizhAssessment);
+  const detailEntries = rawEntries.length ? rawEntries : scoringEntries;
   const reportType = aspek.reportType || (aspek.tahfizhMode === "Sertifikat" ? "summary" : "detail");
-  const summaries = calculateTahfizhSummary(entries, aspek.config);
+  const summaries = calculateTahfizhSummary(scoringEntries, aspek.config);
   const student = (data as any).students;
   const classInfo = student?.classes;
   const isLegacyClassSixExam = Number(classInfo?.grade ?? String(classInfo?.name || "").match(/\d+/)?.[0]) === 6;
   const syncedResult = calculateTahfizhExamResult(
-    entries,
+    scoringEntries,
     aspek.tahfizhMode || "Reguler",
     aspek.config,
     aspek.manualStopReason || "",
@@ -79,142 +144,253 @@ export default function TahfizhVerification() {
         status: aspek.statusLabel || data.status || syncedResult.status,
       };
   const effectiveCatatanGuru = getEffectiveCatatanGuru(data, student?.name || "Siswa");
+  const nilaiAkhir = syncedResult.nilaiAkhir || data.nilai_akhir || 0;
+  const documentNumber = getDocumentNumber(data.mode, data.id, data.published_at, data.tanggal);
+  const assessor = data.assessor_name || data.assessed_by || aspek.assessorName || "-";
 
   return (
-    <main className="min-h-screen bg-background">
-      <section className="border-b border-border bg-card">
-        <div className="mx-auto max-w-5xl px-4 py-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-primary">SDIT Luqmanul Hakim</p>
-              <h1 className="mt-1 text-2xl font-bold text-foreground">Verifikasi Dokumen Tahfizh</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Program Tahfizh & Tahsin Al-Qur'an</p>
+    <main className="min-h-screen overflow-x-hidden bg-slate-50 text-foreground">
+      <section className="border-b border-emerald-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase text-emerald-700">
+                <ShieldCheck className="h-4 w-4" />
+                DOKUMEN ASLI & TERVERIFIKASI
+              </div>
+              <h1 className="mt-4 text-3xl font-bold text-slate-950 sm:text-4xl">Verifikasi Dokumen Tahfizh</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                Portal verifikasi resmi SDIT Luqmanul Hakim untuk memastikan raport dan sertifikat Tahfizh yang sudah dipublish.
+              </p>
             </div>
-            <div className="inline-flex items-center gap-2 rounded-md border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
-              <ShieldCheck className="h-5 w-5" />
-              DOKUMEN ASLI & TERVERIFIKASI
+
+            <div className="grid gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm shadow-sm sm:min-w-80">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-emerald-800">Status Verifikasi</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Valid
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-emerald-800">Status Dokumen</span>
+                <span className="font-bold text-emerald-950">{getFallback(data.document_status || "Published")}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-emerald-800">ID Verifikasi</span>
+                <span className="font-mono text-xs font-bold text-emerald-950">{maskToken(token)}</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl space-y-5 px-4 py-6">
-        <div className="grid gap-3 md:grid-cols-4">
-          <InfoCard label="Nama Siswa" value={student?.name || "-"} />
-          <InfoCard label="Kelas" value={classInfo?.name || "-"} />
-          <InfoCard label="Tanggal Ujian" value={formatDate(data.tanggal)} />
-          <InfoCard label="Mode" value={aspek.tahfizhMode || "Tahfizh"} />
+      <section className="mx-auto max-w-6xl space-y-5 px-4 py-6">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <InfoCard icon={FileText} label="Nomor Dokumen" value={documentNumber} />
+          <InfoCard icon={CheckCircle2} label="Document Status" value={getFallback(data.document_status || "Published")} strong />
+          <InfoCard icon={CalendarDays} label="Tanggal Publish" value={formatDateTime(data.published_at)} />
+          <InfoCard icon={ClipboardCheck} label="Diverifikasi pada" value={verifiedAt} />
         </div>
 
-        <div className="grid gap-3 md:grid-cols-4">
-          <InfoCard label="Nilai Akhir" value={String(syncedResult.nilaiAkhir || data.nilai_akhir || 0)} strong />
-          <InfoCard label="Grade" value={displayState.grade || "-"} strong />
-          <InfoCard label="Status" value={displayState.status || "-"} strong />
-          <InfoCard label="Dokumen" value={data.document_status || "Published"} strong />
+        <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+          <section className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <UserCheck className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-bold text-foreground">Data Siswa</h2>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <DataRow label="Nama Siswa" value={student?.name || "-"} />
+              <DataRow label="Kelas" value={classInfo?.name || "-"} />
+              <DataRow label="Tanggal Ujian" value={formatDate(data.tanggal)} />
+              <DataRow label="Penguji" value={assessor} />
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <Award className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-bold text-foreground">Ringkasan Nilai</h2>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ScoreTile label="Nilai Akhir" value={String(nilaiAkhir)} highlight />
+              <ScoreTile label="Grade" value={displayState.grade || "-"} />
+              <ScoreTile label="Status" value={displayState.status || "-"} />
+              <ScoreTile label="Predikat" value={displayState.predikat || aspek.predikat || "-"} />
+            </div>
+          </section>
         </div>
 
-        {reportType === "summary" ? (
-          <div className="rounded-lg border border-border bg-card p-4">
-            <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
-              <CheckCircle2 className="h-4 w-4 text-primary" /> Ringkasan Akumulasi Per Juz
-            </h2>
-            <div className="overflow-x-auto">
+        <section className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-5">
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-bold text-foreground">Detail Ujian</h2>
+            </div>
+            <span className="text-sm font-semibold text-muted-foreground">Mode Ujian: {getFallback(aspek.tahfizhMode || data.mode)}</span>
+          </div>
+
+          {reportType === "summary" ? (
+            <div className="overflow-x-auto rounded-md border border-border">
               <table className="w-full min-w-[640px] text-sm">
-                <thead className="bg-muted/50 text-left">
+                <thead className="bg-muted/60 text-left text-xs uppercase text-muted-foreground">
                   <tr>
-                    <th className="px-3 py-2">Juz</th>
-                    <th className="px-3 py-2">Total Lahn Jali</th>
-                    <th className="px-3 py-2">Total Lahn Khofi</th>
-                    <th className="px-3 py-2">Total Waqaf</th>
-                    <th className="px-3 py-2">Total Sambung</th>
-                    <th className="px-3 py-2">Rata Kelancaran</th>
-                    <th className="px-3 py-2">Nilai Juz</th>
+                    <th className="px-3 py-3">Juz</th>
+                    <th className="px-3 py-3">Total Lahn Jali</th>
+                    <th className="px-3 py-3">Total Lahn Khofi</th>
+                    <th className="px-3 py-3">Total Waqaf</th>
+                    <th className="px-3 py-3">Total Sambung</th>
+                    <th className="px-3 py-3">Rata Kelancaran</th>
+                    <th className="px-3 py-3">Nilai Juz</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {summaries.map((summary) => (
-                    <tr key={summary.juz} className="border-t border-border">
-                      <td className="px-3 py-2 font-semibold">Juz {summary.juz}</td>
-                      <td className="px-3 py-2">{summary.totalLahnJali}</td>
-                      <td className="px-3 py-2">{summary.totalLahnKhofi}</td>
-                      <td className="px-3 py-2">{summary.totalWaqaf}</td>
-                      <td className="px-3 py-2">{summary.totalSalahSambung}</td>
-                      <td className="px-3 py-2">{summary.rataKelancaran}</td>
-                      <td className="px-3 py-2 font-bold text-primary">{summary.nilaiJuz}</td>
-                    </tr>
-                  ))}
+                  {summaries.length ? (
+                    summaries.map((summary) => (
+                      <tr key={summary.juz} className="border-t border-border">
+                        <td className="px-3 py-3 font-semibold">Juz {summary.juz}</td>
+                        <td className="px-3 py-3">{summary.totalLahnJali}</td>
+                        <td className="px-3 py-3">{summary.totalLahnKhofi}</td>
+                        <td className="px-3 py-3">{summary.totalWaqaf}</td>
+                        <td className="px-3 py-3">{summary.totalSalahSambung}</td>
+                        <td className="px-3 py-3">{summary.rataKelancaran}</td>
+                        <td className="px-3 py-3 font-bold text-primary">{summary.nilaiJuz}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <EmptyTableRow colSpan={7} />
+                  )}
                 </tbody>
               </table>
             </div>
-          </div>
-        ) : (
-          <div className="rounded-lg border border-border bg-card p-4">
-            <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-foreground">
-              <CheckCircle2 className="h-4 w-4 text-primary" /> Detail Soal Ujian
-            </h2>
-            <div className="overflow-x-auto">
+          ) : (
+            <div className="overflow-x-auto rounded-md border border-border">
               <table className="w-full min-w-[760px] text-sm">
-                <thead className="bg-muted/50 text-left">
+                <thead className="bg-muted/60 text-left text-xs uppercase text-muted-foreground">
                   <tr>
-                    <th className="px-3 py-2">Surat</th>
-                    <th className="px-3 py-2">Juz</th>
-                    <th className="px-3 py-2">Ayat</th>
-                    <th className="px-3 py-2">LJ</th>
-                    <th className="px-3 py-2">LK</th>
-                    <th className="px-3 py-2">Waqaf</th>
-                    <th className="px-3 py-2">Sambung</th>
-                    <th className="px-3 py-2">Catatan</th>
-                    <th className="px-3 py-2">Nilai</th>
+                    <th className="px-3 py-3">Surat</th>
+                    <th className="px-3 py-3">Juz</th>
+                    <th className="px-3 py-3">Ayat</th>
+                    <th className="px-3 py-3">LJ</th>
+                    <th className="px-3 py-3">LK</th>
+                    <th className="px-3 py-3">Waqaf</th>
+                    <th className="px-3 py-3">Sambung</th>
+                    <th className="px-3 py-3">Catatan</th>
+                    <th className="px-3 py-3">Nilai</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {entries.map((entry, index) => (
-                    <tr key={`${entry.surah}-${index}`} className="border-t border-border">
-                      <td className="px-3 py-2 font-semibold">{entry.surah}</td>
-                      <td className="px-3 py-2">{entry.juz}</td>
-                      <td className="px-3 py-2">{entry.ayatRange || [entry.ayatAwal, entry.ayatAkhir].filter(Boolean).join("-") || "-"}</td>
-                      <td className="px-3 py-2">{entry.lahnJali}</td>
-                      <td className="px-3 py-2">{entry.lahnKhofi}</td>
-                      <td className="px-3 py-2">{entry.waqaf}</td>
-                      <td className="px-3 py-2">{entry.salahSambung}</td>
-                      <td className="px-3 py-2">{entry.catatan || "-"}</td>
-                      <td className="px-3 py-2 font-bold text-primary">{calculateNilaiSurahWithRumus({
-                        surah: entry.surah,
-                        juz: entry.juz,
-                        lahn_jali: entry.lahnJali,
-                        lahn_khofi: entry.lahnKhofi,
-                        kelancaran: entry.kelancaran,
-                        waqaf_ibtida: entry.waqaf,
-                        salah_sambung_ayat: entry.salahSambung,
-                      }, "baru")}</td>
-                    </tr>
-                  ))}
+                  {detailEntries.length ? (
+                    detailEntries.map((entry, index) => (
+                      <tr key={`${entry.surah || "surah"}-${index}`} className="border-t border-border">
+                        <td className="px-3 py-3 font-semibold">{entry.surah || "-"}</td>
+                        <td className="px-3 py-3">{entry.juz || "-"}</td>
+                        <td className="px-3 py-3">{entry.ayatRange || [entry.ayatAwal, entry.ayatAkhir].filter(Boolean).join("-") || "-"}</td>
+                        <td className="px-3 py-3">{entry.lahnJali ?? 0}</td>
+                        <td className="px-3 py-3">{entry.lahnKhofi ?? 0}</td>
+                        <td className="px-3 py-3">{entry.waqaf ?? 0}</td>
+                        <td className="px-3 py-3">{entry.salahSambung ?? 0}</td>
+                        <td className="px-3 py-3">{entry.catatan || "-"}</td>
+                        <td className="px-3 py-3 font-bold text-primary">
+                          {calculateNilaiSurahWithRumus({
+                            surah: entry.surah,
+                            juz: entry.juz,
+                            lahn_jali: entry.lahnJali,
+                            lahn_khofi: entry.lahnKhofi,
+                            kelancaran: entry.kelancaran,
+                            waqaf_ibtida: entry.waqaf,
+                            salah_sambung_ayat: entry.salahSambung,
+                          }, "baru")}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <EmptyTableRow colSpan={9} />
+                  )}
                 </tbody>
               </table>
             </div>
-          </div>
-        )}
+          )}
+        </section>
 
-        {(aspek.autoFailLog || aspek.manualStopReason || effectiveCatatanGuru) && (
-          <div className="rounded-lg border border-border bg-card p-4">
-            <h2 className="mb-2 text-base font-semibold text-foreground">Catatan</h2>
-            <div className="space-y-1 text-sm text-muted-foreground">
+        <section className="grid gap-5 lg:grid-cols-[1fr_0.9fr]">
+          <div className="rounded-lg border border-border bg-card p-4 shadow-sm sm:p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-bold text-foreground">Catatan Guru dan Evaluasi</h2>
+            </div>
+            <div className="space-y-2 text-sm leading-6 text-muted-foreground">
               {aspek.autoFailLog && <p>{aspek.autoFailLog}</p>}
               {aspek.manualStopReason && <p>Alasan dihentikan: {aspek.manualStopReason}</p>}
-              {effectiveCatatanGuru && <p>{effectiveCatatanGuru}</p>}
+              {effectiveCatatanGuru ? <p>{effectiveCatatanGuru}</p> : <p>-</p>}
             </div>
           </div>
-        )}
+
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 shadow-sm sm:p-5">
+            <div className="mb-3 flex items-center gap-2 text-emerald-900">
+              <ShieldCheck className="h-5 w-5" />
+              <h2 className="text-lg font-bold">Keamanan Verifikasi</h2>
+            </div>
+            <ul className="space-y-2 text-sm leading-6 text-emerald-900">
+              <li>Dokumen ini diverifikasi langsung dari database resmi aplikasi.</li>
+              <li>Token unik hanya berlaku untuk dokumen yang sudah dipublish.</li>
+              <li>Jika data tidak ditemukan, dokumen tidak valid atau belum dipublish.</li>
+            </ul>
+          </div>
+        </section>
       </section>
     </main>
   );
 }
 
-function InfoCard({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+function InfoCard({
+  icon: Icon,
+  label,
+  value,
+  strong = false,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  strong?: boolean;
+}) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className={strong ? "mt-1 text-xl font-bold text-foreground" : "mt-1 text-sm font-semibold text-foreground"}>{value}</p>
+    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+        <Icon className="h-4 w-4" />
+      </div>
+      <p className="text-xs font-medium uppercase text-muted-foreground">{label}</p>
+      <p className={strong ? "mt-1 text-lg font-bold text-foreground" : "mt-1 text-sm font-semibold text-foreground"}>{value}</p>
     </div>
+  );
+}
+
+function DataRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-border bg-muted/30 p-3">
+      <p className="text-xs font-medium uppercase text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function ScoreTile({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className={highlight ? "rounded-md bg-primary p-3 text-primary-foreground" : "rounded-md border border-border bg-muted/30 p-3"}>
+      <p className={highlight ? "text-xs font-medium uppercase text-primary-foreground/80" : "text-xs font-medium uppercase text-muted-foreground"}>
+        {label}
+      </p>
+      <p className="mt-1 text-2xl font-bold">{value}</p>
+    </div>
+  );
+}
+
+function EmptyTableRow({ colSpan }: { colSpan: number }) {
+  return (
+    <tr className="border-t border-border">
+      <td colSpan={colSpan} className="px-3 py-6 text-center text-sm text-muted-foreground">
+        Data detail ujian belum tersedia.
+      </td>
+    </tr>
   );
 }

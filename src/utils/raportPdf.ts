@@ -242,7 +242,8 @@ function drawHeader(
   pageW: number,
   margin: number,
   qrDataUrl?: string,
-  nomorDokumen?: string
+  nomorDokumen?: string,
+  verifyUrl?: string
 ) {
   const headerH = 24;
 
@@ -311,14 +312,22 @@ function drawHeader(
   }
 
   if (qrDataUrl) {
-    safeAddImage(
-      doc,
-      qrDataUrl,
-      pageW - margin - 16,
-      margin + headerH + 1,
-      16,
-      16
-    );
+    const qrX = pageW - margin - 16;
+    const qrY = margin + headerH + 1;
+    const qrSize = 16;
+
+    safeAddImage(doc, qrDataUrl, qrX, qrY, qrSize, qrSize);
+
+    if (verifyUrl) {
+      doc.link(qrX, qrY, qrSize, qrSize, { url: verifyUrl });
+    }
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(5.5);
+    doc.setTextColor(...GRAY_TEXT);
+    doc.text("Verifikasi Online", qrX + qrSize / 2, qrY + qrSize + 2.5, {
+      align: "center",
+    });
   }
 }
 
@@ -1020,7 +1029,7 @@ export async function generateRaportPDF(
   const qrUrl = opts.showQR ? await makeQR(verifyText) : undefined;
 
   drawWatermark(doc, header, assets, opts, pageW, pageH);
-  drawHeader(doc, data, header, assets, pageW, margin, qrUrl, nomor);
+  drawHeader(doc, data, header, assets, pageW, margin, qrUrl, nomor, opts.verifyUrl);
 
   let y = margin + 26 + 16;
 

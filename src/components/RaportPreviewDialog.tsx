@@ -19,11 +19,14 @@ import {
   X,
   ImageIcon,
   RefreshCw,
+  ExternalLink,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { generateCatatanOtomatisFromUjian } from "@/utils/catatanOtomatis";
 import { aggregateTahfizhAssessmentsForDisplay } from "@/data/tahfizhSystem";
 import { getStandardExamGrading } from "@/data/grading";
+import { buildTahfizhVerificationUrl } from "@/utils/verificationUrl";
 import {
   generateRaportPDF,
   downloadRaportPDF,
@@ -210,11 +213,16 @@ export default function RaportPreviewDialog({
     };
   }, [ujian, studentName, className, assessorName, tanggal, finalCatatan]);
 
-  const effectiveOpts: RaportPdfOptions = useMemo(() => {
-    const token = ujian?.verification_token || ujian?.nilai_aspek?.verificationToken;
-    const verifyUrl = token ? `${window.location.origin}/verifikasi/tahfizh/${token}` : opts.verifyUrl;
-    return { ...opts, verifyUrl };
-  }, [opts, ujian]);
+  const verificationToken = ujian?.verification_token || ujian?.nilai_aspek?.verificationToken;
+  const verifyUrl = useMemo(
+    () => buildTahfizhVerificationUrl(verificationToken) || opts.verifyUrl,
+    [opts.verifyUrl, verificationToken]
+  );
+
+  const effectiveOpts: RaportPdfOptions = useMemo(
+    () => ({ ...opts, verifyUrl }),
+    [opts, verifyUrl]
+  );
 
   useEffect(() => {
     if (!open || !ujian) return;
@@ -294,6 +302,23 @@ export default function RaportPreviewDialog({
     }
   };
 
+  const handleOpenVerification = () => {
+    if (!verifyUrl) return;
+    window.open(verifyUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleCopyVerification = async () => {
+    if (!verifyUrl) return;
+
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard tidak tersedia");
+      await navigator.clipboard.writeText(verifyUrl);
+      toast.success("Link verifikasi berhasil disalin");
+    } catch {
+      toast.error("Gagal menyalin link verifikasi");
+    }
+  };
+
   if (!ujian) return null;
 
   return (
@@ -341,6 +366,32 @@ export default function RaportPreviewDialog({
               QR Verifikasi
             </label>
 
+            {verifyUrl && (
+              <div className="flex flex-wrap items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs text-emerald-800">
+                <span className="font-medium">Link Verifikasi</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 bg-white px-2 text-xs"
+                  onClick={handleOpenVerification}
+                >
+                  <ExternalLink className="mr-1 h-3.5 w-3.5" />
+                  Buka
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 bg-white px-2 text-xs"
+                  onClick={handleCopyVerification}
+                >
+                  <Copy className="mr-1 h-3.5 w-3.5" />
+                  Salin Link
+                </Button>
+              </div>
+            )}
+
             <label className="flex items-center gap-2 text-xs">
               <Switch
                 checked={opts.showWatermark}
@@ -356,6 +407,12 @@ export default function RaportPreviewDialog({
           </div>
 
           <div className="flex gap-2">
+            {verifyUrl && (
+              <Button variant="outline" size="sm" onClick={handleOpenVerification}>
+                <ExternalLink className="w-4 h-4 mr-1" /> Buka Verifikasi
+              </Button>
+            )}
+
             <Button variant="outline" size="sm" onClick={handlePrint}>
               <Printer className="w-4 h-4 mr-1" /> Cetak
             </Button>
